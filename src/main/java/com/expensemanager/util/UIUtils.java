@@ -61,8 +61,9 @@ public final class UIUtils {
      * @param dark whether dark theme is active (reserved for future per-theme tweaks)
      */
     public static void applyTheme(boolean dark) {
-        // Rounded corners: buttons, text fields, combo/spinner (Section 5, Component.arc = 12)
-        UIManager.put("Button.arc", ARC);
+        // Primary JButtons: pill shape (arc 999). ToggleButton: rounded rect (12). Other: 12.
+        UIManager.put("Button.arc", 999);
+        UIManager.put("ToggleButton.arc", ARC);
         UIManager.put("Component.arc", ARC);
         UIManager.put("TextComponent.arc", ARC);
         UIManager.put("CheckBox.arc", ARC);

@@ -5,12 +5,11 @@ import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.ui.RectangleEdge;
 
 import java.awt.*;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.RectangularShape;
-import java.awt.geom.RoundRectangle2D;
 
 /**
- * BarPainter that draws bars with rounded top edges. No shadow.
- * Section 1.3: "Bar bo tròn".
+ * BarPainter with rounded top corners only. No shadow. Figma: bars with soft blue, rounded tops.
  */
 public final class RoundedBarPainter implements BarPainter {
 
@@ -28,22 +27,27 @@ public final class RoundedBarPainter implements BarPainter {
         double h = bar.getHeight();
         int arc = (int) Math.min(ARC, Math.min(w, h) / 2);
         if (arc < 1) arc = 1;
-        g2.fill(new RoundRectangle2D.Double(x, y, w, h, arc, arc));
+
+        // Rounded top corners only (top = smaller y for vertical bars)
+        GeneralPath path = new GeneralPath();
+        path.moveTo(x + arc, y);
+        path.lineTo(x + w - arc, y);
+        path.quadTo(x + w, y, x + w, y + arc);
+        path.lineTo(x + w, y + h);
+        path.lineTo(x, y + h);
+        path.lineTo(x, y + arc);
+        path.quadTo(x, y, x + arc, y);
+        path.closePath();
+        g2.fill(path);
     }
 
     @Override
     public void paintBarShadow(Graphics2D g2, BarRenderer renderer, int row, int column,
-                               RectangularShape bar, RectangleEdge base, boolean pegShadow) {
-        // No shadow for a clean look
-    }
+                               RectangularShape bar, RectangleEdge base, boolean pegShadow) {}
 
     @Override
-    public boolean equals(Object obj) {
-        return obj instanceof RoundedBarPainter;
-    }
+    public boolean equals(Object obj) { return obj instanceof RoundedBarPainter; }
 
     @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
+    public int hashCode() { return getClass().hashCode(); }
 }

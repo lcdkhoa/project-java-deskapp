@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Main window. Menu: Dashboard, Transactions, Budget, Analytics. Theme toggle top-right. Section 2, 5.
- * Sidebar styled as navigation panel (active: background highlight + bold). Card wrappers for main/card backgrounds.
+ * Sidebar uses SidebarButton (active: #2563EB; inactive: transparent; hover: #F3F4F6).
  */
 public class MainFrame extends JFrame {
     private static final int W = 1200;
@@ -24,7 +24,8 @@ public class MainFrame extends JFrame {
     private final BudgetView budgetView;
     private final AnalyticsView analyticsView;
     private final List<JPanel> cardWrappers = new ArrayList<>();
-    private final List<JButton> navButtons = new ArrayList<>();
+    private final List<SidebarButton> navButtons = new ArrayList<>();
+    private final ButtonGroup navGroup = new ButtonGroup();
     private String currentCard = "Dashboard";
     private JPanel northPanel;
     private JPanel westPanel;
@@ -85,26 +86,17 @@ public class MainFrame extends JFrame {
         return p;
     }
 
-    private JButton createNavButton(String label, String card) {
-        JButton b = new JButton(label);
-        b.setOpaque(true);
-        b.setBorderPainted(false);
-        b.setFocusPainted(false);
-        b.setContentAreaFilled(true);
-        b.setHorizontalAlignment(SwingConstants.LEFT);
-        b.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+    private SidebarButton createNavButton(String label, String card) {
+        SidebarButton b = new SidebarButton(card, label);
         b.addActionListener(e -> showCard(card));
+        navGroup.add(b);
         navButtons.add(b);
         return b;
     }
 
     private void updateSidebarSelection(String active) {
-        boolean dark = FlatLaf.isDark();
-        for (int i = 0; i < navButtons.size() && i < NAV_CARDS.length; i++) {
-            boolean selected = NAV_CARDS[i].equals(active);
-            JButton btn = navButtons.get(i);
-            btn.setBackground(selected ? UIUtils.getSidebarActiveBackground(dark) : UIUtils.getSidebarBackground(dark));
-            btn.setFont(btn.getFont().deriveFont(selected ? Font.BOLD : Font.PLAIN));
+        for (SidebarButton btn : navButtons) {
+            btn.setSelected(btn.getCardName().equals(active));
         }
     }
 
@@ -124,6 +116,9 @@ public class MainFrame extends JFrame {
             }
         }
         updateSidebarSelection(currentCard);
+        for (SidebarButton sb : navButtons) {
+            sb.refreshTheme();
+        }
     }
 
     public void showCard(String name) {

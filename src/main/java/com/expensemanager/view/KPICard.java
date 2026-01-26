@@ -4,38 +4,31 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * KPI card per Section 1.2: white background, rounded corners (15), slight drop shadow,
- * icon (left, color-coded), gray title, large bold colored amount.
+ * KPI card extending ModernCard. Section 1.2: 40x40 rounded icon (left), title + value (right).
+ * Expense: red; Income: green; Remaining: blue; Budget Used: purple.
+ * Icons mocked with colored circle and symbol (↓, ↑, ◆, %).
  */
-public class KPICard extends JPanel {
+public class KPICard extends ModernCard {
 
-    private static final int RADIUS = 15;
-    private static final int SHADOW_OFFSET = 3;
-    private static final int PADDING = 12;
     private static final Color TITLE_COLOR = new Color(0x6B7280);
-    private static final Color SHADOW_COLOR = new Color(0, 0, 0, 45);
+    private static final int ICON_SIZE = 40;
+    private static final int VALUE_FONT_SIZE = 20;
 
-    private final JLabel iconLabel;
     private final JLabel titleLabel;
-    private final JLabel amountLabel;
+    private final JLabel valueLabel;
 
     /**
-     * @param title       Gray, small (e.g. "Monthly Expense")
-     * @param amountText  Large bold, colored (e.g. "1.234.567 đ")
-     * @param icon        Symbol: "↓" expense, "↑" income, "◆" remaining, "%" budget
-     * @param iconColor   Red for expense, green for income/positive remaining, etc.
-     * @param amountColor Same logic: red/green by type, or primary for budget
+     * @param title      Gray, small (e.g. "Monthly Expense")
+     * @param valueText  Large bold, colored (e.g. "16,435,000" or "85%")
+     * @param iconChar   Symbol in 40x40: "↓" expense, "↑" income, "◆" remaining, "%" budget
+     * @param iconColor  Background of 40x40: red/green/blue/purple
+     * @param valueColor Value text: #EF4444 expense, #10B981 income, #3B82F6 remaining, purple budget
      */
-    public KPICard(String title, String amountText, String icon, Color iconColor, Color amountColor) {
-        setOpaque(true);
-        setLayout(new BorderLayout(PADDING, 0));
-        setBorder(BorderFactory.createEmptyBorder(PADDING, PADDING, PADDING + SHADOW_OFFSET, PADDING + SHADOW_OFFSET));
+    public KPICard(String title, String valueText, String iconChar, Color iconColor, Color valueColor) {
+        super(null);
+        setLayout(new BorderLayout(12, 0));
 
-        iconLabel = new JLabel(icon);
-        iconLabel.setFont(iconLabel.getFont().deriveFont(22f));
-        iconLabel.setForeground(iconColor);
-        iconLabel.setVerticalAlignment(SwingConstants.TOP);
-        add(iconLabel, BorderLayout.WEST);
+        add(new IconCircle(iconChar, iconColor), BorderLayout.WEST);
 
         JPanel right = new JPanel(new BorderLayout(0, 2));
         right.setOpaque(false);
@@ -43,35 +36,44 @@ public class KPICard extends JPanel {
         titleLabel.setFont(titleLabel.getFont().deriveFont(11f));
         titleLabel.setForeground(TITLE_COLOR);
         right.add(titleLabel, BorderLayout.NORTH);
-        amountLabel = new JLabel(amountText);
-        amountLabel.setFont(amountLabel.getFont().deriveFont(Font.BOLD, 18f));
-        amountLabel.setForeground(amountColor);
-        right.add(amountLabel, BorderLayout.CENTER);
+        valueLabel = new JLabel(valueText);
+        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.BOLD, VALUE_FONT_SIZE));
+        valueLabel.setForeground(valueColor);
+        right.add(valueLabel, BorderLayout.CENTER);
         add(right, BorderLayout.CENTER);
     }
 
-    public void setAmount(String text, Color amountColor) {
-        amountLabel.setText(text);
-        amountLabel.setForeground(amountColor);
+    public void setAmount(String text, Color valueColor) {
+        valueLabel.setText(text);
+        valueLabel.setForeground(valueColor);
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        int w = getWidth();
-        int h = getHeight();
-        int cw = Math.max(0, w - SHADOW_OFFSET);
-        int ch = Math.max(0, h - SHADOW_OFFSET);
+    /** 40x40 rounded (circle) icon with colored background and white symbol. */
+    private static final class IconCircle extends JPanel {
+        private final String symbol;
+        private final Color bgColor;
 
-        // Slight drop shadow: rounded rect offset bottom-right
-        g2.setColor(SHADOW_COLOR);
-        g2.fillRoundRect(SHADOW_OFFSET, SHADOW_OFFSET, cw, ch, RADIUS + 2, RADIUS + 2);
+        IconCircle(String symbol, Color bgColor) {
+            this.symbol = symbol != null && !symbol.isEmpty() ? symbol : "?";
+            this.bgColor = bgColor;
+            setOpaque(false);
+            setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+            setMinimumSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        }
 
-        // White card, rounded corners (radius 15)
-        g2.setColor(Color.WHITE);
-        g2.fillRoundRect(0, 0, cw, ch, RADIUS, RADIUS);
-
-        g2.dispose();
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(bgColor);
+            g2.fillOval(0, 0, ICON_SIZE, ICON_SIZE);
+            g2.setColor(Color.WHITE);
+            g2.setFont(getFont().deriveFont(Font.BOLD, 18f));
+            FontMetrics fm = g2.getFontMetrics();
+            int x = (ICON_SIZE - fm.stringWidth(symbol)) / 2;
+            int y = (ICON_SIZE - fm.getHeight()) / 2 + fm.getAscent();
+            g2.drawString(symbol, x, y);
+            g2.dispose();
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.expensemanager.view;
 
+import com.expensemanager.util.UIFactory;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -18,7 +20,7 @@ public class TransactionsView extends JPanel {
 
         JPanel top = new JPanel(new BorderLayout());
         top.add(controller.getFilterPanel(), BorderLayout.CENTER);
-        JButton addTx = new JButton("+ Add Transaction");
+        JButton addTx = UIFactory.createPrimaryButton("Add Transaction", UIFactory.createPlusIcon());
         addTx.addActionListener(e -> new CreateTransactionDialog(main).setVisible(true));
         top.add(addTx, BorderLayout.EAST);
         add(top, BorderLayout.NORTH);

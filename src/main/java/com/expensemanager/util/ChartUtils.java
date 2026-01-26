@@ -1,0 +1,163 @@
+package com.expensemanager.util;
+
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.chart.ui.RectangleEdge;
+
+import com.expensemanager.view.RoundedBarPainter;
+import org.jfree.data.general.PieDataset;
+
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Chart styling to match Figma: transparent backgrounds, no gridlines, small gray axes,
+ * bar (soft blue, rounded top), donut (thin ring, Section 6.5.2 colors), line (teal, smooth).
+ */
+public final class ChartUtils {
+
+    /** Soft blue for bar chart. */
+    public static final Color SOFT_BLUE = new Color(0x93C5FD);
+    /** Teal for line chart. */
+    public static final Color TEAL = new Color(0x14B8A6);
+    /** Transparent for chart/plot background. */
+    private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+    /** Small gray for tick labels when shown. */
+    private static final Color TICK_LABEL_GRAY = new Color(0x6B7280);
+    private static final Font TICK_LABEL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
+
+    /** Section 6.5.2 ExpenseCategory colors for donut. */
+    private static final Map<String, Color> CATEGORY_COLORS = new HashMap<>();
+    static {
+        CATEGORY_COLORS.put("Food", new Color(0x4F46E5));
+        CATEGORY_COLORS.put("Transport", new Color(0x6366F1));
+        CATEGORY_COLORS.put("Housing", new Color(0x8B5CF6));
+        CATEGORY_COLORS.put("Bills", new Color(0x7C3AED));
+        CATEGORY_COLORS.put("Shopping", new Color(0xEC4899));
+        CATEGORY_COLORS.put("Entertainment", new Color(0xF59E0B));
+        CATEGORY_COLORS.put("Coffee", new Color(0xA16207));
+        CATEGORY_COLORS.put("Healthcare", new Color(0x22C55E));
+        CATEGORY_COLORS.put("Education", new Color(0x0EA5E9));
+        CATEGORY_COLORS.put("Other", new Color(0x6B7280));
+    }
+
+    private ChartUtils() {}
+
+    public static Color getCategoryColor(String name) {
+        return CATEGORY_COLORS.getOrDefault(name, Color.GRAY);
+    }
+
+    /**
+     * General: transparent bg, no outline, no gridlines, hide axis lines, small gray tick labels.
+     */
+    public static void applyGeneral(JFreeChart chart) {
+        chart.setBackgroundPaint(TRANSPARENT);
+        if (chart.getPlot() instanceof CategoryPlot cp) {
+            cp.setBackgroundPaint(TRANSPARENT);
+            cp.setOutlineVisible(false);
+            cp.setDomainGridlinesVisible(false);
+            cp.setRangeGridlinesVisible(false);
+            trySetAxisLineInvisible(cp.getDomainAxis());
+            trySetAxisLineInvisible(cp.getRangeAxis());
+            trySetTickLabelStyle(cp.getDomainAxis());
+            trySetTickLabelStyle(cp.getRangeAxis());
+        } else if (chart.getPlot() instanceof XYPlot xp) {
+            xp.setBackgroundPaint(TRANSPARENT);
+            xp.setOutlineVisible(false);
+            xp.setDomainGridlinesVisible(false);
+            xp.setRangeGridlinesVisible(false);
+            trySetAxisLineInvisible(xp.getDomainAxis());
+            trySetAxisLineInvisible(xp.getRangeAxis());
+            trySetTickLabelStyle(xp.getDomainAxis());
+            trySetTickLabelStyle(xp.getRangeAxis());
+        } else if (chart.getPlot() instanceof PiePlot) {
+            // Pie/Ring: plot-level only
+            chart.getPlot().setBackgroundPaint(TRANSPARENT);
+            chart.getPlot().setOutlineVisible(false);
+        }
+    }
+
+    private static void trySetAxisLineInvisible(org.jfree.chart.axis.Axis axis) {
+        if (axis == null) return;
+        try {
+            axis.setAxisLinePaint(TRANSPARENT);
+        } catch (Exception ignored) {}
+    }
+
+    private static void trySetTickLabelStyle(org.jfree.chart.axis.Axis axis) {
+        if (axis == null) return;
+        try {
+            axis.setTickLabelFont(TICK_LABEL_FONT);
+            axis.setTickLabelPaint(TICK_LABEL_GRAY);
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * Bar chart: rounded top corners, Soft Blue, no Y-axis values.
+     */
+    public static void applyBarChart(JFreeChart chart) {
+        applyGeneral(chart);
+        if (!(chart.getPlot() instanceof CategoryPlot cp)) return;
+        BarRenderer r = (BarRenderer) cp.getRenderer();
+        r.setBarPainter(new RoundedBarPainter());
+        r.setShadowVisible(false);
+        r.setSeriesPaint(0, SOFT_BLUE);
+        try {
+            if (cp.getRangeAxis() != null) cp.getRangeAxis().setTickLabelsVisible(false);
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * Donut: thin ring (interior gap 0.5), no shadow, no section outline, 6.5.2 colors, legend right, no border.
+     */
+    public static void applyDonutChart(JFreeChart chart, PieDataset dataset) {
+        applyGeneral(chart);
+        if (!(chart.getPlot() instanceof PiePlot pp)) return;
+        pp.setCircular(true);
+        pp.setInteriorGap(0.40);
+        pp.setBackgroundPaint(TRANSPARENT);
+        pp.setOutlineVisible(false);
+        pp.setShadowPaint(null);
+        try { pp.setShadowGenerator(null); } catch (Exception ignored) {}
+        pp.setSectionOutlinesVisible(false);
+        for (Object key : dataset.getKeys()) {
+            String name = key.toString();
+            pp.setSectionPaint((Comparable<?>) key, getCategoryColor(name));
+        }
+        if (chart.getLegend() != null) {
+            chart.getLegend().setPosition(RectangleEdge.RIGHT);
+            try { chart.getLegend().setFrame((org.jfree.chart.block.BlockFrame) null); } catch (Exception ignored) {}
+        }
+    }
+
+    /**
+     * Line chart: XYSplineRenderer, teal, no shapes (dots).
+     */
+    public static void applyLineChart(JFreeChart chart) {
+        applyGeneral(chart);
+        if (!(chart.getPlot() instanceof XYPlot xp)) return;
+        XYSplineRenderer r = new XYSplineRenderer();
+        r.setSeriesPaint(0, TEAL);
+        r.setSeriesShapesVisible(0, false);
+        r.setSeriesLinesVisible(0, true);
+        xp.setRenderer(r);
+        if (xp.getDomainAxis() != null) xp.getDomainAxis().setVisible(false);
+        if (xp.getRangeAxis() != null) xp.getRangeAxis().setVisible(false);
+    }
+
+    /**
+     * ChartPanel with transparent background for use inside ModernCard.
+     */
+    public static ChartPanel createChartPanel(JFreeChart chart) {
+        ChartPanel cp = new ChartPanel(chart, 280, 180, 80, 80, 1024, 768, true, true, true, true, true, true);
+        cp.setBackground(TRANSPARENT);
+        cp.setOpaque(false);
+        return cp;
+    }
+}

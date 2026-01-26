@@ -1,48 +1,69 @@
 package com.expensemanager.view;
 
+import com.expensemanager.util.UIFactory;
+
+import net.miginfocom.swing.MigLayout;
+
 import javax.swing.*;
 import java.awt.*;
 
 /**
- * Dashboard - Section 1. Month selector, 4 KPI cards, Last 7 Days, By Category, Monthly Cashflow, Budget Warnings, Add Transaction.
+ * Dashboard - Material Design. Main bg #F3F4F6. Responsive MigLayout: KPI (4 equal), charts (35-30-35), Budget Warnings.
+ * Insets 20px, gap 15px. All cards grow and fill. Content tracks viewport width to avoid white space on the right.
  */
 public class DashboardView extends JPanel {
+    private static final Color MAIN_BG = new Color(0xF3F4F6);
+    private static final int INSETS = 20;
+    private static final int GAP = 15;
+
     private final MainFrame main;
     private final DashboardController controller;
 
     public DashboardView(MainFrame main) {
         this.main = main;
         this.controller = new DashboardController(this);
-        setLayout(new BorderLayout(12, 12));
-        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        setBackground(MAIN_BG);
+        setLayout(new BorderLayout(GAP, GAP));
+        setBorder(BorderFactory.createEmptyBorder(INSETS, INSETS, INSETS, INSETS));
 
         JPanel top = new JPanel(new BorderLayout());
+        top.setBackground(MAIN_BG);
         top.add(controller.getMonthSelectorPanel(), BorderLayout.CENTER);
-        JButton addTx = new JButton("+ Add Transaction");
+        JButton addTx = UIFactory.createPrimaryButton("Add Transaction", UIFactory.createPlusIcon());
         addTx.addActionListener(e -> new CreateTransactionDialog(main).setVisible(true));
         top.add(addTx, BorderLayout.EAST);
         add(top, BorderLayout.NORTH);
 
-        JPanel kpi = controller.getKpiCardsPanel();
-        add(kpi, BorderLayout.CENTER);
+        // MigLayout: 4 cols [grow,fill] equal; rows: KPI (min), charts (grow), Budget (min). Gap 15. All grow/push.
+        JPanel content = new ScrollableContentPanel(new MigLayout(
+                "ins 0, gap " + GAP + " " + GAP,
+                "[grow,fill][grow,fill][grow,fill][grow,fill]",
+                "[] [grow] []"
+        ));
+        content.setBackground(MAIN_BG);
+        content.add(controller.getKpiCardsPanel(), "span 4, growx, pushx, wrap");
+        content.add(controller.getChartsPanel(), "span 4, growx, pushx, growy, wrap");
+        content.add(controller.getBudgetWarningsPanel(), "span 4, growx, pushx");
 
-        // Placeholder for charts + budget warnings - will be in a scroll or grid
-        JPanel content = new JPanel();
-        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.add(controller.getChartsPanel());
-        content.add(controller.getBudgetWarningsPanel());
         JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        scroll.getViewport().setBackground(MAIN_BG);
         add(scroll, BorderLayout.CENTER);
+    }
 
-        // Re-layout: we had KPI in center and then overwrote with scroll. Fix: put KPI above scroll.
-        removeAll();
-        setLayout(new BorderLayout(12, 12));
-        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-        add(top, BorderLayout.NORTH);
-        JPanel upper = new JPanel(new BorderLayout());
-        upper.add(kpi, BorderLayout.NORTH);
-        upper.add(scroll, BorderLayout.CENTER);
-        add(upper, BorderLayout.CENTER);
+    /**
+     * JPanel that implements Scrollable so the content tracks viewport width (no white space on the right).
+     */
+    private static final class ScrollableContentPanel extends JPanel implements Scrollable {
+        ScrollableContentPanel(MigLayout layout) { super(layout); }
+
+        @Override public boolean getScrollableTracksViewportWidth() { return true; }
+        @Override public boolean getScrollableTracksViewportHeight() { return false; }
+        @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+        @Override public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 16; }
+        @Override public int getScrollableBlockIncrement(Rectangle r, int o, int d) {
+            return (o == SwingConstants.HORIZONTAL) ? r.width : r.height;
+        }
     }
 
     void onShown() { refresh(); }
