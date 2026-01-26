@@ -13,7 +13,7 @@ import java.awt.*;
 public class KPICard extends ModernCard {
 
     private static final Color TITLE_COLOR = new Color(0x6B7280);
-    private static final int ICON_SIZE = 32;
+    private static final int ICON_SIZE = 16; // Changed from 32 to 16 to fix pixelation
     private static final int TITLE_FONT_SIZE = 20;
     private static final int VALUE_FONT_SIZE = 32;
 
@@ -56,9 +56,9 @@ public class KPICard extends ModernCard {
         row1.add(titleLabel, "align left, aligny center");
         add(row1, "wrap");
 
-        // Row 2 (Value Row): Big Value Number (32px Bold) - strictly below title, no text wrapping
+        // Row 2 (Value Row): Big Value Number (32px Plain) - strictly below title, no text wrapping
         valueLabel = new JLabel(valueText);
-        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.BOLD, VALUE_FONT_SIZE)); // 32px Bold
+        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.PLAIN, VALUE_FONT_SIZE)); // 32px Plain (not bold)
         valueLabel.setForeground(valueColor);
         valueLabel.setHorizontalAlignment(SwingConstants.LEFT);
         // Prevent text wrapping - expand card width if necessary

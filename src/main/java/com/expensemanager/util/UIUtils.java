@@ -15,7 +15,7 @@ public final class UIUtils {
     public static final int COLOR_PRIMARY = 0x4F46E5;
 
     /** Light: main panel background. */
-    public static final int COLOR_MAIN_BG_LIGHT = 0xF3F4F6;
+    public static final int COLOR_MAIN_BG_LIGHT = 0xFFFFFF; // Changed from gray to white
     /** Light: content cards. */
     public static final int COLOR_CARD_BG_LIGHT = 0xFFFFFF;
     /** Light: sidebar background. */
