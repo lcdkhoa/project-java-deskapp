@@ -1,7 +1,7 @@
 com\expensemanager\dao\TransactionDAO.class
+com\expensemanager\view\BudgetCategoryCard$1.class
 com\expensemanager\model\User.class
 com\expensemanager\view\MainFrame.class
-com\expensemanager\view\TransactionsController$2.class
 com\expensemanager\view\BudgetView.class
 com\expensemanager\view\CreateTransactionDialog$CategoryItem.class
 com\expensemanager\model\Transaction.class
@@ -14,17 +14,22 @@ com\expensemanager\view\AddBudgetDialog.class
 com\expensemanager\db\Schema.class
 com\expensemanager\util\MonthKeyUtil.class
 com\expensemanager\view\AnalyticsView.class
+com\expensemanager\util\UIUtils.class
 com\expensemanager\dao\UserDAO.class
 com\expensemanager\db\SeedData.class
 com\expensemanager\dao\CategoryDAO.class
 com\expensemanager\view\TransactionsView.class
 com\expensemanager\view\DashboardController$2.class
 com\expensemanager\view\DashboardView.class
+com\expensemanager\view\KPICard.class
 com\expensemanager\view\BudgetController.class
+com\expensemanager\view\RoundedBarPainter.class
 com\expensemanager\FlatLaf.class
 com\expensemanager\AppContext.class
+com\expensemanager\view\BudgetProgressBar.class
 com\expensemanager\view\CreateTransactionDialog.class
 com\expensemanager\util\DateUtil.class
+com\expensemanager\view\BudgetCategoryCard.class
 com\expensemanager\model\Budget.class
 com\expensemanager\view\AnalyticsController.class
 com\expensemanager\db\DatabaseConnection.class
@@ -34,3 +39,5 @@ com\expensemanager\view\DashboardController.class
 com\expensemanager\view\TransactionsController.class
 com\expensemanager\dao\BudgetDAO$BudgetUsedRow.class
 com\expensemanager\model\Category.class
+com\expensemanager\view\TransactionRowPanel$1.class
+com\expensemanager\view\TransactionRowPanel.class

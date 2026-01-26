@@ -5,7 +5,6 @@ import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.dao.TransactionDAO;
 import com.expensemanager.db.DatabaseConnection;
-import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.util.MonthKeyUtil;
@@ -16,7 +15,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.YearMonth;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,7 +49,6 @@ public class BudgetController {
             long totalBudget = bDao.getTotalBudget(conn, userId, monthKey);
             long totalSpent = Math.abs(txDao.getMonthlyExpense(conn, userId, monthKey));
             long remaining = totalBudget - totalSpent;
-            double pct = totalBudget > 0 ? totalSpent * 100.0 / totalBudget : 0;
 
             JPanel overview = new JPanel(new GridLayout(1, 3, 12, 0));
             overview.add(box("Total Budget", CurrencyUtil.format(totalBudget)));
@@ -61,11 +58,26 @@ public class BudgetController {
 
             JPanel byCat = new JPanel();
             byCat.setLayout(new BoxLayout(byCat, BoxLayout.Y_AXIS));
-            byCat.add(new JLabel("Budget by Category"));
-            Map<String, String> idToName = new HashMap<>();
-            for (Category c : cDao.findAll(conn)) idToName.put(c.getId(), c.getIcon() + " " + c.getName());
+            byCat.setBackground(new Color(0xF3F4F6));
+            byCat.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+            JLabel sectionTitle = new JLabel("Budget by Category");
+            sectionTitle.setFont(sectionTitle.getFont().deriveFont(Font.BOLD, 14f));
+            sectionTitle.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
+            sectionTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+            byCat.add(sectionTitle);
+
+            Map<String, Category> idToCat = new HashMap<>();
+            for (Category c : cDao.findAll(conn)) idToCat.put(c.getId(), c);
+
             for (BudgetDAO.BudgetUsedRow r : bDao.getBudgetUsedPerCategory(conn, userId, monthKey)) {
-                byCat.add(new JLabel(idToName.getOrDefault(r.categoryId, r.categoryId) + "  " + CurrencyUtil.format(r.spent) + " / " + CurrencyUtil.format(r.budget) + "  " + String.format("%.0f%%", r.percentUsed)));
+                Category cat = idToCat.get(r.categoryId);
+                String icon = cat != null ? cat.getIcon() : "•";
+                Color iconColor = parseColor(cat != null ? cat.getColor() : null);
+                String name = cat != null ? cat.getName() : r.categoryId;
+                BudgetCategoryCard card = new BudgetCategoryCard(icon, iconColor, name, r.spent, r.budget, r.percentUsed);
+                card.setAlignmentX(Component.LEFT_ALIGNMENT);
+                byCat.add(card);
+                byCat.add(Box.createVerticalStrut(10));
             }
             contentPanel.add(new JScrollPane(byCat), BorderLayout.CENTER);
         } catch (SQLException ex) {
@@ -80,5 +92,15 @@ public class BudgetController {
         p.setBorder(BorderFactory.createTitledBorder(title));
         p.add(new JLabel(value), BorderLayout.CENTER);
         return p;
+    }
+
+    private static Color parseColor(String hex) {
+        if (hex == null || hex.isBlank()) return new Color(0x9CA3AF);
+        if (!hex.startsWith("#")) hex = "#" + hex;
+        try {
+            return Color.decode(hex);
+        } catch (Exception e) {
+            return new Color(0x9CA3AF);
+        }
     }
 }

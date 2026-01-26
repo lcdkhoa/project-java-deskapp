@@ -1,11 +1,16 @@
+D:\project_java_desk_app\src\main\java\com\expensemanager\view\RoundedBarPainter.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\dao\TransactionDAO.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\FlatLaf.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\model\User.java
+D:\project_java_desk_app\src\main\java\com\expensemanager\util\UIUtils.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\view\AnalyticsView.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\util\DateUtil.java
+D:\project_java_desk_app\src\main\java\com\expensemanager\view\BudgetCategoryCard.java
+D:\project_java_desk_app\src\main\java\com\expensemanager\view\BudgetProgressBar.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\dao\CategoryDAO.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\db\Schema.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\model\Category.java
+D:\project_java_desk_app\src\main\java\com\expensemanager\view\KPICard.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\view\TransactionsController.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\view\BudgetView.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\util\CurrencyUtil.java
@@ -19,6 +24,7 @@ D:\project_java_desk_app\src\main\java\com\expensemanager\db\SeedData.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\model\Budget.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\db\DatabaseConnection.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\util\MonthKeyUtil.java
+D:\project_java_desk_app\src\main\java\com\expensemanager\view\TransactionRowPanel.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\view\AnalyticsController.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\view\MainFrame.java
 D:\project_java_desk_app\src\main\java\com\expensemanager\view\BudgetController.java

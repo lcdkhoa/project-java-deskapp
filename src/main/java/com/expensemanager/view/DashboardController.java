@@ -15,7 +15,7 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.xy.XYSeries;
@@ -144,31 +144,44 @@ public class DashboardController {
         }
     }
 
+    // Section 1.2: Expense red, Income green, Remaining red/green by value, Budget Used indigo or gray
+    private static final Color RED = new Color(0xB91C1C);
+    private static final Color GREEN = new Color(0x16A34A);
+    private static final Color INDIGO = new Color(0x4F46E5);
+
+    // Section 6.5.2: Expense category colors for donut
+    private static final Map<String, Color> CATEGORY_COLORS = new HashMap<>();
+    static {
+        CATEGORY_COLORS.put("Food", new Color(0x4F46E5));
+        CATEGORY_COLORS.put("Transport", new Color(0x6366F1));
+        CATEGORY_COLORS.put("Housing", new Color(0x8B5CF6));
+        CATEGORY_COLORS.put("Bills", new Color(0x7C3AED));
+        CATEGORY_COLORS.put("Shopping", new Color(0xEC4899));
+        CATEGORY_COLORS.put("Entertainment", new Color(0xF59E0B));
+        CATEGORY_COLORS.put("Coffee", new Color(0xA16207));
+        CATEGORY_COLORS.put("Healthcare", new Color(0x22C55E));
+        CATEGORY_COLORS.put("Education", new Color(0x0EA5E9));
+        CATEGORY_COLORS.put("Other", new Color(0x6B7280));
+    }
+
+    private static final Color SOFT_BLUE = new Color(0x93C5FD);
+    private static final Color TEAL = new Color(0x14B8A6);
+
     private void refreshKpi(long expense, long income, long remaining, double budgetUsedPct, long totalBudget) {
         JPanel p = getKpiCardsPanel();
         p.removeAll();
         p.setLayout(new GridLayout(1, 4, 12, 0));
-        p.add(kpiCard("Monthly Expense", "↓ " + CurrencyUtil.format(Math.abs(expense)), new Color(0xB91C1C)));
-        p.add(kpiCard("Monthly Income", "↑ " + CurrencyUtil.format(income), new Color(0x16A34A)));
-        p.add(kpiCard("Remaining", CurrencyUtil.format(remaining), remaining < 0 ? new Color(0xB91C1C) : new Color(0x16A34A)));
+        p.add(new KPICard("Monthly Expense", CurrencyUtil.format(Math.abs(expense)), "↓", RED, RED));
+        p.add(new KPICard("Monthly Income", CurrencyUtil.format(income), "↑", GREEN, GREEN));
+        boolean remainingNeg = remaining < 0;
+        p.add(new KPICard("Remaining", CurrencyUtil.format(remaining), "◆", remainingNeg ? RED : GREEN, remainingNeg ? RED : GREEN));
         if (!Double.isNaN(budgetUsedPct)) {
-            p.add(kpiCard("Budget Used", String.format("%.0f%%", budgetUsedPct), new Color(0x4F46E5)));
+            p.add(new KPICard("Budget Used", String.format("%.0f%%", budgetUsedPct), "%", INDIGO, INDIGO));
         } else {
-            p.add(kpiCard("Budget Used", "-", Color.GRAY));
+            p.add(new KPICard("Budget Used", "-", "%", Color.GRAY, Color.GRAY));
         }
         p.revalidate();
         p.repaint();
-    }
-
-    private JPanel kpiCard(String title, String value, Color accent) {
-        JPanel c = new JPanel(new BorderLayout(8, 8));
-        c.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(accent, 2), BorderFactory.createEmptyBorder(12, 12, 12, 12)));
-        c.add(new JLabel(title), BorderLayout.NORTH);
-        JLabel v = new JLabel(value);
-        v.setFont(v.getFont().deriveFont(18f));
-        v.setForeground(accent);
-        c.add(v, BorderLayout.CENTER);
-        return c;
     }
 
     private void refreshCharts(Connection conn, String userId, String monthKey, TransactionDAO txDao, BudgetDAO bDao, CategoryDAO cDao) throws SQLException {
@@ -176,7 +189,7 @@ public class DashboardController {
         p.removeAll();
         p.setLayout(new GridLayout(1, 3, 12, 12));
 
-        // Last 7 Days
+        // Last 7 Days (Section 1.3: no axes, bar bo tròn, soft blue)
         LocalDate lastDay = currentMonth.atEndOfMonth();
         LocalDate start = lastDay.minusDays(6);
         if (start.getMonthValue() != currentMonth.getMonthValue()) start = currentMonth.atDay(1);
@@ -187,9 +200,18 @@ public class DashboardController {
         }
         JFreeChart bar = ChartFactory.createBarChart("Last 7 Days Spending", null, "Amount", barSet);
         bar.removeLegend();
+        bar.setBackgroundPaint(Color.WHITE);
         CategoryPlot barPlot = bar.getCategoryPlot();
+        barPlot.setBackgroundPaint(Color.WHITE);
+        barPlot.setOutlineVisible(false);
+        barPlot.setDomainGridlinesVisible(false);
+        barPlot.setRangeGridlinesVisible(false);
         barPlot.getDomainAxis().setVisible(false);
-        ((BarRenderer)barPlot.getRenderer()).setBarPainter(new org.jfree.chart.renderer.category.StandardBarPainter());
+        barPlot.getRangeAxis().setVisible(false);
+        BarRenderer barR = (BarRenderer) barPlot.getRenderer();
+        barR.setBarPainter(new RoundedBarPainter());
+        barR.setShadowVisible(false);
+        barR.setSeriesPaint(0, SOFT_BLUE);
         p.add(new ChartPanel(bar, 280, 180, 80, 80, 1024, 768, true, true, true, true, true, true));
 
         // By Category (Donut) - max 6, rest in Other
@@ -211,11 +233,19 @@ public class DashboardController {
         }
         if (otherSum > 0) pieSet.setValue("Other", otherSum);
         JFreeChart pie = ChartFactory.createPieChart("By Category", pieSet, false, true, false);
-        ((PiePlot)pie.getPlot()).setCircular(true);
-        ((PiePlot)pie.getPlot()).setInteriorGap(0.35); // donut
+        pie.setBackgroundPaint(Color.WHITE);
+        PiePlot piePlot = (PiePlot) pie.getPlot();
+        piePlot.setCircular(true);
+        piePlot.setInteriorGap(0.40);
+        piePlot.setBackgroundPaint(Color.WHITE);
+        piePlot.setOutlineVisible(false);
+        for (Object key : pieSet.getKeys()) {
+            String name = key.toString();
+            piePlot.setSectionPaint((Comparable<?>) key, CATEGORY_COLORS.getOrDefault(name, Color.GRAY));
+        }
         p.add(new ChartPanel(pie, 280, 180, 80, 80, 1024, 768, true, true, true, true, true, true));
 
-        // Monthly Cashflow (Line)
+        // Monthly Cashflow (Line): smooth spline, no dots, teal, no axes/grid (Section 1.5)
         Map<LocalDate, Long> cf = txDao.getCashflowByDay(conn, userId, monthKey);
         XYSeries series = new XYSeries("Cashflow");
         int days = currentMonth.lengthOfMonth();
@@ -225,12 +255,19 @@ public class DashboardController {
         }
         JFreeChart line = ChartFactory.createXYLineChart("Monthly Cashflow", "Day", "Amount", new XYSeriesCollection(series));
         line.removeLegend();
+        line.setBackgroundPaint(Color.WHITE);
         XYPlot xyPlot = line.getXYPlot();
+        xyPlot.setBackgroundPaint(Color.WHITE);
+        xyPlot.setOutlineVisible(false);
+        xyPlot.setDomainGridlinesVisible(false);
+        xyPlot.setRangeGridlinesVisible(false);
         xyPlot.getDomainAxis().setVisible(false);
-        xyPlot.setBackgroundPaint(null);
-        XYLineAndShapeRenderer r = (XYLineAndShapeRenderer) xyPlot.getRenderer();
-        r.setSeriesShapesVisible(0, true);
-        r.setSeriesLinesVisible(0, true);
+        xyPlot.getRangeAxis().setVisible(false);
+        XYSplineRenderer splineR = new XYSplineRenderer();
+        splineR.setSeriesPaint(0, TEAL);
+        splineR.setSeriesShapesVisible(0, false);
+        splineR.setSeriesLinesVisible(0, true);
+        xyPlot.setRenderer(splineR);
         p.add(new ChartPanel(line, 280, 180, 80, 80, 1024, 768, true, true, true, true, true, true));
 
         p.revalidate();
