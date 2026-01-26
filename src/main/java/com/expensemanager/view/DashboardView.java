@@ -11,7 +11,8 @@ import java.awt.*;
  * Dashboard - Figma layout: MigLayout wrap 1, insets 0.
  * Row 1: Header (White) Title + Add Transaction.
  * Row 2: Date Selector (transparent row, white rounded card, arc 20).
- * Row 3: KPI cards. Row 4: Charts (growy, pushy to fill). Row 5: Budget Warning (South).
+ * Row 3: KPI cards. Row 4: Charts (growy, pushy to fill). Row 5: Budget Warning
+ * (South).
  * Light mode only. Main BG White (Color.WHITE).
  */
 public class DashboardView extends JPanel {
@@ -31,8 +32,9 @@ public class DashboardView extends JPanel {
         this.controller = new DashboardController(this);
         setBackground(MAIN_BG);
         setOpaque(true); // Ensure panel is opaque to show white background
-        setLayout(new MigLayout("ins 0, wrap 1, gap " + CARD_GAP + " " + CARD_GAP, "[grow,fill]", "[] [][][grow,fill] []"));
-        
+        setLayout(new MigLayout("ins 0, wrap 1, gap " + CARD_GAP + " " + CARD_GAP, "[grow,fill]",
+                "[] [][][grow,fill] []"));
+
         // Ensure any parent ScrollPane viewport also has white background
         addHierarchyListener(e -> {
             Component parent = getParent();
@@ -122,8 +124,15 @@ public class DashboardView extends JPanel {
         }
     }
 
-    void onShown() { refresh(); }
-    void refresh() { controller.refresh(); }
+    void onShown() {
+        refresh();
+    }
 
-    MainFrame getMain() { return main; }
+    void refresh() {
+        controller.refresh();
+    }
+
+    MainFrame getMain() {
+        return main;
+    }
 }

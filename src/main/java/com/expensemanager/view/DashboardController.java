@@ -155,7 +155,8 @@ public class DashboardController {
 
     private JPanel buildKpiPanel() {
         // 4 columns [grow,fill] equal width, gap 20
-        JPanel panel = new JPanel(new MigLayout("ins 0, gap 20 0", "[grow,fill][grow,fill][grow,fill][grow,fill]", "[]"));
+        JPanel panel = new JPanel(
+                new MigLayout("ins 0, gap 20 0", "[grow,fill][grow,fill][grow,fill][grow,fill]", "[]"));
         panel.setBackground(Color.WHITE);
         panel.setOpaque(true);
         return panel;
@@ -258,12 +259,13 @@ public class DashboardController {
         Map<String, LocalDate> dateLabelToDate = new HashMap<>();
         for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
             long value = byDate.getOrDefault(d, 0L);
-            if (value > 0) hasData = true;
+            if (value > 0)
+                hasData = true;
             String dateLabel = d.getDayOfMonth() + "/" + d.getMonthValue();
             dateLabelToDate.put(dateLabel, d);
             barSet.addValue(value, "Expense", dateLabel);
         }
-        
+
         JPanel barCard = new ModernCard();
         if (!hasData) {
             // Show "No expense data" message
@@ -277,11 +279,11 @@ public class DashboardController {
             applyChartTitleStyle(bar, "Last 7 Days Spending");
             bar.removeLegend();
             ChartUtils.applyBarChart(bar);
-            
+
             // Set custom tooltip generator for bar chart with date mapping
             org.jfree.chart.plot.CategoryPlot barPlot = bar.getCategoryPlot();
             barPlot.getRenderer().setDefaultToolTipGenerator(new Last7DaysToolTipGenerator(dateLabelToDate));
-            
+
             ChartPanel barPanel = ChartUtils.createChartPanel(bar);
             barPanel.setDisplayToolTips(true);
             barCard.add(barPanel, BorderLayout.CENTER);
@@ -301,11 +303,12 @@ public class DashboardController {
         for (int i = 1; i <= days; i++) {
             LocalDate d = currentMonth.atDay(i);
             long value = cf.getOrDefault(d, 0L);
-            if (value != 0) hasCashflowData = true;
+            if (value != 0)
+                hasCashflowData = true;
             // Divide by 1000 to reduce chart height (1 unit = 1000)
             series.add(i, value / 1000.0);
         }
-        
+
         JPanel lineCard = new ModernCard();
         if (!hasCashflowData) {
             // Show "No expense data" message
@@ -320,17 +323,18 @@ public class DashboardController {
             applyChartTitleStyle(line, "Monthly Cashflow");
             line.removeLegend();
             ChartUtils.applyLineChart(line);
-            
+
             // Set custom tooltip generator for line chart
             XYPlot linePlot = (XYPlot) line.getPlot();
             linePlot.getRenderer().setDefaultToolTipGenerator(new MonthlyCashflowToolTipGenerator(currentMonth));
-            
+
             // Increase stroke width to make line thicker
             if (linePlot.getRenderer() instanceof org.jfree.chart.renderer.xy.XYSplineRenderer) {
-                org.jfree.chart.renderer.xy.XYSplineRenderer renderer = (org.jfree.chart.renderer.xy.XYSplineRenderer) linePlot.getRenderer();
+                org.jfree.chart.renderer.xy.XYSplineRenderer renderer = (org.jfree.chart.renderer.xy.XYSplineRenderer) linePlot
+                        .getRenderer();
                 renderer.setSeriesStroke(0, new BasicStroke(3.0f)); // Thicker line (was default ~1.0f)
             }
-            
+
             ChartPanel linePanel = ChartUtils.createChartPanel(line);
             linePanel.setDisplayToolTips(true);
             lineCard.add(linePanel, BorderLayout.CENTER);
@@ -463,7 +467,8 @@ public class DashboardController {
     }
 
     /**
-     * Create custom legend panel showing only categories with expense > 0, with colored dots, names,
+     * Create custom legend panel showing only categories with expense > 0, with
+     * colored dots, names,
      * and amounts. Layout: GridLayout with 2 columns.
      */
     private JPanel createCategoryLegendPanel(List<Category> categories, Map<String, Long> expenses,
@@ -476,7 +481,7 @@ public class DashboardController {
                 categoriesWithExpense.add(cat);
             }
         }
-        
+
         // Use GridLayout(0, 2, 10, 10) for 2 columns with 10px gaps
         JPanel legend = new JPanel(new GridLayout(0, 2, 10, 10));
         legend.setOpaque(false);
@@ -569,25 +574,27 @@ public class DashboardController {
 
     /**
      * Custom tooltip generator for Last 7 Days Spending bar chart.
-     * Format: HTML with Date on line 1 (Today/Yesterday/mmm-dd), Amount on line 2 (plain, 14px).
+     * Format: HTML with Date on line 1 (Today/Yesterday/mmm-dd), Amount on line 2
+     * (plain, 14px).
      */
     private static class Last7DaysToolTipGenerator implements org.jfree.chart.labels.CategoryToolTipGenerator {
         private final Map<String, LocalDate> dateLabelToDate;
-        
+
         Last7DaysToolTipGenerator(Map<String, LocalDate> dateLabelToDate) {
             this.dateLabelToDate = dateLabelToDate;
         }
-        
+
         @Override
         public String generateToolTip(CategoryDataset dataset, int row, int column) {
             Comparable<?> categoryKey = dataset.getColumnKey(column);
             Number value = dataset.getValue(row, column);
-            if (value == null) return "";
-            
+            if (value == null)
+                return "";
+
             String dateLabel = categoryKey.toString();
             LocalDate date = dateLabelToDate.get(dateLabel);
             String dateStr;
-            
+
             if (date != null) {
                 LocalDate today = LocalDate.now();
                 if (date.equals(today)) {
@@ -596,15 +603,16 @@ public class DashboardController {
                     dateStr = "Yesterday";
                 } else {
                     // Format: mmm-dd (e.g., "Dec-17", "Jan-26")
-                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("MMM-dd");
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
+                            .ofPattern("MMM-dd");
                     dateStr = date.format(formatter);
                 }
             } else {
                 dateStr = dateLabel;
             }
-            
+
             String amountStr = CurrencyUtil.formatNoSymbol(value.longValue());
-            
+
             return String.format(
                     "<html><center><span style='color:#3B82F6'>%s</span><br/><span style='font-size:14px; font-weight:normal; color:#3B82F6'>%s đ</span></center></html>",
                     dateStr, amountStr);
@@ -626,15 +634,16 @@ public class DashboardController {
         public String generateToolTip(org.jfree.data.xy.XYDataset dataset, int series, int item) {
             Number xValue = dataset.getX(series, item);
             Number yValue = dataset.getY(series, item);
-            if (xValue == null || yValue == null) return "";
-            
+            if (xValue == null || yValue == null)
+                return "";
+
             int dayOfMonth = xValue.intValue();
             LocalDate date = month.atDay(dayOfMonth);
             String dateStr = String.format("%02d/%02d", date.getDayOfMonth(), date.getMonthValue());
             // Multiply by 1000 since values were divided by 1000 for display
-            long actualValue = (long)(yValue.doubleValue() * 1000);
+            long actualValue = (long) (yValue.doubleValue() * 1000);
             String amountStr = CurrencyUtil.formatNoSymbol(actualValue);
-            
+
             return String.format(
                     "<html><center>%s<br/><span style='font-size:14px; font-weight:normal'>%s đ</span></center></html>",
                     dateStr, amountStr);
@@ -642,7 +651,8 @@ public class DashboardController {
     }
 
     /**
-     * Apply standardized chart title styling: center aligned, 24px PLAIN font, padding.
+     * Apply standardized chart title styling: center aligned, 24px PLAIN font,
+     * padding.
      */
     private void applyChartTitleStyle(JFreeChart chart, String title) {
         TextTitle textTitle = new TextTitle(title);

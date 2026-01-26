@@ -54,7 +54,9 @@ public class MainFrame extends JFrame {
         northPanel = new JPanel(new BorderLayout());
         JLabel title = new JLabel("Expense Manager");
         title.setFont(title.getFont().deriveFont(18f));
-        northPanel.add(title, BorderLayout.WEST);
+        title.setHorizontalAlignment(SwingConstants.LEFT);
+        title.setBorder(BorderFactory.createEmptyBorder(20, 20, 0, 0));
+        northPanel.add(title, BorderLayout.CENTER);
         add(northPanel, BorderLayout.NORTH);
 
         // MigLayout: wrap 1, insets 20 10 20 10, gapy 15
@@ -99,14 +101,14 @@ public class MainFrame extends JFrame {
         // Load icon from imgs/menu/ folder with mapping
         String iconPath = "imgs/menu/" + getIconFileName(card);
         ImageIcon icon = UIUtils.getIcon(iconPath, 20, 20);
-        
+
         SidebarButton b = new SidebarButton(card, label, icon);
         b.addActionListener(e -> showCard(card));
         navGroup.add(b);
         navButtons.add(b);
         return b;
     }
-    
+
     /**
      * Maps card name to icon file name.
      */
