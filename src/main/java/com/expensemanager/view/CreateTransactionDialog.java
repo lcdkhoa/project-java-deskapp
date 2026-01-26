@@ -651,6 +651,30 @@ public class CreateTransactionDialog extends JDialog {
                 categoryOrder = new String[] { "Salary", "Freelance", "Affiliate", "Selling", "Other Income" };
             }
 
+            // Count valid categories
+            int validCategoryCount = 0;
+            for (String catName : categoryOrder) {
+                Category category = list.stream()
+                        .filter(c -> c.getName().equals(catName))
+                        .findFirst()
+                        .orElse(null);
+                if (category != null) {
+                    validCategoryCount++;
+                }
+            }
+
+            // Calculate number of rows needed (3 columns per row)
+            int rows = (int) Math.ceil(validCategoryCount / 3.0);
+            if (rows == 0) rows = 1; // At least 1 row
+
+            // Update categoryGridPanel layout with dynamic row count
+            StringBuilder rowConstraints = new StringBuilder();
+            for (int i = 0; i < rows; i++) {
+                if (i > 0) rowConstraints.append(" ");
+                rowConstraints.append("[75!]");
+            }
+            categoryGridPanel.setLayout(new MigLayout("ins 0, gap 10 10", "[140!][140!][140!]", rowConstraints.toString()));
+
             int index = 0;
             for (String catName : categoryOrder) {
                 Category category = list.stream()
