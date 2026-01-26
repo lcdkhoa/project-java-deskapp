@@ -59,7 +59,10 @@ public class DashboardView extends JPanel {
         add(controller.getKpiCardsPanel(), "growx, wrap");
 
         // Row 4 (Charts): growy, pushy to fill and touch Budget Warning
-        add(controller.getChartsPanel(), "growx, growy, pushy, wrap");
+        // Set minimum height to force scrolling
+        JPanel chartsPanel = controller.getChartsPanel();
+        chartsPanel.setMinimumSize(new Dimension(0, 600)); // Minimum height to force scrollbar
+        add(chartsPanel, "growx, growy, pushy, wrap");
 
         // Row 5 (Footer): Budget Warning at bottom
         add(controller.getBudgetWarningsPanel(), "growx");

@@ -73,7 +73,19 @@ public class MainFrame extends JFrame {
     private JPanel createCardWrapper(JComponent view) {
         JPanel p = new JPanel(new BorderLayout());
         p.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-        p.add(view, BorderLayout.CENTER);
+        
+        // Wrap DashboardView in JScrollPane with specific styling
+        if (view instanceof DashboardView) {
+            JScrollPane scrollPane = new JScrollPane(view);
+            scrollPane.setBorder(null);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.getViewport().setBackground(Color.WHITE);
+            scrollPane.getViewport().setOpaque(true);
+            p.add(scrollPane, BorderLayout.CENTER);
+        } else {
+            p.add(view, BorderLayout.CENTER);
+        }
+        
         cardWrappers.add(p);
         return p;
     }
@@ -104,9 +116,19 @@ public class MainFrame extends JFrame {
             w.setBackground(UIUtils.getMainBackground(false));
             if (w.getComponentCount() > 0) {
                 Component c = w.getComponent(0);
-                c.setBackground(c instanceof DashboardView
-                        ? UIUtils.getMainBackground(false)
-                        : UIUtils.getCardBackground(false));
+                if (c instanceof JScrollPane) {
+                    // Handle JScrollPane wrapper for DashboardView
+                    JScrollPane scrollPane = (JScrollPane) c;
+                    scrollPane.getViewport().setBackground(Color.WHITE);
+                    scrollPane.getViewport().setOpaque(true);
+                    if (scrollPane.getViewport().getView() instanceof DashboardView) {
+                        ((DashboardView) scrollPane.getViewport().getView()).setBackground(UIUtils.getMainBackground(false));
+                    }
+                } else {
+                    c.setBackground(c instanceof DashboardView
+                            ? UIUtils.getMainBackground(false)
+                            : UIUtils.getCardBackground(false));
+                }
             }
         }
         updateSidebarSelection(currentCard);
