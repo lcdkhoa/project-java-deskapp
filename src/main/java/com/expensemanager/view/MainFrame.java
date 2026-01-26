@@ -79,10 +79,6 @@ public class MainFrame extends JFrame {
         analyticsView.onShown();
     }
 
-    public void openCreateTransaction() {
-        new CreateTransactionDialog(this).setVisible(true);
-    }
-
     public void refreshDashboard() { dashboardView.refresh(); }
     public void refreshTransactions() { transactionsView.refresh(); }
     public void refreshBudget() { budgetView.refresh(); }

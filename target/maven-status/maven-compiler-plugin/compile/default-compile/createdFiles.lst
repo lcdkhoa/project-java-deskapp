@@ -24,6 +24,7 @@ com\expensemanager\view\BudgetController.class
 com\expensemanager\FlatLaf.class
 com\expensemanager\AppContext.class
 com\expensemanager\view\CreateTransactionDialog.class
+com\expensemanager\util\DateUtil.class
 com\expensemanager\model\Budget.class
 com\expensemanager\view\AnalyticsController.class
 com\expensemanager\db\DatabaseConnection.class

@@ -19,7 +19,7 @@ public class DashboardView extends JPanel {
         JPanel top = new JPanel(new BorderLayout());
         top.add(controller.getMonthSelectorPanel(), BorderLayout.CENTER);
         JButton addTx = new JButton("+ Add Transaction");
-        addTx.addActionListener(e -> main.openCreateTransaction());
+        addTx.addActionListener(e -> new CreateTransactionDialog(main).setVisible(true));
         top.add(addTx, BorderLayout.EAST);
         add(top, BorderLayout.NORTH);
 
