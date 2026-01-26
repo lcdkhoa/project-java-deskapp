@@ -47,18 +47,45 @@ public class DashboardController {
     }
 
     public JPanel getMonthSelectorPanel() {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
-        p.add(new JButton("<") {{
-            addActionListener(e -> { prevMonth(); view.refresh(); });
-        }});
-        p.add(monthLabel);
-        p.add(new JButton(">") {{
-            addActionListener(e -> { nextMonth(); view.refresh(); });
-        }});
+        JPanel p = new JPanel(new MigLayout("ins 0 25 0 25, fill", "[][grow, center][]", "center"));
+        p.setOpaque(false);
+        
+        // Previous button with left.png icon
+        JButton prevBtn = new JButton();
+        ImageIcon leftIcon = com.expensemanager.util.UIUtils.getIcon("imgs/dashboard/left.png", 24, 24);
+        if (leftIcon != null) {
+            prevBtn.setIcon(leftIcon);
+        } else {
+            prevBtn.setText("<");
+        }
+        prevBtn.setBorderPainted(false);
+        prevBtn.setContentAreaFilled(false);
+        prevBtn.setOpaque(false);
+        prevBtn.addActionListener(e -> { prevMonth(); view.refresh(); });
+        p.add(prevBtn, "cell 0 0");
+        
+        p.add(monthLabel, "cell 1 0");
+        
+        // Next button with right.png icon
+        JButton nextBtn = new JButton();
+        ImageIcon rightIcon = com.expensemanager.util.UIUtils.getIcon("imgs/dashboard/right.png", 24, 24);
+        if (rightIcon != null) {
+            nextBtn.setIcon(rightIcon);
+        } else {
+            nextBtn.setText(">");
+        }
+        nextBtn.setBorderPainted(false);
+        nextBtn.setContentAreaFilled(false);
+        nextBtn.setOpaque(false);
+        nextBtn.addActionListener(e -> { nextMonth(); view.refresh(); });
+        p.add(nextBtn, "cell 2 0");
+        
+        // Back button - optional, can be added below or hidden
         JButton back = new JButton("Back to current month");
         back.addActionListener(e -> { backToCurrent(); view.refresh(); });
         back.setVisible(!isCurrentMonth());
-        p.add(back);
+        // Note: Back button not in the main row - can be added separately if needed
+        
         return p;
     }
 
@@ -150,14 +177,14 @@ public class DashboardController {
     private void refreshKpi(long expense, long income, long remaining, double budgetUsedPct, long totalBudget) {
         JPanel p = getKpiCardsPanel();
         p.removeAll();
-        p.add(new KPICard("Monthly Expense", CurrencyUtil.format(Math.abs(expense)), "↓", RED, RED), "grow");
-        p.add(new KPICard("Monthly Income", CurrencyUtil.format(income), "↑", GREEN, GREEN), "grow");
+        p.add(new KPICard("Monthly Expense", CurrencyUtil.formatNoSymbol(Math.abs(expense)), "imgs/dashboard/down.png", RED), "grow");
+        p.add(new KPICard("Monthly Income", CurrencyUtil.formatNoSymbol(income), "imgs/dashboard/up.png", GREEN), "grow");
         boolean remainingNeg = remaining < 0;
-        p.add(new KPICard("Remaining", CurrencyUtil.format(remaining), "◆", remainingNeg ? RED : BLUE, remainingNeg ? RED : BLUE), "grow");
+        p.add(new KPICard("Remaining", CurrencyUtil.formatNoSymbol(remaining), "imgs/dashboard/remains.png", remainingNeg ? RED : BLUE), "grow");
         if (!Double.isNaN(budgetUsedPct)) {
-            p.add(new KPICard("Budget Used", String.format("%.0f%%", budgetUsedPct), "%", PURPLE, PURPLE), "grow");
+            p.add(new KPICard("Budget Used", String.format("%.0f%%", budgetUsedPct), "imgs/dashboard/used.png", PURPLE), "grow");
         } else {
-            p.add(new KPICard("Budget Used", "-", "%", Color.GRAY, Color.GRAY), "grow");
+            p.add(new KPICard("Budget Used", "-", "imgs/dashboard/used.png", Color.GRAY), "grow");
         }
         p.revalidate();
         p.repaint();

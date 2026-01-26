@@ -10,7 +10,7 @@ import java.awt.*;
 public class ModernCard extends JPanel {
 
     private static final int PADDING = 20;
-    private static final int ARC = 20;
+    private static final int ARC = 30;
     private static final Color BORDER_COLOR = new Color(229, 231, 235); // #E5E7EB
 
     public ModernCard() {

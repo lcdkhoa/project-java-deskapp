@@ -1,79 +1,73 @@
 package com.expensemanager.view;
 
+import com.expensemanager.util.UIUtils;
+import net.miginfocom.swing.MigLayout;
+
 import javax.swing.*;
 import java.awt.*;
 
 /**
- * KPI card extending ModernCard. Section 1.2: 40x40 rounded icon (left), title + value (right).
+ * KPI card with custom icons from imgs/dashboard/. MigLayout: Row 1 (Icon + Title), Row 2 (Value).
  * Expense: red; Income: green; Remaining: blue; Budget Used: purple.
- * Icons mocked with colored circle and symbol (↓, ↑, ◆, %).
  */
 public class KPICard extends ModernCard {
 
     private static final Color TITLE_COLOR = new Color(0x6B7280);
-    private static final int ICON_SIZE = 40;
-    private static final int VALUE_FONT_SIZE = 20;
+    private static final int ICON_SIZE = 32;
+    private static final int TITLE_FONT_SIZE = 20;
+    private static final int VALUE_FONT_SIZE = 32;
 
     private final JLabel titleLabel;
     private final JLabel valueLabel;
+    private final JLabel iconLabel;
 
     /**
      * @param title      Gray, small (e.g. "Monthly Expense")
      * @param valueText  Large bold, colored (e.g. "16,435,000" or "85%")
-     * @param iconChar   Symbol in 40x40: "↓" expense, "↑" income, "◆" remaining, "%" budget
-     * @param iconColor  Background of 40x40: red/green/blue/purple
+     * @param iconPath   Path to icon image (e.g., "imgs/dashboard/down.png")
      * @param valueColor Value text: #EF4444 expense, #10B981 income, #3B82F6 remaining, purple budget
      */
-    public KPICard(String title, String valueText, String iconChar, Color iconColor, Color valueColor) {
+    public KPICard(String title, String valueText, String iconPath, Color valueColor) {
         super(null);
-        setLayout(new BorderLayout(12, 0));
+        // Override ModernCard's border padding from 20 to 15 for more compact card
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        // Override ModernCard's BorderLayout with MigLayout: wrap 1 for strict vertical stacking
+        // gapy 10 for gap between title and value rows
+        setLayout(new MigLayout("ins 0, wrap 1, gapy 10", "[]", "[]"));
 
-        add(new IconCircle(iconChar, iconColor), BorderLayout.WEST);
+        // Row 1 (Title Row): Icon + Title - same row, vertically centered
+        JPanel row1 = new JPanel(new MigLayout("ins 0, gap 8 0", "[][]", "[center]"));
+        row1.setOpaque(false);
+        
+        iconLabel = new JLabel();
+        ImageIcon icon = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
+        if (icon != null) {
+            iconLabel.setIcon(icon);
+        } else {
+            // Fallback: use a placeholder
+            iconLabel.setText("?");
+            iconLabel.setFont(iconLabel.getFont().deriveFont(Font.BOLD, 16f));
+        }
+        row1.add(iconLabel, "align left, aligny center");
 
-        JPanel right = new JPanel(new BorderLayout(0, 2));
-        right.setOpaque(false);
         titleLabel = new JLabel(title);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(11f));
+        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.PLAIN, TITLE_FONT_SIZE)); // 20px Regular/Medium
         titleLabel.setForeground(TITLE_COLOR);
-        right.add(titleLabel, BorderLayout.NORTH);
+        row1.add(titleLabel, "align left, aligny center");
+        add(row1, "wrap");
+
+        // Row 2 (Value Row): Big Value Number (32px Bold) - strictly below title, no text wrapping
         valueLabel = new JLabel(valueText);
-        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.BOLD, VALUE_FONT_SIZE));
+        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.BOLD, VALUE_FONT_SIZE)); // 32px Bold
         valueLabel.setForeground(valueColor);
-        right.add(valueLabel, BorderLayout.CENTER);
-        add(right, BorderLayout.CENTER);
+        valueLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        // Prevent text wrapping - expand card width if necessary
+        valueLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        add(valueLabel, "align left");
     }
 
     public void setAmount(String text, Color valueColor) {
         valueLabel.setText(text);
         valueLabel.setForeground(valueColor);
-    }
-
-    /** 40x40 rounded (circle) icon with colored background and white symbol. */
-    private static final class IconCircle extends JPanel {
-        private final String symbol;
-        private final Color bgColor;
-
-        IconCircle(String symbol, Color bgColor) {
-            this.symbol = symbol != null && !symbol.isEmpty() ? symbol : "?";
-            this.bgColor = bgColor;
-            setOpaque(false);
-            setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
-            setMinimumSize(new Dimension(ICON_SIZE, ICON_SIZE));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(bgColor);
-            g2.fillOval(0, 0, ICON_SIZE, ICON_SIZE);
-            g2.setColor(Color.WHITE);
-            g2.setFont(getFont().deriveFont(Font.BOLD, 18f));
-            FontMetrics fm = g2.getFontMetrics();
-            int x = (ICON_SIZE - fm.stringWidth(symbol)) / 2;
-            int y = (ICON_SIZE - fm.getHeight()) / 2 + fm.getAscent();
-            g2.drawString(symbol, x, y);
-            g2.dispose();
-        }
     }
 }

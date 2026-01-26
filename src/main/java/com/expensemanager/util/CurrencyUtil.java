@@ -14,6 +14,11 @@ public final class CurrencyUtil {
         return FMT.format(amount) + " đ";
     }
 
+    /** Format without currency symbol (for KPI cards). */
+    public static String formatNoSymbol(long amount) {
+        return FMT.format(amount);
+    }
+
     /** For display: negative amounts as -X đ, positive as +X đ when signing is needed. */
     public static String formatSigned(long amount) {
         if (amount < 0) return "-" + format(-amount);

@@ -108,4 +108,26 @@ public final class UIUtils {
     public static Color getPrimary() {
         return new Color(COLOR_PRIMARY);
     }
+
+    /**
+     * Load and scale an icon image from the resources path.
+     * Handles missing files gracefully by returning null.
+     *
+     * @param path relative path from project root (e.g., "imgs/dashboard/down.png")
+     * @param width target width in pixels
+     * @param height target height in pixels
+     * @return scaled ImageIcon, or null if file not found
+     */
+    public static ImageIcon getIcon(String path, int width, int height) {
+        try {
+            java.awt.Image img = javax.imageio.ImageIO.read(new java.io.File(path));
+            if (img != null) {
+                img = img.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
+                return new ImageIcon(img);
+            }
+        } catch (Exception e) {
+            // File not found or read error - return null (caller should handle)
+        }
+        return null;
+    }
 }

@@ -12,16 +12,16 @@ import java.awt.*;
  * Row 1: Header (White) Title + Add Transaction.
  * Row 2: Date Selector (transparent row, white rounded card, arc 20).
  * Row 3: KPI cards. Row 4: Charts (growy, pushy to fill). Row 5: Budget Warning (South).
- * Light mode only. Main BG #F3F4F6.
+ * Light mode only. Main BG White (Color.WHITE).
  */
 public class DashboardView extends JPanel {
-    private static final Color MAIN_BG = new Color(0xF3F4F6);
+    private static final Color MAIN_BG = Color.WHITE; // Changed from Light Gray to White
     private static final Color SUBTITLE_GRAY = new Color(0x6B7280);
     private static final Color CARD_BORDER = new Color(229, 231, 235); // #E5E7EB
     private static final int CARD_GAP = 20;
     private static final int HEADER_HEIGHT = 70; // 60–80px
-    private static final int DATE_STRIP_HEIGHT = 50;
-    private static final int CARD_ARC = 20;
+    private static final int DATE_STRIP_HEIGHT = 70;
+    private static final int CARD_ARC = 30;
 
     private final MainFrame main;
     private final DashboardController controller;
@@ -30,7 +30,23 @@ public class DashboardView extends JPanel {
         this.main = main;
         this.controller = new DashboardController(this);
         setBackground(MAIN_BG);
+        setOpaque(true); // Ensure panel is opaque to show white background
         setLayout(new MigLayout("ins 0, wrap 1, gap " + CARD_GAP + " " + CARD_GAP, "[grow,fill]", "[] [][][grow,fill] []"));
+        
+        // Ensure any parent ScrollPane viewport also has white background
+        addHierarchyListener(e -> {
+            Component parent = getParent();
+            while (parent != null) {
+                if (parent instanceof JViewport) {
+                    ((JViewport) parent).setBackground(MAIN_BG);
+                    ((JViewport) parent).setOpaque(true);
+                } else if (parent instanceof JScrollPane) {
+                    ((JScrollPane) parent).getViewport().setBackground(MAIN_BG);
+                    ((JScrollPane) parent).getViewport().setOpaque(true);
+                }
+                parent = parent.getParent();
+            }
+        });
 
         // Row 1 (Header): White BG, ~60–80px. Title left, + Add Transaction right.
         JPanel header = buildHeaderPanel();
@@ -71,20 +87,12 @@ public class DashboardView extends JPanel {
     }
 
     private JPanel buildDateSelectorStrip() {
-        JPanel strip = new JPanel(new BorderLayout()) {
-            @Override
-            public Dimension getPreferredSize() {
-                return new Dimension(super.getPreferredSize().width, DATE_STRIP_HEIGHT);
-            }
-        };
-        strip.setOpaque(false);
+        // Date selector with MigLayout: buttons at edges, label centered
         JPanel inner = controller.getMonthSelectorPanel();
-        inner.setOpaque(false);
-        strip.add(inner, BorderLayout.CENTER);
-        return new DateStripCard(strip);
+        return new DateStripCard(inner);
     }
 
-    /** White date selector card: #FFFFFF, arc 20, 1px border #E5E7EB, height 50. */
+    /** White date selector card: #FFFFFF, arc 30, 1px border #E5E7EB, height 70. */
     private static final class DateStripCard extends JPanel {
         DateStripCard(JPanel content) {
             setLayout(new BorderLayout());
