@@ -47,6 +47,7 @@ public class CreateTransactionDialog extends JDialog {
     // Category name to icon file mapping
     private static final Map<String, String> CATEGORY_ICON_MAP = new HashMap<>();
     static {
+        // Expense categories
         CATEGORY_ICON_MAP.put("Food", "imgs/category/food.png");
         CATEGORY_ICON_MAP.put("Transport", "imgs/category/transport.png");
         CATEGORY_ICON_MAP.put("Shopping", "imgs/category/shopping.png");
@@ -56,9 +57,16 @@ public class CreateTransactionDialog extends JDialog {
         CATEGORY_ICON_MAP.put("Housing", "imgs/category/housing.png");
         CATEGORY_ICON_MAP.put("Education", "imgs/category/education.png");
         CATEGORY_ICON_MAP.put("Other", "imgs/category/others.png");
+
+        // Income categories - placeholder paths (will show "?" if files don't exist)
+        CATEGORY_ICON_MAP.put("Salary", "imgs/category/salary.png");
+        CATEGORY_ICON_MAP.put("Freelance", "imgs/category/freelance.png");
+        CATEGORY_ICON_MAP.put("Affiliate", "imgs/category/affiliate.png");
+        CATEGORY_ICON_MAP.put("Selling", "imgs/category/selling.png");
+        CATEGORY_ICON_MAP.put("Other Income", "imgs/category/other_income.png");
     }
 
-    private static final String[] WALLET_OPTIONS = { "Cash", "Bank", "Momo", "ZaloPay" };
+    private static final String[] WALLET_OPTIONS = { "Cash", "Bank Transfer", "Momo", "ZaloPay" };
     private static final String[] WALLET_VALUES = { "cash", "bank_transfer", "momo", "zalopay" };
 
     private static final Color EXPENSE_COLOR = new Color(0xE7000B);
@@ -131,7 +139,7 @@ public class CreateTransactionDialog extends JDialog {
         form.add(categoryGridPanel, "w 450!, alignx center, wrap");
 
         // Wallet - width 452px, height 48px, centered
-        JLabel walletLabel = new JLabel("Wallet *");
+        JLabel walletLabel = new JLabel("Wallet");
         walletLabel.setFont(walletLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(walletLabel, "alignx left");
 
@@ -630,11 +638,18 @@ public class CreateTransactionDialog extends JDialog {
         try (Connection conn = DatabaseConnection.getConnection()) {
             List<Category> list = new CategoryDAO().findByType(conn, type);
 
-            // Filter and map categories to match the 3x3 grid requirement
-            // For expense: Food, Transport, Shopping, Entertainment, Bills, Healthcare,
-            // Housing, Education, Other
-            String[] categoryOrder = { "Food", "Transport", "Shopping", "Entertainment", "Bills", "Healthcare",
-                    "Housing", "Education", "Other" };
+            // Define category order based on type
+            String[] categoryOrder;
+            if (type.equals("expense")) {
+                // Expense categories: Food, Transport, Shopping, Entertainment, Bills,
+                // Healthcare,
+                // Housing, Education, Other
+                categoryOrder = new String[] { "Food", "Transport", "Shopping", "Entertainment", "Bills", "Healthcare",
+                        "Housing", "Education", "Other" };
+            } else {
+                // Income categories: Salary, Freelance, Affiliate, Selling, Other Income
+                categoryOrder = new String[] { "Salary", "Freelance", "Affiliate", "Selling", "Other Income" };
+            }
 
             int index = 0;
             for (String catName : categoryOrder) {
@@ -643,7 +658,8 @@ public class CreateTransactionDialog extends JDialog {
                         .findFirst()
                         .orElse(null);
 
-                if (category != null && index < 9) {
+                if (category != null) {
+                    // Get icon path from map, fallback to placeholder if not found
                     String iconPath = CATEGORY_ICON_MAP.getOrDefault(catName, "imgs/category/others.png");
                     CategoryItemPanel panel = new CategoryItemPanel(category.getId(), category.getName(), iconPath);
 

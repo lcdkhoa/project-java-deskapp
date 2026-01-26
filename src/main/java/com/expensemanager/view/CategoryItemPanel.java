@@ -11,7 +11,7 @@ public class CategoryItemPanel extends JPanel {
     private static final int PANEL_WIDTH = 140;
     private static final int PANEL_HEIGHT = 75;
     private static final int ARC = 30;
-    private static final int ICON_SIZE = 32;
+    private static final int ICON_SIZE = 24;
     private static final Color SELECTED_BORDER_COLOR = new Color(0x155DFC);
     private static final Color DEFAULT_BORDER_COLOR = new Color(0xE5E7EB);
     private static final int SELECTED_BORDER_WIDTH = 2;
