@@ -13,7 +13,10 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.RingPlot;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.labels.PieToolTipGenerator;
+import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.xy.XYSeries;
@@ -218,20 +221,28 @@ public class DashboardController {
         p.removeAll();
 
         // Last 7 Days (Section 1.3: no axes, bar bo tròn, soft blue)
-        LocalDate lastDay = currentMonth.atEndOfMonth();
-        LocalDate start = lastDay.minusDays(6);
-        if (start.getMonthValue() != currentMonth.getMonthValue())
-            start = currentMonth.atDay(1);
-        Map<LocalDate, Long> byDate = txDao.getExpenseByDateRange(conn, userId, start, lastDay);
+        // Data Range: (Today - 6 days) to (Tomorrow)
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusDays(6);
+        LocalDate end = today.plusDays(1);
+        Map<LocalDate, Long> byDate = txDao.getExpenseByDateRange(conn, userId, start, end);
         DefaultCategoryDataset barSet = new DefaultCategoryDataset();
-        for (LocalDate d = start; !d.isAfter(lastDay); d = d.plusDays(1)) {
-            barSet.addValue(byDate.getOrDefault(d, 0L), "Expense",
-                    d.getDayOfMonth() + "/" + currentMonth.getMonthValue());
+        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+            long value = byDate.getOrDefault(d, 0L);
+            String dateLabel = d.getDayOfMonth() + "/" + d.getMonthValue();
+            barSet.addValue(value, "Expense", dateLabel);
         }
         JFreeChart bar = ChartFactory.createBarChart("Last 7 Days Spending", null, "Amount", barSet);
         bar.removeLegend();
         ChartUtils.applyBarChart(bar);
-        p.add(new ModernCard(ChartUtils.createChartPanel(bar)), "grow");
+        
+        // Set custom tooltip generator for bar chart
+        org.jfree.chart.plot.CategoryPlot barPlot = bar.getCategoryPlot();
+        barPlot.getRenderer().setDefaultToolTipGenerator(new Last7DaysToolTipGenerator());
+        
+        ChartPanel barPanel = ChartUtils.createChartPanel(bar);
+        barPanel.setDisplayToolTips(true);
+        p.add(new ModernCard(barPanel), "grow");
 
         // By Category (Donut) - new design with custom legend and HTML tooltip
         p.add(buildCategoryChartPanel(conn, userId, monthKey, txDao, cDao), "grow");
@@ -249,7 +260,14 @@ public class DashboardController {
                 new XYSeriesCollection(series));
         line.removeLegend();
         ChartUtils.applyLineChart(line);
-        p.add(new ModernCard(ChartUtils.createChartPanel(line)), "grow");
+        
+        // Set custom tooltip generator for line chart
+        XYPlot linePlot = (XYPlot) line.getPlot();
+        linePlot.getRenderer().setDefaultToolTipGenerator(new MonthlyCashflowToolTipGenerator(currentMonth));
+        
+        ChartPanel linePanel = ChartUtils.createChartPanel(line);
+        linePanel.setDisplayToolTips(true);
+        p.add(new ModernCard(linePanel), "grow");
 
         p.revalidate();
         p.repaint();
@@ -296,9 +314,9 @@ public class DashboardController {
         RingPlot plot = (RingPlot) chart.getPlot();
         plot.setSectionDepth(0.5); // Thick donut ring
         plot.setLabelGenerator(null); // Hide connecting labels
-        plot.setOutlineVisible(false); // No border
+        plot.setOutlineVisible(false); // No outer border
         plot.setBackgroundPaint(null); // Transparent
-        plot.setShadowPaint(null);
+        plot.setShadowPaint(null); // Disable shadow to remove dirty look
         try {
             plot.setShadowGenerator(null);
         } catch (Exception ignored) {
@@ -308,20 +326,20 @@ public class DashboardController {
 
         // Set colors and white outlines from Category.color field
         // Only set for categories that are in the dataset (expense > 0)
-        BasicStroke whiteStroke = new BasicStroke(3.0f);
+        BasicStroke whiteStroke = new BasicStroke(4.0f); // Thick enough to create visible gap
         for (Category cat : allCategories) {
             long expense = categoryExpenses.get(cat.getId());
             if (expense > 0) {
                 Color catColor = parseColor(cat.getColor());
                 plot.setSectionPaint(cat.getId(), catColor);
-                // Set white outline for each section to create gaps
+                // Set white outline for each section to create gaps (Force White)
                 plot.setSectionOutlinePaint(cat.getId(), Color.WHITE);
                 plot.setSectionOutlineStroke(cat.getId(), whiteStroke);
             }
         }
 
         // Set HTML tooltip generator
-        plot.setToolTipGenerator(new CategoryToolTipGenerator(idToCategory, categoryExpenses, totalExpense));
+        plot.setToolTipGenerator(new PieCategoryToolTipGenerator(idToCategory, categoryExpenses, totalExpense));
 
         // Create chart panel
         ChartPanel chartPanel = ChartUtils.createChartPanel(chart);
@@ -421,13 +439,12 @@ public class DashboardController {
     /**
      * Custom HTML tooltip generator for category chart.
      */
-    @SuppressWarnings("rawtypes")
-    private static class CategoryToolTipGenerator implements PieToolTipGenerator {
+    private static class PieCategoryToolTipGenerator implements PieToolTipGenerator {
         private final Map<String, Category> idToCategory;
         private final Map<String, Long> expenses;
         private final long totalExpense;
 
-        CategoryToolTipGenerator(Map<String, Category> idToCategory, Map<String, Long> expenses, long totalExpense) {
+        PieCategoryToolTipGenerator(Map<String, Category> idToCategory, Map<String, Long> expenses, long totalExpense) {
             this.idToCategory = idToCategory;
             this.expenses = expenses;
             this.totalExpense = totalExpense;
@@ -455,6 +472,54 @@ public class DashboardController {
                             "%s of total" +
                             "</div></html>",
                     colorHex, cat.getName(), amountStr, pctStr);
+        }
+    }
+
+    /**
+     * Custom tooltip generator for Last 7 Days Spending bar chart.
+     * Format: HTML with Date on line 1, Amount on line 2 (bold, 14px).
+     */
+    private static class Last7DaysToolTipGenerator implements org.jfree.chart.labels.CategoryToolTipGenerator {
+        @Override
+        public String generateToolTip(CategoryDataset dataset, int row, int column) {
+            Comparable<?> categoryKey = dataset.getColumnKey(column);
+            Number value = dataset.getValue(row, column);
+            if (value == null) return "";
+            
+            String dateStr = categoryKey.toString();
+            String amountStr = CurrencyUtil.formatNoSymbol(value.longValue());
+            
+            return String.format(
+                    "<html><center>%s<br/><span style='font-size:14px; font-weight:bold'>%s đ</span></center></html>",
+                    dateStr, amountStr);
+        }
+    }
+
+    /**
+     * Custom tooltip generator for Monthly Cashflow line chart.
+     * Format: HTML with Date on line 1, Cashflow Amount on line 2 (bold, 14px).
+     */
+    private static class MonthlyCashflowToolTipGenerator implements XYToolTipGenerator {
+        private final YearMonth month;
+
+        MonthlyCashflowToolTipGenerator(YearMonth month) {
+            this.month = month;
+        }
+
+        @Override
+        public String generateToolTip(org.jfree.data.xy.XYDataset dataset, int series, int item) {
+            Number xValue = dataset.getX(series, item);
+            Number yValue = dataset.getY(series, item);
+            if (xValue == null || yValue == null) return "";
+            
+            int dayOfMonth = xValue.intValue();
+            LocalDate date = month.atDay(dayOfMonth);
+            String dateStr = String.format("%02d/%02d", date.getDayOfMonth(), date.getMonthValue());
+            String amountStr = CurrencyUtil.formatNoSymbol(yValue.longValue());
+            
+            return String.format(
+                    "<html><center>%s<br/><span style='font-size:14px; font-weight:bold'>%s đ</span></center></html>",
+                    dateStr, amountStr);
         }
     }
 

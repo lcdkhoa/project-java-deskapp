@@ -89,13 +89,14 @@ public class BudgetWarningsPanel extends JPanel {
             setLayout(new MigLayout("ins 15, fillx, wrap 2", "[grow][]", "[]0[]"));
             putClientProperty("FlatLaf.style", "arc: 30");
 
-            // Row 1: Category Name (24px Bold) | Percentage (24px Bold, Red) - same baseline
+            // Row 1: Category Name (21px PLAIN, Black) | Percentage (21px PLAIN, Red) - same baseline
             JLabel categoryLabel = new JLabel(categoryName);
-            categoryLabel.setFont(categoryLabel.getFont().deriveFont(Font.BOLD, 24f));
+            categoryLabel.setFont(categoryLabel.getFont().deriveFont(Font.PLAIN, 21f));
+            categoryLabel.setForeground(Color.BLACK);
             add(categoryLabel, "cell 0 0, align left, aligny center");
 
             JLabel pctLabel = new JLabel(pctStr);
-            pctLabel.setFont(pctLabel.getFont().deriveFont(Font.BOLD, 24f));
+            pctLabel.setFont(pctLabel.getFont().deriveFont(Font.PLAIN, 21f));
             pctLabel.setForeground(PERCENT_RED);
             pctLabel.setHorizontalAlignment(SwingConstants.RIGHT);
             add(pctLabel, "cell 1 0, align right, aligny center");
