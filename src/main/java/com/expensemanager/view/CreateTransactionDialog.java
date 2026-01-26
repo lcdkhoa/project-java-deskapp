@@ -36,6 +36,8 @@ public class CreateTransactionDialog extends JDialog {
     private ButtonGroup typeGroup;
     private JSpinner dateSpinner;
     private JSpinner timeSpinner;
+    private JTextField dateField;
+    private JTextField timeField;
     private JComboBox<String> walletCombo;
     private JTextField noteF;
 
@@ -121,11 +123,20 @@ public class CreateTransactionDialog extends JDialog {
         JPanel dateTimePanel = new JPanel(new MigLayout("ins 0, gap 10", "[grow,fill][grow,fill]", "[]"));
         dateTimePanel.setOpaque(false);
 
+        // Create spinners for logic (hidden) - must be created first
         dateSpinner = createDateSpinner();
-        dateTimePanel.add(createDateField(dateSpinner), "growx");
-
         timeSpinner = createTimeSpinner();
-        dateTimePanel.add(createTimeField(timeSpinner), "growx");
+
+        // Create modern date/time fields with popup pickers
+        JPanel dateFieldPanel = createModernDateField();
+        JPanel timeFieldPanel = createModernTimeField();
+
+        // Initialize field texts after creation
+        updateDateFieldText();
+        updateTimeFieldText();
+
+        dateTimePanel.add(dateFieldPanel, "growx");
+        dateTimePanel.add(timeFieldPanel, "growx");
 
         form.add(dateTimePanel, "w 452!, alignx center, wrap");
 
@@ -257,140 +268,294 @@ public class CreateTransactionDialog extends JDialog {
         }
     }
 
-    private JPanel createDateField(JSpinner spinner) {
-        JPanel panel = new JPanel(new BorderLayout()) {
+    private JPanel createModernDateField() {
+        // Create styled text field
+        dateField = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+            }
+        };
+        dateField.setOpaque(false);
+        dateField.setBackground(Color.WHITE);
+        dateField.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
+        dateField.setFont(dateField.getFont().deriveFont(Font.PLAIN, 14f));
+
+        // Add calendar icon button on the right
+        JButton iconButton = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(0x6B7280)); // Gray color for icon
+
+                int width = getWidth();
+                int height = getHeight();
+                int iconSize = 18;
+                int x = (width - iconSize) / 2;
+                int y = (height - iconSize) / 2;
+
+                // Draw calendar icon
+                g2.setStroke(new BasicStroke(1.5f));
+                g2.drawRoundRect(x + 2, y + 4, iconSize - 4, iconSize - 6, 2, 2);
+                g2.fillRect(x + 3, y + 4, iconSize - 6, 3);
+                g2.setStroke(new BasicStroke(1f));
+                g2.drawLine(x + 5, y + 10, x + iconSize - 5, y + 10);
+                g2.drawLine(x + 5, y + 13, x + iconSize - 5, y + 13);
+
+                g2.dispose();
+            }
+        };
+        iconButton.setOpaque(false);
+        iconButton.setContentAreaFilled(false);
+        iconButton.setBorderPainted(false);
+        iconButton.setFocusPainted(false);
+        iconButton.setPreferredSize(new Dimension(40, 48));
+        iconButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Create wrapper panel with rounded corners
+        JPanel wrapper = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Fill white background with rounded corners - ensure no gray
+
+                // Fill white background with rounded corners
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-                // Draw border only
-                g2.setColor(new Color(0xE5E7EB));
+
+                // Draw border
+                Color borderColor = dateField.isFocusOwner() ? new Color(0x155DFC) : new Color(0xE5E7EB);
+                g2.setColor(borderColor);
                 g2.setStroke(new BasicStroke(1));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
-        panel.setOpaque(true);
-        panel.setBackground(Color.WHITE);
-        panel.setPreferredSize(new Dimension(221, 48));
-        panel.setMinimumSize(new Dimension(221, 48));
-        panel.setMaximumSize(new Dimension(221, 48));
+        wrapper.setOpaque(false);
+        wrapper.setPreferredSize(new Dimension(221, 48));
+        wrapper.setMinimumSize(new Dimension(221, 48));
+        wrapper.setMaximumSize(new Dimension(221, 48));
+        wrapper.add(dateField, BorderLayout.CENTER);
+        wrapper.add(iconButton, BorderLayout.EAST);
 
-        // Calendar icon on right
-        JLabel iconLabel = new JLabel("📅");
-        iconLabel.setOpaque(false);
-        iconLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15));
-        iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        // Add focus listener to repaint border
+        dateField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                wrapper.repaint();
+            }
 
-        // Wrap spinner in a panel to style it and hide arrows
-        JPanel spinnerWrapper = new JPanel(new BorderLayout());
-        spinnerWrapper.setOpaque(false);
-        spinnerWrapper.setBackground(Color.WHITE);
-        spinnerWrapper.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
-        spinnerWrapper.add(spinner, BorderLayout.CENTER);
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                wrapper.repaint();
+            }
+        });
 
-        // Hide spinner arrows
-        hideSpinnerArrows(spinner);
+        // Add click listeners to open date picker
+        java.awt.event.MouseAdapter clickListener = new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                showDatePickerPopup(dateField, iconButton);
+            }
+        };
+        dateField.addMouseListener(clickListener);
+        wrapper.addMouseListener(clickListener);
+        iconButton.addActionListener(e -> showDatePickerPopup(dateField, iconButton));
 
-        panel.add(spinnerWrapper, BorderLayout.CENTER);
-        panel.add(iconLabel, BorderLayout.EAST);
-
-        return panel;
+        return wrapper;
     }
 
-    private JPanel createTimeField(JSpinner spinner) {
-        JPanel panel = new JPanel(new BorderLayout()) {
+    private JPanel createModernTimeField() {
+        // Create styled text field
+        timeField = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+            }
+        };
+        timeField.setOpaque(false);
+        timeField.setBackground(Color.WHITE);
+        timeField.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
+        timeField.setFont(timeField.getFont().deriveFont(Font.PLAIN, 14f));
+
+        // Add clock icon button on the right
+        JButton iconButton = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(0x6B7280)); // Gray color for icon
+
+                int width = getWidth();
+                int height = getHeight();
+                int iconSize = 18;
+                int x = (width - iconSize) / 2;
+                int y = (height - iconSize) / 2;
+                int centerX = x + iconSize / 2;
+                int centerY = y + iconSize / 2;
+
+                // Draw clock icon
+                g2.setStroke(new BasicStroke(1.5f));
+                g2.drawOval(x + 1, y + 1, iconSize - 2, iconSize - 2);
+                g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.drawLine(centerX, centerY, centerX + 4, centerY);
+                g2.drawLine(centerX, centerY, centerX, centerY - 5);
+                g2.fillOval(centerX - 1, centerY - 1, 2, 2);
+
+                g2.dispose();
+            }
+        };
+        iconButton.setOpaque(false);
+        iconButton.setContentAreaFilled(false);
+        iconButton.setBorderPainted(false);
+        iconButton.setFocusPainted(false);
+        iconButton.setPreferredSize(new Dimension(40, 48));
+        iconButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Create wrapper panel with rounded corners
+        JPanel wrapper = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Fill white background with rounded corners - ensure no gray
+
+                // Fill white background with rounded corners
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-                // Draw border only
-                g2.setColor(new Color(0xE5E7EB));
+
+                // Draw border
+                Color borderColor = timeField.isFocusOwner() ? new Color(0x155DFC) : new Color(0xE5E7EB);
+                g2.setColor(borderColor);
                 g2.setStroke(new BasicStroke(1));
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
-        panel.setOpaque(true);
-        panel.setBackground(Color.WHITE);
-        panel.setPreferredSize(new Dimension(221, 48));
-        panel.setMinimumSize(new Dimension(221, 48));
-        panel.setMaximumSize(new Dimension(221, 48));
+        wrapper.setOpaque(false);
+        wrapper.setPreferredSize(new Dimension(221, 48));
+        wrapper.setMinimumSize(new Dimension(221, 48));
+        wrapper.setMaximumSize(new Dimension(221, 48));
+        wrapper.add(timeField, BorderLayout.CENTER);
+        wrapper.add(iconButton, BorderLayout.EAST);
 
-        // Clock icon on right
-        JLabel iconLabel = new JLabel("🕐");
-        iconLabel.setOpaque(false);
-        iconLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15));
-        iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        // Add focus listener to repaint border
+        timeField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                wrapper.repaint();
+            }
 
-        // Wrap spinner in a panel to style it and hide arrows
-        JPanel spinnerWrapper = new JPanel(new BorderLayout());
-        spinnerWrapper.setOpaque(false);
-        spinnerWrapper.setBackground(Color.WHITE);
-        spinnerWrapper.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
-        spinnerWrapper.add(spinner, BorderLayout.CENTER);
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                wrapper.repaint();
+            }
+        });
 
-        // Hide spinner arrows
-        hideSpinnerArrows(spinner);
+        // Add click listeners to open time picker
+        java.awt.event.MouseAdapter clickListener = new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                showTimePickerPopup(timeField, iconButton);
+            }
+        };
+        timeField.addMouseListener(clickListener);
+        wrapper.addMouseListener(clickListener);
+        iconButton.addActionListener(e -> showTimePickerPopup(timeField, iconButton));
 
-        panel.add(spinnerWrapper, BorderLayout.CENTER);
-        panel.add(iconLabel, BorderLayout.EAST);
+        return wrapper;
+    }
 
-        return panel;
+    private void showDatePickerPopup(JTextField field, JButton iconButton) {
+        // Create popup with date spinner
+        JPopupMenu popup = new JPopupMenu();
+        popup.setBorder(BorderFactory.createLineBorder(new Color(0xE5E7EB), 1));
+
+        JPanel popupPanel = new JPanel(new BorderLayout());
+        popupPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        popupPanel.setBackground(Color.WHITE);
+
+        // Use existing dateSpinner
+        JSpinner spinner = dateSpinner;
+        spinner.setPreferredSize(new Dimension(200, 30));
+        popupPanel.add(spinner, BorderLayout.CENTER);
+
+        // Add change listener to update text field
+        spinner.addChangeListener(e -> {
+            updateDateFieldText();
+            popup.setVisible(false);
+        });
+
+        popup.add(popupPanel);
+        popup.show(iconButton, 0, iconButton.getHeight());
+    }
+
+    private void showTimePickerPopup(JTextField field, JButton iconButton) {
+        // Create popup with time spinner
+        JPopupMenu popup = new JPopupMenu();
+        popup.setBorder(BorderFactory.createLineBorder(new Color(0xE5E7EB), 1));
+
+        JPanel popupPanel = new JPanel(new BorderLayout());
+        popupPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        popupPanel.setBackground(Color.WHITE);
+
+        // Use existing timeSpinner
+        JSpinner spinner = timeSpinner;
+        spinner.setPreferredSize(new Dimension(200, 30));
+        popupPanel.add(spinner, BorderLayout.CENTER);
+
+        // Add change listener to update text field
+        spinner.addChangeListener(e -> {
+            updateTimeFieldText();
+            popup.setVisible(false);
+        });
+
+        popup.add(popupPanel);
+        popup.show(iconButton, 0, iconButton.getHeight());
+    }
+
+    private void updateDateFieldText() {
+        if (dateField != null && dateSpinner != null) {
+            Date date = (Date) dateSpinner.getValue();
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM/dd/yyyy");
+            dateField.setText(sdf.format(date));
+        }
+    }
+
+    private void updateTimeFieldText() {
+        if (timeField != null && timeSpinner != null) {
+            Date date = (Date) timeSpinner.getValue();
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("hh:mm a");
+            timeField.setText(sdf.format(date));
+        }
     }
 
     private void styleSpinnerField(JSpinner spinner) {
         try {
+            // Make spinner transparent
+            spinner.setOpaque(false);
+
             JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor) spinner.getEditor();
             if (editor != null) {
+                // Make editor transparent
+                editor.setOpaque(false);
+
                 JTextField textField = editor.getTextField();
                 if (textField != null) {
                     textField.setOpaque(false);
                     textField.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
                     textField.setFont(textField.getFont().deriveFont(Font.PLAIN, 14f));
+                    textField.setBackground(Color.WHITE);
                 }
             }
         } catch (Exception e) {
             // Ignore if editor is not ready yet
-        }
-    }
-
-    private void hideSpinnerArrows(JSpinner spinner) {
-        // Hide spinner arrows by finding and hiding the arrow buttons
-        spinner.addHierarchyListener(new java.awt.event.HierarchyListener() {
-            @Override
-            public void hierarchyChanged(java.awt.event.HierarchyEvent e) {
-                if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0 && spinner.isShowing()) {
-                    SwingUtilities.invokeLater(() -> {
-                        // Hide all buttons in spinner
-                        hideButtonsRecursively(spinner);
-                    });
-                }
-            }
-        });
-        // Also try immediately if already showing
-        if (spinner.isShowing()) {
-            SwingUtilities.invokeLater(() -> hideButtonsRecursively(spinner));
-        }
-    }
-
-    private void hideButtonsRecursively(Container container) {
-        Component[] comps = container.getComponents();
-        for (Component comp : comps) {
-            if (comp instanceof JButton) {
-                comp.setVisible(false);
-                comp.setPreferredSize(new Dimension(0, 0));
-            } else if (comp instanceof Container) {
-                hideButtonsRecursively((Container) comp);
-            }
         }
     }
 
@@ -399,6 +564,7 @@ public class CreateTransactionDialog extends JDialog {
         spinner.setEditor(new JSpinner.DateEditor(spinner, "MM/dd/yyyy"));
         spinner.setPreferredSize(new Dimension(221, 48));
         spinner.setMaximumSize(new Dimension(221, 48));
+        spinner.setOpaque(false); // Make spinner transparent
 
         // Style the spinner after it's added to the container
         spinner.addHierarchyListener(new java.awt.event.HierarchyListener() {
@@ -418,6 +584,7 @@ public class CreateTransactionDialog extends JDialog {
         spinner.setEditor(new JSpinner.DateEditor(spinner, "hh:mm a"));
         spinner.setPreferredSize(new Dimension(221, 48));
         spinner.setMaximumSize(new Dimension(221, 48));
+        spinner.setOpaque(false); // Make spinner transparent
 
         // Style the spinner after it's added to the container
         spinner.addHierarchyListener(new java.awt.event.HierarchyListener() {
@@ -665,15 +832,18 @@ public class CreateTransactionDialog extends JDialog {
 
             // Calculate number of rows needed (3 columns per row)
             int rows = (int) Math.ceil(validCategoryCount / 3.0);
-            if (rows == 0) rows = 1; // At least 1 row
+            if (rows == 0)
+                rows = 1; // At least 1 row
 
             // Update categoryGridPanel layout with dynamic row count
             StringBuilder rowConstraints = new StringBuilder();
             for (int i = 0; i < rows; i++) {
-                if (i > 0) rowConstraints.append(" ");
+                if (i > 0)
+                    rowConstraints.append(" ");
                 rowConstraints.append("[75!]");
             }
-            categoryGridPanel.setLayout(new MigLayout("ins 0, gap 10 10", "[140!][140!][140!]", rowConstraints.toString()));
+            categoryGridPanel
+                    .setLayout(new MigLayout("ins 0, gap 10 10", "[140!][140!][140!]", rowConstraints.toString()));
 
             int index = 0;
             for (String catName : categoryOrder) {
