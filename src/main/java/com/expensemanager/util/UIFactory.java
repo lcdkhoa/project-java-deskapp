@@ -25,8 +25,8 @@ public final class UIFactory {
 
     /** Padding: top, left, bottom, right. */
     public static final Insets BUTTON_MARGIN = new Insets(8, 16, 8, 16);
-    /** Sidebar arc (rounded rect, ~12px). */
-    public static final int SIDEBAR_ARC = 12;
+    /** Sidebar arc (rounded rect, 30px). */
+    public static final int SIDEBAR_ARC = 30;
 
     private UIFactory() {}
 

@@ -1,6 +1,7 @@
 package com.expensemanager.view;
 
 import com.expensemanager.util.UIUtils;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,13 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main window. Menu: Dashboard, Transactions, Budget, Analytics. Light mode only.
- * Sidebar uses SidebarButton (active: #2563EB; inactive: transparent; hover: #F3F4F6).
+ * Main window. Menu: Dashboard, Transactions, Budget, Analytics. Light mode
+ * only.
+ * Sidebar uses SidebarButton (active: #2563EB; inactive: transparent; hover:
+ * #F3F4F6).
  */
 public class MainFrame extends JFrame {
     private static final int W = 1200;
     private static final int H = 750;
-    private static final String[] NAV_CARDS = {"Dashboard", "Transactions", "Budget", "Analytics"};
+    private static final String[] NAV_CARDS = { "Dashboard", "Transactions", "Budget", "Analytics" };
 
     private final JPanel cards;
     private final CardLayout cardLayout;
@@ -49,19 +52,21 @@ public class MainFrame extends JFrame {
         cards.add(createCardWrapper(analyticsView), "Analytics");
 
         northPanel = new JPanel(new BorderLayout());
-        JLabel title = new JLabel("Personal Expense Manager");
+        JLabel title = new JLabel("Expense Manager");
         title.setFont(title.getFont().deriveFont(18f));
         northPanel.add(title, BorderLayout.WEST);
         add(northPanel, BorderLayout.NORTH);
 
-        westPanel = new JPanel(new GridLayout(4, 1, 0, 4));
-        westPanel.add(createNavButton("📊 Dashboard", "Dashboard"));
-        westPanel.add(createNavButton("📝 Transactions", "Transactions"));
-        westPanel.add(createNavButton("💰 Budget", "Budget"));
-        westPanel.add(createNavButton("📈 Analytics", "Analytics"));
+        // MigLayout: wrap 1, insets 20 10 20 10, gapy 15
+        westPanel = new JPanel(new MigLayout("wrap 1, insets 20 10 20 10, gapy 15", "fill, grow"));
+        westPanel.add(createNavButton("Dashboard", "Dashboard"), "h 48!");
+        westPanel.add(createNavButton("Transactions", "Transactions"), "h 48!");
+        westPanel.add(createNavButton("Budget", "Budget"), "h 48!");
+        westPanel.add(createNavButton("Analytics", "Analytics"), "h 48!");
 
         westWrap = new JPanel(new BorderLayout());
-        westWrap.setPreferredSize(new Dimension(220, 0));
+        // Increase sidebar width so labels are not truncated
+        westWrap.setPreferredSize(new Dimension(260, 0));
         westWrap.add(westPanel, BorderLayout.NORTH);
         add(westWrap, BorderLayout.WEST);
         add(cards, BorderLayout.CENTER);
@@ -73,7 +78,7 @@ public class MainFrame extends JFrame {
     private JPanel createCardWrapper(JComponent view) {
         JPanel p = new JPanel(new BorderLayout());
         p.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-        
+
         // Wrap DashboardView in JScrollPane with specific styling
         if (view instanceof DashboardView) {
             JScrollPane scrollPane = new JScrollPane(view);
@@ -85,17 +90,39 @@ public class MainFrame extends JFrame {
         } else {
             p.add(view, BorderLayout.CENTER);
         }
-        
+
         cardWrappers.add(p);
         return p;
     }
 
     private SidebarButton createNavButton(String label, String card) {
-        SidebarButton b = new SidebarButton(card, label);
+        // Load icon from imgs/menu/ folder with mapping
+        String iconPath = "imgs/menu/" + getIconFileName(card);
+        ImageIcon icon = UIUtils.getIcon(iconPath, 20, 20);
+        
+        SidebarButton b = new SidebarButton(card, label, icon);
         b.addActionListener(e -> showCard(card));
         navGroup.add(b);
         navButtons.add(b);
         return b;
+    }
+    
+    /**
+     * Maps card name to icon file name.
+     */
+    private String getIconFileName(String card) {
+        switch (card) {
+            case "Dashboard":
+                return "dashboard.png";
+            case "Transactions":
+                return "transactions.png";
+            case "Budget":
+                return "budget.png";
+            case "Analytics":
+                return "analytics.png";
+            default:
+                return null;
+        }
     }
 
     private void updateSidebarSelection(String active) {
@@ -122,7 +149,8 @@ public class MainFrame extends JFrame {
                     scrollPane.getViewport().setBackground(Color.WHITE);
                     scrollPane.getViewport().setOpaque(true);
                     if (scrollPane.getViewport().getView() instanceof DashboardView) {
-                        ((DashboardView) scrollPane.getViewport().getView()).setBackground(UIUtils.getMainBackground(false));
+                        ((DashboardView) scrollPane.getViewport().getView())
+                                .setBackground(UIUtils.getMainBackground(false));
                     }
                 } else {
                     c.setBackground(c instanceof DashboardView
@@ -147,7 +175,15 @@ public class MainFrame extends JFrame {
         analyticsView.onShown();
     }
 
-    public void refreshDashboard() { dashboardView.refresh(); }
-    public void refreshTransactions() { transactionsView.refresh(); }
-    public void refreshBudget() { budgetView.refresh(); }
+    public void refreshDashboard() {
+        dashboardView.refresh();
+    }
+
+    public void refreshTransactions() {
+        transactionsView.refresh();
+    }
+
+    public void refreshBudget() {
+        budgetView.refresh();
+    }
 }
