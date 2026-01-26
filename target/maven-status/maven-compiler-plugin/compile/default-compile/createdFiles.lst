@@ -32,7 +32,6 @@ com\expensemanager\dao\BudgetDAO.class
 com\expensemanager\view\DashboardController$1.class
 com\expensemanager\db\Schema.class
 com\expensemanager\util\UIUtils.class
-com\expensemanager\view\DashboardView$ScrollableContentPanel.class
 com\expensemanager\dao\CategoryDAO.class
 com\expensemanager\util\ChartUtils.class
 com\expensemanager\view\DashboardController$2.class

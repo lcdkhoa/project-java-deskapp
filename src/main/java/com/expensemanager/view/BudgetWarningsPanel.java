@@ -9,26 +9,27 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Budget warnings: very light red bg, thin red border (12px radius), warning icon (!),
+ * Budget warnings: very light red bg, arc 20, 1px border #E5E7EB, warning icon (!),
  * 'Budget Warnings' title, vertical list with category (bold), amount, percentage (right, red).
  * Only shown when categories exceed 100% budget.
  */
 public class BudgetWarningsPanel extends JPanel {
 
     private static final Color BG = new Color(254, 242, 242);
-    private static final Color BORDER = new Color(0xFECACA);
+    private static final Color BORDER = new Color(229, 231, 235); // #E5E7EB
     private static final Color ICON_RED = new Color(0xEF4444);
     private static final Color TITLE_RED = new Color(0x991B1B);
     private static final Color PERCENT_RED = new Color(0xEF4444);
-    private static final int RADIUS = 12;
+    private static final int RADIUS = 20;
 
     private final JPanel listPanel;
 
     public BudgetWarningsPanel() {
-        setOpaque(true);
+        setOpaque(false);
         setBackground(BG);
         setLayout(new BorderLayout(12, 8));
         setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        putClientProperty("FlatLaf.style", "arc: 20");
 
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         header.setOpaque(false);

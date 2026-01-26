@@ -1,6 +1,5 @@
 package com.expensemanager.view;
 
-import com.expensemanager.FlatLaf;
 import com.expensemanager.util.UIUtils;
 
 import javax.swing.*;
@@ -9,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main window. Menu: Dashboard, Transactions, Budget, Analytics. Theme toggle top-right. Section 2, 5.
+ * Main window. Menu: Dashboard, Transactions, Budget, Analytics. Light mode only.
  * Sidebar uses SidebarButton (active: #2563EB; inactive: transparent; hover: #F3F4F6).
  */
 public class MainFrame extends JFrame {
@@ -53,13 +52,6 @@ public class MainFrame extends JFrame {
         JLabel title = new JLabel("Personal Expense Manager");
         title.setFont(title.getFont().deriveFont(18f));
         northPanel.add(title, BorderLayout.WEST);
-
-        JButton themeBtn = new JButton(FlatLaf.isDark() ? "☀ Light" : "🌙 Dark");
-        themeBtn.addActionListener(e -> {
-            FlatLaf.toggleTheme();
-            themeBtn.setText(FlatLaf.isDark() ? "☀ Light" : "🌙 Dark");
-        });
-        northPanel.add(themeBtn, BorderLayout.EAST);
         add(northPanel, BorderLayout.NORTH);
 
         westPanel = new JPanel(new GridLayout(4, 1, 0, 4));
@@ -100,19 +92,21 @@ public class MainFrame extends JFrame {
         }
     }
 
-    /** Called when theme is toggled to re-apply backgrounds and sidebar styles. */
+    /** Apply light-mode backgrounds and sidebar styles. */
     public void refreshTheme() {
-        boolean dark = FlatLaf.isDark();
-        northPanel.setBackground(UIUtils.getSidebarBackground(dark));
-        westPanel.setBackground(UIUtils.getSidebarBackground(dark));
-        westWrap.setBackground(UIUtils.getSidebarBackground(dark));
+        northPanel.setBackground(UIUtils.getSidebarBackground(false));
+        westPanel.setBackground(UIUtils.getSidebarBackground(false));
+        westWrap.setBackground(UIUtils.getSidebarBackground(false));
         westPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        westWrap.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UIUtils.getSidebarBorderColor(dark)));
-        cards.setBackground(UIUtils.getMainBackground(dark));
+        westWrap.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UIUtils.getSidebarBorderColor(false)));
+        cards.setBackground(UIUtils.getMainBackground(false));
         for (JPanel w : cardWrappers) {
-            w.setBackground(UIUtils.getMainBackground(dark));
+            w.setBackground(UIUtils.getMainBackground(false));
             if (w.getComponentCount() > 0) {
-                w.getComponent(0).setBackground(UIUtils.getCardBackground(dark));
+                Component c = w.getComponent(0);
+                c.setBackground(c instanceof DashboardView
+                        ? UIUtils.getMainBackground(false)
+                        : UIUtils.getCardBackground(false));
             }
         }
         updateSidebarSelection(currentCard);
