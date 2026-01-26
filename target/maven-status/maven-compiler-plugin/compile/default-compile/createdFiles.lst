@@ -1,3 +1,4 @@
+com\expensemanager\view\DashboardView$DateStripCard.class
 com\expensemanager\model\User.class
 com\expensemanager\view\BudgetView.class
 com\expensemanager\view\CreateTransactionDialog$CategoryItem.class
@@ -38,6 +39,7 @@ com\expensemanager\view\DashboardController$2.class
 com\expensemanager\view\KPICard.class
 com\expensemanager\view\KPICard$IconCircle.class
 com\expensemanager\view\BudgetController.class
+com\expensemanager\view\DashboardView$1.class
 com\expensemanager\FlatLaf.class
 com\expensemanager\AppContext.class
 com\expensemanager\view\CreateTransactionDialog.class

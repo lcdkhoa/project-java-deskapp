@@ -98,8 +98,8 @@ public class DashboardController {
     }
 
     private JPanel buildKpiPanel() {
-        // 4 columns [grow,fill] equal width, gap 15
-        return new JPanel(new MigLayout("ins 0, gap 15 0", "[grow,fill][grow,fill][grow,fill][grow,fill]", "[]"));
+        // 4 columns [grow,fill] equal width, gap 20
+        return new JPanel(new MigLayout("ins 0, gap 20 0", "[grow,fill][grow,fill][grow,fill][grow,fill]", "[]"));
     }
 
     public JPanel getChartsPanel() {
@@ -108,8 +108,8 @@ public class DashboardController {
     }
 
     private JPanel buildChartsPanel() {
-        // weightx 0.35, 0.3, 0.35. Row [grow,fill] so charts fill height uniformly. gap 15.
-        return new JPanel(new MigLayout("ins 0, gap 15", "[grow 35][grow 30][grow 35]", "[grow,fill]"));
+        // weightx 0.35, 0.3, 0.35. Row [grow,fill]. gap 20.
+        return new JPanel(new MigLayout("ins 0, gap 20", "[grow 35][grow 30][grow 35]", "[grow,fill]"));
     }
 
     public JPanel getBudgetWarningsPanel() {
