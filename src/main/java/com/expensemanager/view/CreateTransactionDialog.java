@@ -943,29 +943,109 @@ public class CreateTransactionDialog extends JDialog {
                 protected JButton createArrowButton() {
                     JButton button = new JButton() {
                         @Override
-                        public void paintComponent(Graphics g) {
+                        protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            
+                            // Draw dropdown arrow icon pointing down
+                            g2.setColor(new Color(0x6B7280)); // Gray color for icon
+                            
+                            int width = getWidth();
+                            int height = getHeight();
+                            int arrowSize = 12;
+                            int x = (width - arrowSize) / 2;
+                            int y = (height - arrowSize) / 2;
+                            
+                            // Draw triangle pointing down
+                            int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
+                            int[] yPoints = { y + arrowSize, y + 2, y + 2 };
+                            g2.fillPolygon(xPoints, yPoints, 3);
+                            
+                            g2.dispose();
                         }
                     };
-                    button.setVisible(false);
-                    button.setPreferredSize(new Dimension(0, 0));
-                    button.setMaximumSize(new Dimension(0, 0));
-                    button.setMinimumSize(new Dimension(0, 0));
+                    button.setOpaque(false);
+                    button.setContentAreaFilled(false);
+                    button.setBorderPainted(false);
+                    button.setFocusPainted(false);
+                    button.setPreferredSize(new Dimension(40, height));
+                    button.setCursor(new Cursor(Cursor.HAND_CURSOR));
                     return button;
                 }
             });
         } catch (Exception e) {
+            // Fallback: customize arrow button after UI is set
             combo.addHierarchyListener(new java.awt.event.HierarchyListener() {
                 @Override
                 public void hierarchyChanged(java.awt.event.HierarchyEvent e) {
                     if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0
                             && combo.isShowing()) {
                         SwingUtilities.invokeLater(() -> {
-                            // Find and hide arrow button
+                            // Find and customize arrow button
                             Component[] comps = combo.getComponents();
                             for (Component comp : comps) {
                                 if (comp instanceof JButton) {
-                                    comp.setVisible(false);
-                                    comp.setPreferredSize(new Dimension(0, 0));
+                                    final JButton btn = (JButton) comp;
+                                    btn.setOpaque(false);
+                                    btn.setContentAreaFilled(false);
+                                    btn.setBorderPainted(false);
+                                    btn.setFocusPainted(false);
+                                    btn.setPreferredSize(new Dimension(40, height));
+                                    btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                                    
+                                    // Wrap button to add custom paint
+                                    JButton wrappedBtn = new JButton() {
+                                        @Override
+                                        protected void paintComponent(Graphics g) {
+                                            Graphics2D g2 = (Graphics2D) g.create();
+                                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                                            
+                                            // Draw dropdown arrow icon pointing down
+                                            g2.setColor(new Color(0x6B7280));
+                                            
+                                            int w = getWidth();
+                                            int h = getHeight();
+                                            int arrowSize = 12;
+                                            int x = (w - arrowSize) / 2;
+                                            int y = (h - arrowSize) / 2;
+                                            
+                                            // Draw triangle pointing down
+                                            int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
+                                            int[] yPoints = { y + arrowSize, y + 2, y + 2 };
+                                            g2.fillPolygon(xPoints, yPoints, 3);
+                                            
+                                            g2.dispose();
+                                        }
+                                    };
+                                    wrappedBtn.setOpaque(false);
+                                    wrappedBtn.setContentAreaFilled(false);
+                                    wrappedBtn.setBorderPainted(false);
+                                    wrappedBtn.setFocusPainted(false);
+                                    wrappedBtn.setPreferredSize(new Dimension(40, height));
+                                    wrappedBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                                    
+                                    // Copy action listeners from original button
+                                    for (java.awt.event.ActionListener listener : btn.getActionListeners()) {
+                                        wrappedBtn.addActionListener(listener);
+                                    }
+                                    
+                                    // Replace button
+                                    Container parent = btn.getParent();
+                                    if (parent != null) {
+                                        int index = -1;
+                                        for (int i = 0; i < parent.getComponentCount(); i++) {
+                                            if (parent.getComponent(i) == btn) {
+                                                index = i;
+                                                break;
+                                            }
+                                        }
+                                        if (index >= 0) {
+                                            parent.remove(index);
+                                            parent.add(wrappedBtn, index);
+                                            parent.revalidate();
+                                            parent.repaint();
+                                        }
+                                    }
                                 }
                             }
                         });
