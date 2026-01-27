@@ -157,9 +157,9 @@ public class TransactionView extends JPanel {
         outer.add(card, BorderLayout.CENTER);
 
         // First row: Category / Wallet / Sort (labels above inputs)
-        card.add(createLabeledInput("Category", wrapInput(createCategoryCombo())), "growx");
-        card.add(createLabeledInput("Wallet", wrapInput(createWalletCombo())), "growx");
-        card.add(createLabeledInput("Sort by", wrapInput(createSortCombo())), "growx");
+        card.add(createLabeledInput("Category", createCategoryCombo()), "growx");
+        card.add(createLabeledInput("Wallet", createWalletCombo()), "growx");
+        card.add(createLabeledInput("Sort by", createSortCombo()), "growx");
 
         // Second row: Date Range label
         JLabel dr = new JLabel("Date Range (Max 60 days)");
@@ -195,27 +195,6 @@ public class TransactionView extends JPanel {
         p.add(l, "growx");
         p.add(input, "growx");
         return p;
-    }
-
-    private JComponent wrapInput(JComponent child) {
-        JPanel wrapper = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(INPUT_BG);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
-                g2.setColor(BORDER_COLOR);
-                g2.setStroke(new BasicStroke(1f));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        wrapper.setOpaque(false);
-        wrapper.setPreferredSize(new Dimension(0, CONTROL_HEIGHT));
-        wrapper.add(child, BorderLayout.CENTER);
-        return wrapper;
     }
 
     private JComponent createSearchField() {
@@ -294,20 +273,7 @@ public class TransactionView extends JPanel {
     }
 
     private JComponent createCategoryCombo() {
-        categoryCombo = new JComboBox<>();
-        categoryCombo.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof CategoryItem) {
-                    CategoryItem item = (CategoryItem) value;
-                    setText(item.label);
-                }
-                return c;
-            }
-        });
-        styleCombo(categoryCombo);
+        categoryCombo = createStyledComboBox();
 
         categoryCombo.addActionListener(e -> refresh());
         reloadCategories();
@@ -330,76 +296,145 @@ public class TransactionView extends JPanel {
     }
 
     private JComponent createWalletCombo() {
-        walletCombo = new JComboBox<>();
+        walletCombo = createStyledComboBox();
         walletCombo.addItem(new WalletItem(null, "All wallets"));
         walletCombo.addItem(new WalletItem("cash", "Cash"));
         walletCombo.addItem(new WalletItem("bank_transfer", "Bank Transfer"));
         walletCombo.addItem(new WalletItem("card", "Card"));
         walletCombo.addItem(new WalletItem("e_wallet", "E-wallet"));
-        styleCombo(walletCombo);
         walletCombo.addActionListener(e -> refresh());
         return walletCombo;
     }
 
     private JComponent createSortCombo() {
-        sortCombo = new JComboBox<>();
+        sortCombo = createStyledComboBox();
         sortCombo.addItem(new SortItem("date_desc", "Date (Newest first)"));
         sortCombo.addItem(new SortItem("date_asc", "Date (Oldest first)"));
         sortCombo.addItem(new SortItem("amount_desc", "Amount (Highest first)"));
         sortCombo.addItem(new SortItem("amount_asc", "Amount (Lowest first)"));
-        styleCombo(sortCombo);
         sortCombo.addActionListener(e -> refresh());
         return sortCombo;
     }
 
-    private void styleCombo(JComboBox<?> combo) {
-        combo.setOpaque(false);
-        combo.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
-        combo.setBackground(INPUT_BG);
-
-        JComboBox<?> target = combo;
-        target.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+    /**
+     * Styled combo box matching CreateTransactionDialog wallet dropdown design.
+     * White background, rounded border, custom arrow, 48px height.
+     */
+    private <T> JComboBox<T> createStyledComboBox() {
+        JComboBox<T> combo = new JComboBox<T>() {
             @Override
-            protected JButton createArrowButton() {
-                JButton b = new JButton() {
-                    @Override
-                    protected void paintComponent(Graphics g) {
-                        Graphics2D g2 = (Graphics2D) g.create();
-                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                        g2.setColor(new Color(0x6B7280));
-                        int s = 10;
-                        int x = (getWidth() - s) / 2;
-                        int y = (getHeight() - s) / 2 + 2;
-                        int[] xs = { x, x + s, x + s / 2 };
-                        int[] ys = { y, y, y + s };
-                        g2.fillPolygon(xs, ys, 3);
-                        g2.dispose();
-                    }
-                };
-                b.setBorder(BorderFactory.createEmptyBorder());
-                b.setContentAreaFilled(false);
-                b.setOpaque(false);
-                return b;
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
+                g2.dispose();
+                super.paintComponent(g);
+                Graphics2D g2Border = (Graphics2D) g.create();
+                g2Border.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color borderColor = (isFocusOwner() || isPopupVisible()) ? new Color(0x155DFC) : BORDER_COLOR;
+                g2Border.setColor(borderColor);
+                g2Border.setStroke(new BasicStroke(1));
+                g2Border.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
+                g2Border.dispose();
             }
-        });
 
-        target.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            protected void paintBorder(Graphics g) {
+                // Border is painted inside paintComponent.
+            }
+        };
+        combo.setOpaque(false);
+        combo.setPreferredSize(new Dimension(0, CONTROL_HEIGHT));
+        combo.setMinimumSize(new Dimension(0, CONTROL_HEIGHT));
+        combo.setMaximumSize(new Dimension(Integer.MAX_VALUE, CONTROL_HEIGHT));
+        combo.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+        combo.setFont(combo.getFont().deriveFont(Font.PLAIN, 14f));
+
+        try {
+            combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+                @Override
+                protected JButton createArrowButton() {
+                    JButton button = new JButton() {
+                        @Override
+                        protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            g2.setColor(new Color(0x6B7280));
+
+                            int width = getWidth();
+                            int height = getHeight();
+                            int arrowSize = 12;
+                            int x = (width - arrowSize) / 2;
+                            int y = (height - arrowSize) / 2;
+
+                            int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
+                            int[] yPoints = { y + arrowSize, y + 2, y + 2 };
+                            g2.fillPolygon(xPoints, yPoints, 3);
+
+                            g2.dispose();
+                        }
+                    };
+                    button.setOpaque(false);
+                    button.setContentAreaFilled(false);
+                    button.setBorderPainted(false);
+                    button.setFocusPainted(false);
+                    button.setPreferredSize(new Dimension(40, CONTROL_HEIGHT));
+                    button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    return button;
+                }
+            });
+        } catch (Exception e) {
+            // Fallback: rely on default UI if custom UI is not available.
+        }
+
+        combo.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                     boolean isSelected, boolean cellHasFocus) {
                 Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (isSelected) {
-                    c.setBackground(new Color(0x2563EB));
-                    setForeground(Color.WHITE);
+                    c.setBackground(new Color(0x155DFC));
+                    c.setForeground(Color.WHITE);
+                } else {
+                    c.setBackground(Color.WHITE);
+                    c.setForeground(Color.BLACK);
                 }
                 return c;
             }
         });
 
-        target.setPreferredSize(new Dimension(target.getPreferredSize().width, CONTROL_HEIGHT));
-        target.setMaximumSize(new Dimension(Integer.MAX_VALUE, CONTROL_HEIGHT));
-        target.setMinimumSize(new Dimension(80, CONTROL_HEIGHT));
-        target.putClientProperty("JComponent.roundRect", Boolean.TRUE);
+        // Repaint when popup opens/closes to update border color
+        combo.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
+                combo.repaint();
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {
+                combo.repaint();
+            }
+
+            @Override
+            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {
+                combo.repaint();
+            }
+        });
+
+        combo.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                combo.repaint();
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                combo.repaint();
+            }
+        });
+
+        return combo;
     }
 
     public void refresh() {
