@@ -6,7 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Card-like row for Section 2.2: Category icon (circle), Note (bold) + Wallet (gray),
+ * Card-like row for Section 2.2: Category icon (circle), Note (bold) + Wallet
+ * (gray),
  * Amount (red/green) + Time. Padding for spacing.
  */
 public class TransactionRowPanel extends JPanel {
@@ -19,7 +20,7 @@ public class TransactionRowPanel extends JPanel {
     private static final int ROW_PADDING = 10;
 
     public TransactionRowPanel(String icon, Color iconBgColor, String note, String wallet,
-                              long amount, String timeHhmm) {
+            long amount, String timeHhmm) {
         setLayout(new BorderLayout(12, 0));
         setBorder(BorderFactory.createEmptyBorder(ROW_PADDING, 12, ROW_PADDING, 12));
         setOpaque(true);

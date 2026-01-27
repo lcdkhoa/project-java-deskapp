@@ -1,0 +1,763 @@
+package com.expensemanager.view;
+
+import com.expensemanager.AppContext;
+import com.expensemanager.dao.CategoryDAO;
+import com.expensemanager.dao.TransactionDAO;
+import com.expensemanager.db.DatabaseConnection;
+import com.expensemanager.model.Category;
+import com.expensemanager.model.Transaction;
+import com.expensemanager.util.CurrencyUtil;
+import com.expensemanager.util.DateUtil;
+import com.expensemanager.util.UIFactory;
+
+import net.miginfocom.swing.MigLayout;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class TransactionView extends JPanel {
+
+    // Page background must be pure white per design.
+    private static final Color BG_PAGE = Color.WHITE;
+    // Inputs must be light gray against the white page.
+    private static final Color INPUT_BG = new Color(0xF3F4F6);
+    private static final Color CARD_BG = Color.WHITE;
+    private static final Color BORDER_COLOR = new Color(0xE5E7EB);
+    private static final int CARD_ARC = 30;
+    private static final int CONTROL_HEIGHT = 48;
+
+    private static final Color NOTE_COLOR = new Color(0x111827);
+    private static final Color WALLET_COLOR = new Color(0x6B7280);
+    private static final Color EXPENSE_COLOR = new Color(0xB91C1C);
+    private static final Color INCOME_COLOR = new Color(0x16A34A);
+
+    private final MainFrame main;
+
+    // Filters
+    private JTextField searchField;
+    private JComboBox<CategoryItem> categoryCombo;
+    private JComboBox<WalletItem> walletCombo;
+    private DateField fromDateField;
+    private DateField toDateField;
+    private JComboBox<SortItem> sortCombo;
+
+    // List
+    private final JPanel listPanel;
+
+    private final DateTimeFormatter filterDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+
+    public TransactionView(MainFrame main) {
+        this.main = main;
+        setLayout(new MigLayout("wrap 1, fill, insets 20", "[grow]", "[][][][grow]"));
+        setBackground(BG_PAGE);
+
+        // Row 1: Page header (title, subtitle, Add Transaction button)
+        add(createHeaderPanel(), "growx");
+
+        // Row 2: Search bar (full width)
+        add(createSearchRow(), "growx");
+
+        // Row 3: Filters + Date range (grouped card)
+        add(createFilterCard(), "growx");
+
+        // Row 5: Transaction list (scrollable, main content)
+        listPanel = new JPanel(new MigLayout("wrap 1, fillx, insets 0 0 16 0, gapy 12", "[grow,fill]", "[]"));
+        listPanel.setOpaque(true);
+        listPanel.setBackground(BG_PAGE);
+
+        JScrollPane scrollPane = new JScrollPane(listPanel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setBackground(BG_PAGE);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(true);
+        scrollPane.getViewport().setBackground(BG_PAGE);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        add(scrollPane, "grow, push");
+
+        refresh();
+    }
+
+    /**
+     * Row 1: Page title, subtitle, and Add Transaction button.
+     * MigLayout("fillx, insets 0", "[grow][right]", "[]")
+     */
+    private JComponent createHeaderPanel() {
+        JPanel header = new JPanel(new MigLayout("fillx, insets 0", "[grow][right]", "[]"));
+        header.setOpaque(false);
+
+        JPanel titlePanel = new JPanel(new MigLayout("ins 0, wrap 2", "[]", "[]2[]"));
+        titlePanel.setOpaque(false);
+
+        JLabel titleLabel = new JLabel("Transactions");
+        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 24f));
+        titlePanel.add(titleLabel, "wrap");
+
+        JLabel subtitleLabel = new JLabel("Your transaction history");
+        subtitleLabel.setFont(subtitleLabel.getFont().deriveFont(Font.PLAIN, 14f));
+        subtitleLabel.setForeground(WALLET_COLOR);
+        titlePanel.add(subtitleLabel);
+
+        header.add(titlePanel, "growx");
+
+        JButton addTx = UIFactory.createPrimaryButton("Add Transaction", UIFactory.createPlusIcon());
+        addTx.setIconTextGap(8);
+        addTx.setPreferredSize(new Dimension(190, CONTROL_HEIGHT));
+        addTx.addActionListener(e -> new CreateTransactionDialog(main).setVisible(true));
+        header.add(addTx, "right");
+
+        return header;
+    }
+
+    /**
+     * Row 2: Search bar occupying full width.
+     * MigLayout("fillx, insets 10 0 10 0", "[grow]", "[]")
+     */
+    private JComponent createSearchRow() {
+        JPanel row = new JPanel(new MigLayout("fillx, insets 10 0 10 0", "[grow]", "[]"));
+        row.setOpaque(false);
+        row.add(createSearchField(), "growx");
+        return row;
+    }
+
+    /**
+     * Grouped card containing Category/Wallet/Sort and Date Range (From/To),
+     * matching the Figma layout.
+     */
+    private JComponent createFilterCard() {
+        JPanel card = new JPanel(new MigLayout("fillx, insets 16, wrap 3, gapx 18, gapy 14",
+                "[grow,fill][grow,fill][grow,fill]", "[]"));
+        card.setOpaque(false);
+
+        JPanel outer = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(CARD_BG);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
+                g2.setColor(BORDER_COLOR);
+                g2.setStroke(new BasicStroke(1f));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        outer.setOpaque(false);
+        outer.add(card, BorderLayout.CENTER);
+
+        // First row: Category / Wallet / Sort (labels above inputs)
+        card.add(createLabeledInput("Category", wrapInput(createCategoryCombo())), "growx");
+        card.add(createLabeledInput("Wallet", wrapInput(createWalletCombo())), "growx");
+        card.add(createLabeledInput("Sort by", wrapInput(createSortCombo())), "growx");
+
+        // Second row: Date Range label
+        JLabel dr = new JLabel("Date Range (Max 60 days)");
+        dr.setFont(dr.getFont().deriveFont(Font.PLAIN, 12f));
+        dr.setForeground(WALLET_COLOR);
+        card.add(dr, "span 3, gaptop 2");
+
+        // Third row: From / To (labels above inputs)
+        JPanel datesRow = new JPanel(new MigLayout("ins 0, fillx, gapx 12", "[grow,fill][grow,fill]", "[]"));
+        datesRow.setOpaque(false);
+
+        fromDateField = new DateField("From");
+        toDateField = new DateField("To");
+        fromDateField.addChangeListener(this::refresh);
+        toDateField.addChangeListener(this::refresh);
+
+        datesRow.add(createLabeledInput("From", fromDateField), "growx");
+        datesRow.add(createLabeledInput("To", toDateField), "growx");
+
+        card.add(datesRow, "span 3, growx");
+
+        return outer;
+    }
+
+    private JComponent createLabeledInput(String label, JComponent input) {
+        JPanel p = new JPanel(new MigLayout("ins 0, wrap 1, fillx, gapy 6", "[grow]", "[]"));
+        p.setOpaque(false);
+
+        JLabel l = new JLabel(label);
+        l.setFont(l.getFont().deriveFont(Font.PLAIN, 12f));
+        l.setForeground(new Color(0x374151));
+
+        p.add(l, "growx");
+        p.add(input, "growx");
+        return p;
+    }
+
+    private JComponent wrapInput(JComponent child) {
+        JPanel wrapper = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(INPUT_BG);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
+                g2.setColor(BORDER_COLOR);
+                g2.setStroke(new BasicStroke(1f));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        wrapper.setOpaque(false);
+        wrapper.setPreferredSize(new Dimension(0, CONTROL_HEIGHT));
+        wrapper.add(child, BorderLayout.CENTER);
+        return wrapper;
+    }
+
+    private JComponent createSearchField() {
+        final int searchHeight = 50;
+
+        JPanel wrapper = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Search bar background must be pure white per design.
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
+                g2.setColor(BORDER_COLOR);
+                g2.setStroke(new BasicStroke(1f));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        wrapper.setOpaque(false);
+        // Force the search bar to be exactly ~50px high so it does not collapse.
+        wrapper.setPreferredSize(new Dimension(0, searchHeight));
+        wrapper.setMinimumSize(new Dimension(0, searchHeight));
+
+        JLabel iconLabel = new JLabel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(0x6B7280));
+
+                int w = 16;
+                int h = 16;
+                int x = (getWidth() - w) / 2;
+                int y = (getHeight() - h) / 2;
+
+                // Circle
+                g2.setStroke(new BasicStroke(1.5f));
+                g2.drawOval(x, y, 10, 10);
+                // Handle
+                g2.drawLine(x + 8, y + 8, x + 14, y + 14);
+
+                g2.dispose();
+            }
+        };
+        // Match the full search bar height so the rounded corners are not visually "flattened".
+        iconLabel.setPreferredSize(new Dimension(48, searchHeight));
+
+        searchField = new JTextField();
+        searchField.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
+        searchField.setOpaque(false);
+        searchField.putClientProperty("JTextField.placeholderText", "Search transactions...");
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                refresh();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                refresh();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                refresh();
+            }
+        });
+
+        wrapper.add(iconLabel, BorderLayout.WEST);
+        wrapper.add(searchField, BorderLayout.CENTER);
+        return wrapper;
+    }
+
+    private JComponent createCategoryCombo() {
+        categoryCombo = new JComboBox<>();
+        categoryCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof CategoryItem) {
+                    CategoryItem item = (CategoryItem) value;
+                    setText(item.label);
+                }
+                return c;
+            }
+        });
+        styleCombo(categoryCombo);
+
+        categoryCombo.addActionListener(e -> refresh());
+        reloadCategories();
+
+        return categoryCombo;
+    }
+
+    private void reloadCategories() {
+        categoryCombo.removeAllItems();
+        categoryCombo.addItem(new CategoryItem(null, "All categories"));
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            List<Category> all = new CategoryDAO().findAll(conn);
+            for (Category c : all) {
+                categoryCombo.addItem(new CategoryItem(c.getId(), c.getName()));
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error loading categories: " + ex.getMessage());
+        }
+    }
+
+    private JComponent createWalletCombo() {
+        walletCombo = new JComboBox<>();
+        walletCombo.addItem(new WalletItem(null, "All wallets"));
+        walletCombo.addItem(new WalletItem("cash", "Cash"));
+        walletCombo.addItem(new WalletItem("bank_transfer", "Bank Transfer"));
+        walletCombo.addItem(new WalletItem("card", "Card"));
+        walletCombo.addItem(new WalletItem("e_wallet", "E-wallet"));
+        styleCombo(walletCombo);
+        walletCombo.addActionListener(e -> refresh());
+        return walletCombo;
+    }
+
+    private JComponent createSortCombo() {
+        sortCombo = new JComboBox<>();
+        sortCombo.addItem(new SortItem("date_desc", "Date (Newest first)"));
+        sortCombo.addItem(new SortItem("date_asc", "Date (Oldest first)"));
+        sortCombo.addItem(new SortItem("amount_desc", "Amount (Highest first)"));
+        sortCombo.addItem(new SortItem("amount_asc", "Amount (Lowest first)"));
+        styleCombo(sortCombo);
+        sortCombo.addActionListener(e -> refresh());
+        return sortCombo;
+    }
+
+    private void styleCombo(JComboBox<?> combo) {
+        combo.setOpaque(false);
+        combo.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+        combo.setBackground(INPUT_BG);
+
+        JComboBox<?> target = combo;
+        target.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                JButton b = new JButton() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        Graphics2D g2 = (Graphics2D) g.create();
+                        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        g2.setColor(new Color(0x6B7280));
+                        int s = 10;
+                        int x = (getWidth() - s) / 2;
+                        int y = (getHeight() - s) / 2 + 2;
+                        int[] xs = { x, x + s, x + s / 2 };
+                        int[] ys = { y, y, y + s };
+                        g2.fillPolygon(xs, ys, 3);
+                        g2.dispose();
+                    }
+                };
+                b.setBorder(BorderFactory.createEmptyBorder());
+                b.setContentAreaFilled(false);
+                b.setOpaque(false);
+                return b;
+            }
+        });
+
+        target.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (isSelected) {
+                    c.setBackground(new Color(0x2563EB));
+                    setForeground(Color.WHITE);
+                }
+                return c;
+            }
+        });
+
+        target.setPreferredSize(new Dimension(target.getPreferredSize().width, CONTROL_HEIGHT));
+        target.setMaximumSize(new Dimension(Integer.MAX_VALUE, CONTROL_HEIGHT));
+        target.setMinimumSize(new Dimension(80, CONTROL_HEIGHT));
+        target.putClientProperty("JComponent.roundRect", Boolean.TRUE);
+    }
+
+    public void refresh() {
+        if (listPanel == null) {
+            return;
+        }
+        listPanel.removeAll();
+
+        String userId = AppContext.getUserId();
+        CategoryItem categoryItem = (CategoryItem) (categoryCombo != null ? categoryCombo.getSelectedItem() : null);
+        String categoryId = categoryItem != null ? categoryItem.id : null;
+
+        WalletItem walletItem = (WalletItem) (walletCombo != null ? walletCombo.getSelectedItem() : null);
+        String walletType = walletItem != null ? walletItem.value : null;
+
+        LocalDate startDate = parseFilterDate(fromDateField != null ? fromDateField.getTextValue() : null);
+        LocalDate endDate = parseFilterDate(toDateField != null ? toDateField.getTextValue() : null);
+
+        if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
+            JOptionPane.showMessageDialog(this, "End date must be on or after start date.");
+            listPanel.revalidate();
+            listPanel.repaint();
+            return;
+        }
+        if (startDate != null && endDate != null && startDate.plusDays(60).isBefore(endDate)) {
+            JOptionPane.showMessageDialog(this, "Date range cannot exceed 60 days.");
+            listPanel.revalidate();
+            listPanel.repaint();
+            return;
+        }
+
+        String sortKey = "date_desc";
+        if (sortCombo != null && sortCombo.getSelectedItem() instanceof SortItem) {
+            sortKey = ((SortItem) sortCombo.getSelectedItem()).key;
+        }
+
+        String searchNote = searchField != null ? searchField.getText() : null;
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            TransactionDAO txDao = new TransactionDAO();
+            CategoryDAO cDao = new CategoryDAO();
+            Map<String, Category> idToCat = new HashMap<>();
+            for (Category c : cDao.findAll(conn)) {
+                idToCat.put(c.getId(), c);
+            }
+
+            List<Transaction> list = txDao.search(conn, userId, categoryId, walletType, startDate, endDate, sortKey,
+                    searchNote);
+            if (list.isEmpty()) {
+                JLabel empty = new JLabel("No transactions");
+                empty.setForeground(new Color(0x6B7280));
+                empty.setBorder(BorderFactory.createEmptyBorder(24, 12, 24, 12));
+                listPanel.add(empty, "growx");
+            } else {
+                LocalDate lastDate = null;
+                for (Transaction t : list) {
+                    LocalDate d = t.getTransactionDate();
+                    if (d != null && !d.equals(lastDate)) {
+                        addDateHeader(d);
+                        lastDate = d;
+                    }
+                    addTransactionRow(t, idToCat.get(t.getCategoryId()));
+                }
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error loading transactions: " + ex.getMessage());
+        }
+
+        listPanel.revalidate();
+        listPanel.repaint();
+    }
+
+    private void addDateHeader(LocalDate date) {
+        JLabel header = new JLabel(DateUtil.formatDateForGroup(date));
+        header.setFont(header.getFont().deriveFont(Font.BOLD, 13f));
+        header.setForeground(new Color(0x6B7280));
+        header.setBorder(BorderFactory.createEmptyBorder(20, 4, 6, 4));
+        listPanel.add(header, "growx");
+    }
+
+    private void addTransactionRow(Transaction t, Category cat) {
+        String note = t.getNote() != null && !t.getNote().isBlank() ? t.getNote() : "(No note)";
+        String wallet = toWalletDisplay(t.getWalletType());
+        long amount = t.getAmount();
+        String time = t.getTransactionTime() != null ? t.getTransactionTime().toString().substring(0, 5) : "";
+
+        Color iconBg = parseColor(cat != null ? cat.getColor() : null);
+        String iconPath = cat != null ? cat.getIcon() : null;
+
+        TransactionRowItem row = new TransactionRowItem(iconBg, iconPath, note, wallet, amount, time);
+        listPanel.add(row, "growx");
+    }
+
+    private String toWalletDisplay(String walletType) {
+        if (walletType == null || walletType.isBlank())
+            return "";
+        switch (walletType) {
+            case "cash":
+                return "Cash";
+            case "bank_transfer":
+                return "Bank Transfer";
+            case "card":
+                return "Card";
+            case "e_wallet":
+                return "E-wallet";
+            default:
+                return walletType;
+        }
+    }
+
+    private LocalDate parseFilterDate(String text) {
+        if (text == null || text.isBlank())
+            return null;
+        try {
+            return LocalDate.parse(text.trim(), filterDateFormatter);
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
+    }
+
+    private static Color parseColor(String hex) {
+        if (hex == null || hex.isBlank())
+            return new Color(0x9CA3AF);
+        if (!hex.startsWith("#"))
+            hex = "#" + hex;
+        try {
+            return Color.decode(hex);
+        } catch (Exception e) {
+            return new Color(0x9CA3AF);
+        }
+    }
+
+    /**
+     * Card-style transaction row using MigLayout as specified.
+     * MigLayout("fillx, insets 10 20 10 20", "[44!]15[grow][right]", "center")
+     */
+    private static class TransactionRowItem extends JPanel {
+        private static final int ROW_ARC = 22;
+
+        TransactionRowItem(Color iconBgColor, String iconPath, String note, String wallet,
+                long amount, String timeHhmm) {
+            super(new MigLayout("fillx, insets 10 20 10 20", "[44!]15[grow,fill][right]", "center"));
+            setOpaque(false);
+
+            // Custom paint: white rounded card with subtle border
+            setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+
+            CircleIconPanel icon = new CircleIconPanel(iconBgColor, iconPath);
+            add(icon, "cell 0 0");
+
+            JPanel center = new JPanel(new MigLayout("ins 0, fillx, wrap 2", "[grow]", "[]8[]"));
+            center.setOpaque(false);
+
+            JLabel noteLbl = new JLabel(note);
+            noteLbl.setFont(noteLbl.getFont().deriveFont(Font.BOLD, 14f));
+            noteLbl.setForeground(NOTE_COLOR);
+            center.add(noteLbl, "growx, span");
+
+            JLabel walletLbl = new JLabel(wallet != null ? wallet : "");
+            walletLbl.setFont(walletLbl.getFont().deriveFont(Font.PLAIN, 12f));
+            walletLbl.setForeground(WALLET_COLOR);
+            center.add(walletLbl, "growx, span");
+
+            add(center, "cell 1 0, growx");
+
+            JPanel right = new JPanel(new MigLayout("ins 0, wrap 1", "[right]", "[]4[]"));
+            right.setOpaque(false);
+
+            JLabel amountLbl = new JLabel(CurrencyUtil.formatSigned(amount));
+            amountLbl.setFont(amountLbl.getFont().deriveFont(Font.BOLD, 14f));
+            amountLbl.setForeground(amount < 0 ? EXPENSE_COLOR : INCOME_COLOR);
+            right.add(amountLbl, "right");
+
+            JLabel timeLbl = new JLabel(timeHhmm != null ? timeHhmm : "");
+            timeLbl.setFont(timeLbl.getFont().deriveFont(Font.PLAIN, 12f));
+            timeLbl.setForeground(WALLET_COLOR);
+            right.add(timeLbl, "right");
+
+            add(right, "cell 2 0, alignx right");
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(CARD_BG);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), ROW_ARC, ROW_ARC);
+
+            // Subtle card border (matches screenshot better than full shadow).
+            g2.setColor(BORDER_COLOR);
+            g2.setStroke(new BasicStroke(1f));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, ROW_ARC, ROW_ARC);
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    private static class CategoryItem {
+        final String id;
+        final String label;
+
+        CategoryItem(String id, String label) {
+            this.id = id;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    private static class WalletItem {
+        final String value;
+        final String label;
+
+        WalletItem(String value, String label) {
+            this.value = value;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    private static class SortItem {
+        final String key;
+        final String label;
+
+        SortItem(String key, String label) {
+            this.key = key;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    /**
+     * Simple date field with rounded border and calendar icon.
+     * Stores value as plain text (MM/dd/yyyy). Parsing is handled by
+     * TransactionView.
+     */
+    private static class DateField extends JComponent {
+        private final JTextField textField;
+        private final String placeholder;
+
+        DateField(String placeholder) {
+            this.placeholder = placeholder;
+            setLayout(new BorderLayout());
+            setOpaque(false);
+            setPreferredSize(new Dimension(0, CONTROL_HEIGHT));
+
+            textField = new JTextField();
+            textField.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 0));
+            textField.setOpaque(false);
+            textField.putClientProperty("JTextField.placeholderText", "mm/dd/yyyy");
+
+            JButton iconButton = new JButton() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(new Color(0x6B7280));
+
+                    int s = 16;
+                    int x = (getWidth() - s) / 2;
+                    int y = (getHeight() - s) / 2;
+
+                    g2.setStroke(new BasicStroke(1.5f));
+                    g2.drawRoundRect(x + 1, y + 3, s - 2, s - 4, 3, 3);
+                    g2.fillRect(x + 2, y + 3, s - 4, 3);
+
+                    g2.dispose();
+                }
+            };
+            iconButton.setBorder(BorderFactory.createEmptyBorder());
+            iconButton.setContentAreaFilled(false);
+            iconButton.setOpaque(false);
+            iconButton.setPreferredSize(new Dimension(32, 32));
+
+            add(textField, BorderLayout.CENTER);
+            add(iconButton, BorderLayout.EAST);
+
+            java.awt.event.ActionListener openPicker = e -> showSimpleCalendarPopup();
+            iconButton.addActionListener(openPicker);
+
+            textField.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    if (!textField.isEditable())
+                        return;
+                    if (textField.getText() == null || textField.getText().isBlank()) {
+                        showSimpleCalendarPopup();
+                    }
+                }
+            });
+        }
+
+        String getTextValue() {
+            return textField.getText();
+        }
+
+        void addChangeListener(Runnable r) {
+            textField.getDocument().addDocumentListener(new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                    r.run();
+                }
+
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                    r.run();
+                }
+
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                    r.run();
+                }
+            });
+        }
+
+        private void showSimpleCalendarPopup() {
+            // Minimal calendar: rely on standard JSpinner date editor as popup.
+            JSpinner spinner = new JSpinner(
+                    new SpinnerDateModel(new java.util.Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
+            spinner.setEditor(new JSpinner.DateEditor(spinner, "MM/dd/yyyy"));
+
+            int result = JOptionPane.showConfirmDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    spinner,
+                    placeholder + " date",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                Object val = spinner.getValue();
+                if (val instanceof java.util.Date) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM/dd/yyyy");
+                    textField.setText(sdf.format((java.util.Date) val));
+                }
+            }
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(INPUT_BG);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
+            g2.setColor(BORDER_COLOR);
+            g2.setStroke(new BasicStroke(1f));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+}

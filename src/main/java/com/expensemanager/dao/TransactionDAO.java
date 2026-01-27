@@ -200,9 +200,22 @@ public class TransactionDAO {
             args.add("%" + searchNote.trim() + "%");
         }
         // Spec: search by Note, Category name. Category filter uses categoryId; category name search could be added via JOIN.
-        String order = "date_desc".equals(sortBy) ? "transaction_date DESC, transaction_time DESC" :
-                       "amount_desc".equals(sortBy) ? "ABS(amount) DESC, transaction_date DESC" :
-                       "transaction_date DESC, transaction_time DESC";
+        // Sort options:
+        // - date_desc (default): newest first
+        // - date_asc: oldest first
+        // - amount_desc: highest absolute amount first
+        // - amount_asc: lowest absolute amount first
+        String order;
+        if ("date_asc".equals(sortBy)) {
+            order = "transaction_date ASC, transaction_time ASC";
+        } else if ("amount_desc".equals(sortBy)) {
+            order = "ABS(amount) DESC, transaction_date DESC, transaction_time DESC";
+        } else if ("amount_asc".equals(sortBy)) {
+            order = "ABS(amount) ASC, transaction_date DESC, transaction_time DESC";
+        } else {
+            // Default: newest first
+            order = "transaction_date DESC, transaction_time DESC";
+        }
         String sql = "SELECT id, user_id, amount, type, category_id, wallet_type, note, transaction_date, transaction_time, month_key, created_at, updated_at FROM transactions WHERE " + String.join(" AND ", cond) + " ORDER BY " + order;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (int i = 0; i < args.size(); i++) {
