@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Main window. Menu: Dashboard, Transactions, Budget, Analytics. Light mode
+ * Main window. Menu: Dashboard, Transactions, Budget. Light mode
  * only.
  * Sidebar uses SidebarButton (active: #2563EB; inactive: transparent; hover:
  * #F3F4F6).
@@ -17,14 +17,12 @@ import java.util.List;
 public class MainFrame extends JFrame {
     private static final int W = 1200;
     private static final int H = 750;
-    private static final String[] NAV_CARDS = { "Dashboard", "Transactions", "Budget", "Analytics" };
 
     private final JPanel cards;
     private final CardLayout cardLayout;
     private final DashboardView dashboardView;
     private final TransactionsView transactionsView;
     private final BudgetView budgetView;
-    private final AnalyticsView analyticsView;
     private final List<JPanel> cardWrappers = new ArrayList<>();
     private final List<SidebarButton> navButtons = new ArrayList<>();
     private final ButtonGroup navGroup = new ButtonGroup();
@@ -44,12 +42,10 @@ public class MainFrame extends JFrame {
         dashboardView = new DashboardView(this);
         transactionsView = new TransactionsView(this);
         budgetView = new BudgetView(this);
-        analyticsView = new AnalyticsView(this);
 
         cards.add(createCardWrapper(dashboardView), "Dashboard");
         cards.add(createCardWrapper(transactionsView), "Transactions");
         cards.add(createCardWrapper(budgetView), "Budget");
-        cards.add(createCardWrapper(analyticsView), "Analytics");
 
         northPanel = new JPanel(new BorderLayout());
         JLabel title = new JLabel("Expense Manager");
@@ -64,7 +60,6 @@ public class MainFrame extends JFrame {
         westPanel.add(createNavButton("Dashboard", "Dashboard"), "h 48!");
         westPanel.add(createNavButton("Transactions", "Transactions"), "h 48!");
         westPanel.add(createNavButton("Budget", "Budget"), "h 48!");
-        westPanel.add(createNavButton("Analytics", "Analytics"), "h 48!");
 
         westWrap = new JPanel(new BorderLayout());
         // Increase sidebar width so labels are not truncated
@@ -120,8 +115,6 @@ public class MainFrame extends JFrame {
                 return "transactions.png";
             case "Budget":
                 return "budget.png";
-            case "Analytics":
-                return "analytics.png";
             default:
                 return null;
         }
@@ -174,7 +167,6 @@ public class MainFrame extends JFrame {
         dashboardView.onShown();
         transactionsView.onShown();
         budgetView.onShown();
-        analyticsView.onShown();
     }
 
     public void refreshDashboard() {
