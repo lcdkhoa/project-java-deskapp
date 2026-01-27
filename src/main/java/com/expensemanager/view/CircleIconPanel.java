@@ -52,13 +52,7 @@ public class CircleIconPanel extends JComponent {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int size = Math.min(getWidth(), getHeight());
-        int x = (getWidth() - size) / 2;
-        int y = (getHeight() - size) / 2;
-
-        g2.setColor(backgroundColor);
-        g2.fillOval(x, y, size, size);
-
+        // Only render the category icon, no colored circle background.
         if (icon != null) {
             int iw = icon.getIconWidth();
             int ih = icon.getIconHeight();
@@ -70,4 +64,3 @@ public class CircleIconPanel extends JComponent {
         g2.dispose();
     }
 }
-

@@ -42,6 +42,29 @@ public class TransactionView extends JPanel {
 
     private final MainFrame main;
 
+    // Category name to icon file mapping (fallback when DB icon field stores emoji)
+    private static final Map<String, String> CATEGORY_ICON_MAP = new HashMap<>();
+    private static final String DEFAULT_CATEGORY_ICON = "imgs/category/others.png";
+    static {
+        // Expense categories
+        CATEGORY_ICON_MAP.put("Food", "imgs/category/food.png");
+        CATEGORY_ICON_MAP.put("Transport", "imgs/category/transport.png");
+        CATEGORY_ICON_MAP.put("Shopping", "imgs/category/shopping.png");
+        CATEGORY_ICON_MAP.put("Entertainment", "imgs/category/entertainment.png");
+        CATEGORY_ICON_MAP.put("Bills", "imgs/category/bill.png");
+        CATEGORY_ICON_MAP.put("Healthcare", "imgs/category/healthcare.png");
+        CATEGORY_ICON_MAP.put("Housing", "imgs/category/housing.png");
+        CATEGORY_ICON_MAP.put("Education", "imgs/category/education.png");
+        CATEGORY_ICON_MAP.put("Other", "imgs/category/others.png");
+
+        // Income categories
+        CATEGORY_ICON_MAP.put("Salary", "imgs/category/salary.png");
+        CATEGORY_ICON_MAP.put("Freelance", "imgs/category/freelance.png");
+        CATEGORY_ICON_MAP.put("Affiliate", "imgs/category/affiliate.png");
+        CATEGORY_ICON_MAP.put("Selling", "imgs/category/selling.png");
+        CATEGORY_ICON_MAP.put("Other Income", "imgs/category/other_income.png");
+    }
+
     // Filters
     private JTextField searchField;
     private JComboBox<CategoryItem> categoryCombo;
@@ -241,7 +264,8 @@ public class TransactionView extends JPanel {
                 g2.dispose();
             }
         };
-        // Match the full search bar height so the rounded corners are not visually "flattened".
+        // Match the full search bar height so the rounded corners are not visually
+        // "flattened".
         iconLabel.setPreferredSize(new Dimension(48, searchHeight));
 
         searchField = new JTextField();
@@ -521,8 +545,25 @@ public class TransactionView extends JPanel {
         String time = t.getTransactionTime() != null ? t.getTransactionTime().toString().substring(0, 5) : "";
 
         Color iconBg = parseColor(cat != null ? cat.getColor() : null);
-        String iconPath = cat != null ? cat.getIcon() : null;
 
+        // Determine icon path: prefer value from DB, fallback to static mapping by
+        // name.
+        String iconPath = null;
+        String catName = null;
+        if (cat != null) {
+            catName = cat.getName();
+            // If DB icon contains a file path (e.g. ends with .png) then use it,
+            // otherwise treat it as emoji and map by name to our local PNG.
+            String dbIcon = cat.getIcon();
+            if (dbIcon != null && dbIcon.toLowerCase().endsWith(".png")) {
+                iconPath = dbIcon;
+            } else if (catName != null) {
+                iconPath = CATEGORY_ICON_MAP.get(catName);
+            }
+        }
+        if (iconPath == null) {
+            iconPath = DEFAULT_CATEGORY_ICON;
+        }
         TransactionRowItem row = new TransactionRowItem(iconBg, iconPath, note, wallet, amount, time);
         listPanel.add(row, "growx");
     }
