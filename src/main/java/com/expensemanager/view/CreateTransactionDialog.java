@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -353,12 +354,12 @@ public class CreateTransactionDialog extends JDialog {
         java.awt.event.MouseAdapter clickListener = new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                showDatePickerPopup(dateField, iconButton);
+                showDatePickerPopup(wrapper, dateField);
             }
         };
         dateField.addMouseListener(clickListener);
         wrapper.addMouseListener(clickListener);
-        iconButton.addActionListener(e -> showDatePickerPopup(dateField, iconButton));
+        iconButton.addActionListener(e -> showDatePickerPopup(wrapper, dateField));
 
         return wrapper;
     }
@@ -456,62 +457,348 @@ public class CreateTransactionDialog extends JDialog {
         java.awt.event.MouseAdapter clickListener = new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                showTimePickerPopup(timeField, iconButton);
+                showTimePickerPopup(wrapper, timeField);
             }
         };
         timeField.addMouseListener(clickListener);
         wrapper.addMouseListener(clickListener);
-        iconButton.addActionListener(e -> showTimePickerPopup(timeField, iconButton));
+        iconButton.addActionListener(e -> showTimePickerPopup(wrapper, timeField));
 
         return wrapper;
     }
 
-    private void showDatePickerPopup(JTextField field, JButton iconButton) {
-        // Create popup with date spinner
-        JPopupMenu popup = new JPopupMenu();
-        popup.setBorder(BorderFactory.createLineBorder(new Color(0xE5E7EB), 1));
+    private JPanel createCalendarPanel(JPopupMenu popup) {
+        JPanel calendarPanel = new JPanel(new BorderLayout());
+        calendarPanel.setBackground(Color.WHITE);
+        calendarPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel popupPanel = new JPanel(new BorderLayout());
-        popupPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        popupPanel.setBackground(Color.WHITE);
+        // Get current date from spinner
+        Date currentDate = (Date) dateSpinner.getValue();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(currentDate);
+        final int[] currentYear = { cal.get(Calendar.YEAR) };
+        final int[] currentMonth = { cal.get(Calendar.MONTH) };
 
-        // Use existing dateSpinner
-        JSpinner spinner = dateSpinner;
-        spinner.setPreferredSize(new Dimension(200, 30));
-        popupPanel.add(spinner, BorderLayout.CENTER);
+        // Header panel with navigation
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 10, 5));
 
-        // Add change listener to update text field
-        spinner.addChangeListener(e -> {
-            updateDateFieldText();
-            popup.setVisible(false);
+        // Month/Year label
+        final JLabel monthYearLabel = new JLabel();
+        monthYearLabel.setFont(monthYearLabel.getFont().deriveFont(Font.BOLD, 14f));
+        monthYearLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Calendar body panel (will be updated)
+        final JPanel[] bodyPanelRef = { new JPanel(new GridLayout(0, 7, 5, 5)) };
+        bodyPanelRef[0].setBackground(Color.WHITE);
+
+        // Function to build calendar body
+        Runnable buildCalendarBody = () -> {
+            bodyPanelRef[0].removeAll();
+
+            // Day names header
+            String[] dayNames = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+            for (String dayName : dayNames) {
+                JLabel dayLabel = new JLabel(dayName, SwingConstants.CENTER);
+                dayLabel.setFont(dayLabel.getFont().deriveFont(Font.PLAIN, 11f));
+                dayLabel.setForeground(new Color(0x6B7280));
+                bodyPanelRef[0].add(dayLabel);
+            }
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(currentYear[0], currentMonth[0], 1);
+            int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1; // 0 = Sunday
+            int daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+            // Get currently selected date to highlight
+            Date selectedDate = (Date) dateSpinner.getValue();
+            Calendar selectedCal = Calendar.getInstance();
+            selectedCal.setTime(selectedDate);
+            int selectedYear = selectedCal.get(Calendar.YEAR);
+            int selectedMonth = selectedCal.get(Calendar.MONTH);
+            int selectedDayValue = selectedCal.get(Calendar.DAY_OF_MONTH);
+
+            // Fill empty cells before first day
+            for (int i = 0; i < firstDayOfWeek; i++) {
+                bodyPanelRef[0].add(new JLabel());
+            }
+
+            // Add day buttons
+            for (int day = 1; day <= daysInMonth; day++) {
+                final int dayValue = day;
+                boolean isSelected = (currentYear[0] == selectedYear && 
+                                     currentMonth[0] == selectedMonth && 
+                                     day == selectedDayValue);
+                JButton dayBtn = createDayButton(String.valueOf(day), isSelected);
+                dayBtn.addActionListener(e -> {
+                    Calendar newCal = Calendar.getInstance();
+                    newCal.set(currentYear[0], currentMonth[0], dayValue);
+                    dateSpinner.setValue(newCal.getTime());
+                    updateDateFieldText();
+                    popup.setVisible(false);
+                });
+                bodyPanelRef[0].add(dayBtn);
+            }
+
+            // Update month/year label
+            String[] monthNames = { "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December" };
+            monthYearLabel.setText(monthNames[currentMonth[0]] + " " + currentYear[0]);
+
+            bodyPanelRef[0].revalidate();
+            bodyPanelRef[0].repaint();
+        };
+
+        // Previous month button
+        JButton prevBtn = createFlatButton("<");
+        prevBtn.addActionListener(e -> {
+            currentMonth[0]--;
+            if (currentMonth[0] < 0) {
+                currentMonth[0] = 11;
+                currentYear[0]--;
+            }
+            buildCalendarBody.run();
         });
 
-        popup.add(popupPanel);
-        popup.show(iconButton, 0, iconButton.getHeight());
+        // Next month button
+        JButton nextBtn = createFlatButton(">");
+        nextBtn.addActionListener(e -> {
+            currentMonth[0]++;
+            if (currentMonth[0] > 11) {
+                currentMonth[0] = 0;
+                currentYear[0]++;
+            }
+            buildCalendarBody.run();
+        });
+
+        headerPanel.add(prevBtn, BorderLayout.WEST);
+        headerPanel.add(monthYearLabel, BorderLayout.CENTER);
+        headerPanel.add(nextBtn, BorderLayout.EAST);
+
+        // Build initial calendar
+        buildCalendarBody.run();
+
+        calendarPanel.add(headerPanel, BorderLayout.NORTH);
+        calendarPanel.add(bodyPanelRef[0], BorderLayout.CENTER);
+
+        return calendarPanel;
     }
 
-    private void showTimePickerPopup(JTextField field, JButton iconButton) {
-        // Create popup with time spinner
+    private JButton createDayButton(String text, boolean isSelected) {
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (isSelected) {
+                    g2.setColor(new Color(0x155DFC));
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
+                    g2.setColor(Color.WHITE);
+                } else {
+                    g2.setColor(Color.WHITE);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
+                    g2.setColor(Color.BLACK);
+                }
+
+                FontMetrics fm = g2.getFontMetrics(getFont());
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                g2.drawString(getText(), x, y);
+                g2.dispose();
+            }
+        };
+        btn.setOpaque(false);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setPreferredSize(new Dimension(35, 35));
+        btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 12f));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private JPanel createTimeListPanel(JPopupMenu popup) {
+        JPanel timePanel = new JPanel(new BorderLayout());
+        timePanel.setBackground(Color.WHITE);
+        timePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Get current time from spinner
+        Date currentTime = (Date) timeSpinner.getValue();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(currentTime);
+        int currentHour = cal.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = cal.get(Calendar.MINUTE);
+        int currentTimeMinutes = currentHour * 60 + currentMinute;
+
+        // Create scrollable list of time slots
+        JPanel timeListPanel = new JPanel();
+        timeListPanel.setLayout(new BoxLayout(timeListPanel, BoxLayout.Y_AXIS));
+        timeListPanel.setBackground(Color.WHITE);
+
+        // Find closest time slot first
+        int closestSlotMinutes = -1;
+        int minDiff = Integer.MAX_VALUE;
+        for (int hour = 0; hour < 24; hour++) {
+            for (int minute = 0; minute < 60; minute += 30) {
+                int slotMinutes = hour * 60 + minute;
+                int diff = Math.abs(slotMinutes - currentTimeMinutes);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestSlotMinutes = slotMinutes;
+                }
+            }
+        }
+
+        // Generate time slots in 30-minute intervals
+        int slotIndex = 0;
+        final int[] closestSlotIndex = { -1 };
+        for (int hour = 0; hour < 24; hour++) {
+            for (int minute = 0; minute < 60; minute += 30) {
+                final int h = hour;
+                final int m = minute;
+                String timeStr = String.format("%02d:%02d", hour, minute);
+                int slotMinutes = hour * 60 + minute;
+                boolean isSelected = (slotMinutes == closestSlotMinutes);
+
+                if (isSelected) {
+                    closestSlotIndex[0] = slotIndex;
+                }
+
+                JButton timeBtn = createTimeSlotButton(timeStr, isSelected);
+                timeBtn.addActionListener(e -> {
+                    Calendar newCal = Calendar.getInstance();
+                    newCal.set(Calendar.HOUR_OF_DAY, h);
+                    newCal.set(Calendar.MINUTE, m);
+                    newCal.set(Calendar.SECOND, 0);
+                    timeSpinner.setValue(newCal.getTime());
+                    updateTimeFieldText();
+                    popup.setVisible(false);
+                });
+                timeListPanel.add(timeBtn);
+                slotIndex++;
+            }
+        }
+
+        JScrollPane scrollPane = new JScrollPane(timeListPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setPreferredSize(new Dimension(200, 250));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        // Scroll to closest time slot
+        if (closestSlotIndex[0] >= 0) {
+            final int finalClosestSlot = closestSlotIndex[0];
+            SwingUtilities.invokeLater(() -> {
+                Component comp = timeListPanel.getComponent(finalClosestSlot);
+                if (comp != null) {
+                    Rectangle rect = comp.getBounds();
+                    scrollPane.getViewport().scrollRectToVisible(rect);
+                }
+            });
+        }
+
+        timePanel.add(scrollPane, BorderLayout.CENTER);
+        return timePanel;
+    }
+
+    private JButton createTimeSlotButton(String text, boolean isSelected) {
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (isSelected || getModel().isRollover()) {
+                    Color bgColor = isSelected ? new Color(0x155DFC) : new Color(0xE3F2FD);
+                    g2.setColor(bgColor);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                    g2.setColor(isSelected ? Color.WHITE : Color.BLACK);
+                } else {
+                    g2.setColor(Color.WHITE);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                    g2.setColor(Color.BLACK);
+                }
+
+                FontMetrics fm = g2.getFontMetrics(getFont());
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                g2.drawString(getText(), x, y);
+                g2.dispose();
+            }
+        };
+        btn.setOpaque(false);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setPreferredSize(new Dimension(180, 35));
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 13f));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private JButton createFlatButton(String text) {
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (getModel().isRollover()) {
+                    g2.setColor(new Color(0xE3F2FD));
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                } else {
+                    g2.setColor(Color.WHITE);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                }
+
+                g2.setColor(Color.BLACK);
+                FontMetrics fm = g2.getFontMetrics(getFont());
+                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                g2.drawString(getText(), x, y);
+                g2.dispose();
+            }
+        };
+        btn.setOpaque(false);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setPreferredSize(new Dimension(30, 30));
+        btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 14f));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    private void showDatePickerPopup(JPanel anchorPanel, JTextField field) {
         JPopupMenu popup = new JPopupMenu();
         popup.setBorder(BorderFactory.createLineBorder(new Color(0xE5E7EB), 1));
 
-        JPanel popupPanel = new JPanel(new BorderLayout());
-        popupPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        popupPanel.setBackground(Color.WHITE);
+        JPanel calendarPanel = createCalendarPanel(popup);
+        popup.add(calendarPanel);
+        
+        // Set popup width to match anchor panel width
+        popup.setPopupSize(anchorPanel.getWidth(), 350);
+        
+        // Show popup below the anchor panel (wrapper)
+        popup.show(anchorPanel, 0, anchorPanel.getHeight());
+    }
 
-        // Use existing timeSpinner
-        JSpinner spinner = timeSpinner;
-        spinner.setPreferredSize(new Dimension(200, 30));
-        popupPanel.add(spinner, BorderLayout.CENTER);
+    private void showTimePickerPopup(JPanel anchorPanel, JTextField field) {
+        JPopupMenu popup = new JPopupMenu();
+        popup.setBorder(BorderFactory.createLineBorder(new Color(0xE5E7EB), 1));
 
-        // Add change listener to update text field
-        spinner.addChangeListener(e -> {
-            updateTimeFieldText();
-            popup.setVisible(false);
-        });
-
-        popup.add(popupPanel);
-        popup.show(iconButton, 0, iconButton.getHeight());
+        JPanel timePanel = createTimeListPanel(popup);
+        popup.add(timePanel);
+        
+        // Set popup width to match anchor panel width
+        popup.setPopupSize(anchorPanel.getWidth(), 300);
+        
+        // Show popup below the anchor panel (wrapper)
+        popup.show(anchorPanel, 0, anchorPanel.getHeight());
     }
 
     private void updateDateFieldText() {
