@@ -22,12 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Create Transaction modal - Section 2.1. Amount, Type, Date, Time, Category,
- * Wallet (optional), Note (max 120).
- * Expense → amount < 0; Income → amount > 0.
- * Refactored with MigLayout and new Figma design specs.
- */
 public class CreateTransactionDialog extends JDialog {
     private final MainFrame main;
     private JTextField amountF;
@@ -60,7 +54,7 @@ public class CreateTransactionDialog extends JDialog {
         CATEGORY_ICON_MAP.put("Education", "imgs/category/education.png");
         CATEGORY_ICON_MAP.put("Other", "imgs/category/others.png");
 
-        // Income categories - placeholder paths (will show "?" if files don't exist)
+        // Income categories
         CATEGORY_ICON_MAP.put("Salary", "imgs/category/salary.png");
         CATEGORY_ICON_MAP.put("Freelance", "imgs/category/freelance.png");
         CATEGORY_ICON_MAP.put("Affiliate", "imgs/category/affiliate.png");
@@ -632,21 +626,21 @@ public class CreateTransactionDialog extends JDialog {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Fill white background with rounded corners
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
-                // Draw border - blue when focused, gray otherwise
-                Color borderColor = (isFocusOwner() || isPopupVisible()) ? new Color(0x155DFC) : new Color(0xE5E7EB);
-                g2.setColor(borderColor);
-                g2.setStroke(new BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
                 g2.dispose();
                 super.paintComponent(g);
+                Graphics2D g2Border = (Graphics2D) g.create();
+                g2Border.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color borderColor = (isFocusOwner() || isPopupVisible()) ? new Color(0x155DFC) : new Color(0xE5E7EB);
+                g2Border.setColor(borderColor);
+                g2Border.setStroke(new BasicStroke(1));
+                g2Border.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
+                g2Border.dispose();
             }
 
             @Override
             protected void paintBorder(Graphics g) {
-                // Override to prevent default border painting
             }
         };
         combo.setOpaque(false);
@@ -656,7 +650,6 @@ public class CreateTransactionDialog extends JDialog {
         combo.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         combo.setFont(combo.getFont().deriveFont(Font.PLAIN, 14f));
 
-        // Hide arrow button by setting UI and customizing arrow button
         try {
             combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
                 @Override
@@ -664,7 +657,6 @@ public class CreateTransactionDialog extends JDialog {
                     JButton button = new JButton() {
                         @Override
                         public void paintComponent(Graphics g) {
-                            // Do nothing - hide the arrow
                         }
                     };
                     button.setVisible(false);
@@ -675,7 +667,6 @@ public class CreateTransactionDialog extends JDialog {
                 }
             });
         } catch (Exception e) {
-            // Fallback: hide arrow button after UI is set
             combo.addHierarchyListener(new java.awt.event.HierarchyListener() {
                 @Override
                 public void hierarchyChanged(java.awt.event.HierarchyEvent e) {
