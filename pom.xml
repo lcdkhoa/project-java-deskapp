@@ -18,28 +18,24 @@
     </properties>
 
     <dependencies>
-        <!-- FlatLaf - modern look -->
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
             <version>3.7</version>
         </dependency>
 
-        <!-- SQLite JDBC -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.51.1.0</version>
         </dependency>
 
-        <!-- JFreeChart for charts (Bar, Donut, Line) -->
         <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreechart</artifactId>
             <version>1.5.6</version>
         </dependency>
 
-        <!-- MigLayout for dashboard grid -->
         <dependency>
             <groupId>com.miglayout</groupId>
             <artifactId>miglayout-swing</artifactId>
