@@ -42,9 +42,6 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Controller for Dashboard. Section 1. KPIs, charts, budget warnings from DB.
- */
 public class DashboardController {
     private final DashboardView view;
     private YearMonth currentMonth;
@@ -67,15 +64,10 @@ public class DashboardController {
         p.setOpaque(false);
         p.setBackground(Color.WHITE);
 
-        // Previous button with left.png icon - centered vertically
         JButton prevBtn = new JButton();
         ImageIcon leftIcon = com.expensemanager.util.UIUtils
-                .getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 24, 24);
-        if (leftIcon != null) {
-            prevBtn.setIcon(leftIcon);
-        } else {
-            prevBtn.setText("<");
-        }
+                .getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 16, 16);
+        prevBtn.setIcon(leftIcon);
         prevBtn.setBorderPainted(false);
         prevBtn.setContentAreaFilled(false);
         prevBtn.setOpaque(false);
@@ -84,19 +76,12 @@ public class DashboardController {
             view.refresh();
         });
         p.add(prevBtn, "cell 0 0, aligny center");
-
-        // Month label - centered both horizontally and vertically
         p.add(monthLabel, "cell 1 0, alignx center, aligny center");
 
-        // Next button with right.png icon - centered vertically
         JButton nextBtn = new JButton();
         ImageIcon rightIcon = com.expensemanager.util.UIUtils
-                .getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 24, 24);
-        if (rightIcon != null) {
-            nextBtn.setIcon(rightIcon);
-        } else {
-            nextBtn.setText(">");
-        }
+                .getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 16, 16);
+        nextBtn.setIcon(rightIcon);
         nextBtn.setBorderPainted(false);
         nextBtn.setContentAreaFilled(false);
         nextBtn.setOpaque(false);
@@ -106,10 +91,9 @@ public class DashboardController {
         });
         p.add(nextBtn, "cell 2 0, aligny center");
 
-        // Back to current month link - centered below the date label
         backToCurrentLink = new JLabel("Back to current month");
         backToCurrentLink.setFont(backToCurrentLink.getFont().deriveFont(12f));
-        backToCurrentLink.setForeground(new Color(0x2563EB)); // Blue color
+        backToCurrentLink.setForeground(new Color(0x2563EB));
         backToCurrentLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backToCurrentLink.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -212,8 +196,6 @@ public class DashboardController {
         }
     }
 
-    // Section 1.2: Expense #EF4444, Income #10B981, Remaining #3B82F6, Budget Used
-    // purple
     private static final Color RED = new Color(0xEF4444);
     private static final Color GREEN = new Color(0x10B981);
     private static final Color BLUE = new Color(0x3B82F6);
