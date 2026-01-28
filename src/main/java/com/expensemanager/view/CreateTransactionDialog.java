@@ -41,30 +41,8 @@ public class CreateTransactionDialog extends JDialog {
     private CategoryItemPanel selectedCategoryPanel;
     private JPanel categoryGridPanel;
 
-    // Category name to icon file mapping
-    private static final Map<String, String> CATEGORY_ICON_MAP = new HashMap<>();
-    static {
-        // Expense categories
-        CATEGORY_ICON_MAP.put("Food", "imgs/category/food.png");
-        CATEGORY_ICON_MAP.put("Transport", "imgs/category/transport.png");
-        CATEGORY_ICON_MAP.put("Shopping", "imgs/category/shopping.png");
-        CATEGORY_ICON_MAP.put("Entertainment", "imgs/category/entertainment.png");
-        CATEGORY_ICON_MAP.put("Bills", "imgs/category/bill.png");
-        CATEGORY_ICON_MAP.put("Healthcare", "imgs/category/healthcare.png");
-        CATEGORY_ICON_MAP.put("Housing", "imgs/category/housing.png");
-        CATEGORY_ICON_MAP.put("Education", "imgs/category/education.png");
-        CATEGORY_ICON_MAP.put("Other", "imgs/category/others.png");
-
-        // Income categories
-        CATEGORY_ICON_MAP.put("Salary", "imgs/category/salary.png");
-        CATEGORY_ICON_MAP.put("Freelance", "imgs/category/freelance.png");
-        CATEGORY_ICON_MAP.put("Affiliate", "imgs/category/affiliate.png");
-        CATEGORY_ICON_MAP.put("Selling", "imgs/category/selling.png");
-        CATEGORY_ICON_MAP.put("Other Income", "imgs/category/other_income.png");
-    }
-
-    private static final String[] WALLET_OPTIONS = { "Cash", "Bank Transfer", "Momo", "ZaloPay" };
-    private static final String[] WALLET_VALUES = { "cash", "bank_transfer", "momo", "zalopay" };
+    private static final String[] WALLET_OPTIONS = { "Cash", "Bank Transfer", "Visa Card", "Ví điện tử" };
+    private static final String[] WALLET_VALUES = { "cash", "bank_transfer", "card", "e_wallet" };
 
     private static final Color EXPENSE_COLOR = new Color(0xE7000B);
     private static final Color INCOME_COLOR = new Color(0x00A63E);
@@ -527,9 +505,9 @@ public class CreateTransactionDialog extends JDialog {
             // Add day buttons
             for (int day = 1; day <= daysInMonth; day++) {
                 final int dayValue = day;
-                boolean isSelected = (currentYear[0] == selectedYear && 
-                                     currentMonth[0] == selectedMonth && 
-                                     day == selectedDayValue);
+                boolean isSelected = (currentYear[0] == selectedYear &&
+                        currentMonth[0] == selectedMonth &&
+                        day == selectedDayValue);
                 JButton dayBtn = createDayButton(String.valueOf(day), isSelected);
                 dayBtn.addActionListener(e -> {
                     Calendar newCal = Calendar.getInstance();
@@ -779,10 +757,10 @@ public class CreateTransactionDialog extends JDialog {
 
         JPanel calendarPanel = createCalendarPanel(popup);
         popup.add(calendarPanel);
-        
+
         // Set popup width to match anchor panel width
         popup.setPopupSize(anchorPanel.getWidth(), 350);
-        
+
         // Show popup below the anchor panel (wrapper)
         popup.show(anchorPanel, 0, anchorPanel.getHeight());
     }
@@ -793,10 +771,10 @@ public class CreateTransactionDialog extends JDialog {
 
         JPanel timePanel = createTimeListPanel(popup);
         popup.add(timePanel);
-        
+
         // Set popup width to match anchor panel width
         popup.setPopupSize(anchorPanel.getWidth(), 300);
-        
+
         // Show popup below the anchor panel (wrapper)
         popup.show(anchorPanel, 0, anchorPanel.getHeight());
     }
@@ -946,21 +924,21 @@ public class CreateTransactionDialog extends JDialog {
                         protected void paintComponent(Graphics g) {
                             Graphics2D g2 = (Graphics2D) g.create();
                             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                            
+
                             // Draw dropdown arrow icon pointing down
                             g2.setColor(new Color(0x6B7280)); // Gray color for icon
-                            
+
                             int width = getWidth();
                             int height = getHeight();
                             int arrowSize = 12;
                             int x = (width - arrowSize) / 2;
                             int y = (height - arrowSize) / 2;
-                            
+
                             // Draw triangle pointing down
                             int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
                             int[] yPoints = { y + arrowSize, y + 2, y + 2 };
                             g2.fillPolygon(xPoints, yPoints, 3);
-                            
+
                             g2.dispose();
                         }
                     };
@@ -992,28 +970,29 @@ public class CreateTransactionDialog extends JDialog {
                                     btn.setFocusPainted(false);
                                     btn.setPreferredSize(new Dimension(40, height));
                                     btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                                    
+
                                     // Wrap button to add custom paint
                                     JButton wrappedBtn = new JButton() {
                                         @Override
                                         protected void paintComponent(Graphics g) {
                                             Graphics2D g2 = (Graphics2D) g.create();
-                                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                                            
+                                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                                                    RenderingHints.VALUE_ANTIALIAS_ON);
+
                                             // Draw dropdown arrow icon pointing down
                                             g2.setColor(new Color(0x6B7280));
-                                            
+
                                             int w = getWidth();
                                             int h = getHeight();
                                             int arrowSize = 12;
                                             int x = (w - arrowSize) / 2;
                                             int y = (h - arrowSize) / 2;
-                                            
+
                                             // Draw triangle pointing down
                                             int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
                                             int[] yPoints = { y + arrowSize, y + 2, y + 2 };
                                             g2.fillPolygon(xPoints, yPoints, 3);
-                                            
+
                                             g2.dispose();
                                         }
                                     };
@@ -1023,12 +1002,12 @@ public class CreateTransactionDialog extends JDialog {
                                     wrappedBtn.setFocusPainted(false);
                                     wrappedBtn.setPreferredSize(new Dimension(40, height));
                                     wrappedBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                                    
+
                                     // Copy action listeners from original button
                                     for (java.awt.event.ActionListener listener : btn.getActionListeners()) {
                                         wrappedBtn.addActionListener(listener);
                                     }
-                                    
+
                                     // Replace button
                                     Container parent = btn.getParent();
                                     if (parent != null) {
@@ -1211,8 +1190,9 @@ public class CreateTransactionDialog extends JDialog {
                         .orElse(null);
 
                 if (category != null) {
-                    // Get icon path from map, fallback to placeholder if not found
-                    String iconPath = CATEGORY_ICON_MAP.getOrDefault(catName, "imgs/category/others.png");
+                    // Prefer icon_path from DB, fallback to static map then placeholder
+                    String iconPath = category.getIconPath();
+
                     CategoryItemPanel panel = new CategoryItemPanel(category.getId(), category.getName(), iconPath);
 
                     // Add click listener

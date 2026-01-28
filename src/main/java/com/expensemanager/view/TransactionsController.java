@@ -91,12 +91,13 @@ public class TransactionsController {
                     lastDate = d;
                 }
                 Category cat = idToCat.get(t.getCategoryId());
-                String icon = cat != null ? cat.getIcon() : "•";
-                Color iconColor = parseColor(cat != null ? cat.getColor() : null);
+                String iconPath = (cat != null && cat.getIconPath() != null && !cat.getIconPath().isBlank())
+                        ? cat.getIconPath() : "src/main/java/com/expensemanager/img/category/others.png";
+                Color iconColor = parseColor(cat != null ? cat.getLegendChartColor() : null);
                 String wallet = WALLET_DISPLAY.getOrDefault(t.getWalletType(), t.getWalletType() != null ? t.getWalletType() : "");
                 String time = t.getTransactionTime() != null ? t.getTransactionTime().toString().substring(0, 5) : "";
                 TransactionRowPanel row = new TransactionRowPanel(
-                        icon, iconColor, t.getNote(), wallet, t.getAmount(), time);
+                        iconPath, iconColor, t.getNote(), wallet, t.getAmount(), time);
                 row.setAlignmentX(Component.LEFT_ALIGNMENT);
                 listPanel.add(row);
                 listPanel.add(Box.createVerticalStrut(ROW_GAP));

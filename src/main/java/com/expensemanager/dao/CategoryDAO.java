@@ -16,12 +16,12 @@ import java.util.List;
 public class CategoryDAO {
 
     public List<Category> findAll(Connection conn) throws SQLException {
-        String sql = "SELECT id, name, icon, color, type, is_active, created_at FROM categories WHERE is_active = 1 ORDER BY type, name";
+        String sql = "SELECT id, name, icon_path, legend_chart_color, type, is_active, created_at FROM categories WHERE is_active = 1 ORDER BY type, name";
         return queryList(conn, sql);
     }
 
     public List<Category> findByType(Connection conn, String type) throws SQLException {
-        String sql = "SELECT id, name, icon, color, type, is_active, created_at FROM categories WHERE is_active = 1 AND type = ? ORDER BY name";
+        String sql = "SELECT id, name, icon_path, legend_chart_color, type, is_active, created_at FROM categories WHERE is_active = 1 AND type = ? ORDER BY name";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, type);
             return extractList(ps);
@@ -29,7 +29,7 @@ public class CategoryDAO {
     }
 
     public Category findById(Connection conn, String id) throws SQLException {
-        String sql = "SELECT id, name, icon, color, type, is_active, created_at FROM categories WHERE id = ?";
+        String sql = "SELECT id, name, icon_path, legend_chart_color, type, is_active, created_at FROM categories WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -57,8 +57,8 @@ public class CategoryDAO {
         Category c = new Category();
         c.setId(rs.getString("id"));
         c.setName(rs.getString("name"));
-        c.setIcon(rs.getString("icon"));
-        c.setColor(rs.getString("color"));
+        c.setIconPath(rs.getString("icon_path"));
+        c.setLegendChartColor(rs.getString("legend_chart_color"));
         c.setType(rs.getString("type"));
         c.setActive(rs.getInt("is_active") != 0);
         String t = rs.getString("created_at");

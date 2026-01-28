@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * KPI card with custom icons from imgs/dashboard/. MigLayout: Row 1 (Icon + Title), Row 2 (Value).
+ * KPI card with custom icons from img/dashboard/. MigLayout: Row 1 (Icon + Title), Row 2 (Value).
  * Expense: red; Income: green; Remaining: blue; Budget Used: purple.
  */
 public class KPICard extends ModernCard {
@@ -24,7 +24,7 @@ public class KPICard extends ModernCard {
     /**
      * @param title      Gray, small (e.g. "Monthly Expense")
      * @param valueText  Large bold, colored (e.g. "16,435,000" or "85%")
-     * @param iconPath   Path to icon image (e.g., "imgs/dashboard/down.png")
+     * @param iconPath   Path to icon image (e.g., "src/main/java/com/expensemanager/img/dashboard/down.png")
      * @param valueColor Value text: #EF4444 expense, #10B981 income, #3B82F6 remaining, purple budget
      */
     public KPICard(String title, String valueText, String iconPath, Color valueColor) {

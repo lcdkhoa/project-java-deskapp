@@ -69,11 +69,11 @@ public class BudgetController {
             summaryRow.setBackground(Color.WHITE);
             summaryRow.setOpaque(true);
             summaryRow.add(new BudgetCard("Total Budget", CurrencyUtil.format(totalBudget),
-                    "imgs/budget/budget.png", new Color(0x2563EB)), "grow");
+                    "src/main/java/com/expensemanager/img/budget/budget.png", new Color(0x2563EB)), "grow");
             summaryRow.add(new BudgetCard("Total Spent", CurrencyUtil.format(totalSpent),
-                    "imgs/budget/spent.png", new Color(0xB91C1C)), "grow");
+                    "src/main/java/com/expensemanager/img/budget/spent.png", new Color(0xB91C1C)), "grow");
             summaryRow.add(new BudgetCard("Remaining", CurrencyUtil.format(remaining),
-                    "imgs/budget/remains.png", new Color(0x16A34A)), "grow");
+                    "src/main/java/com/expensemanager/img/budget/remains.png", new Color(0x16A34A)), "grow");
             contentPanel.add(summaryRow, "growx");
 
             // Spent % panel: fixed height 85px, arc 30, full width. White card with label +

@@ -7,6 +7,7 @@ import com.expensemanager.db.DatabaseConnection;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
 import com.expensemanager.util.MonthKeyUtil;
+import com.expensemanager.util.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -46,7 +47,16 @@ public class AddBudgetDialog extends JDialog {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
                 super.getListCellRendererComponent(list, value, index, selected, focus);
-                if (value instanceof Category) setText(((Category)value).getIcon() + " " + ((Category)value).getName());
+                if (value instanceof Category) {
+                    Category c = (Category) value;
+                    setText(c.getName());
+                    String path = c.getIconPath();
+                    if (path != null && !path.isBlank()) {
+                        setIcon(UIUtils.getIcon(path, 20, 20));
+                    } else {
+                        setIcon(null);
+                    }
+                }
                 return this;
             }
         });

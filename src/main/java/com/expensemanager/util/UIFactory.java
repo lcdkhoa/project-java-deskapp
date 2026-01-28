@@ -1,13 +1,12 @@
 package com.expensemanager.util;
 
-import com.expensemanager.FlatLaf;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
 /**
- * UI Factory for creating consistently styled buttons matching the Figma design.
+ * UI Factory for creating consistently styled buttons matching the Figma
+ * design.
  * Blue Theme (#2563EB), pill shape for primary, rounded rect for sidebar.
  */
 public final class UIFactory {
@@ -28,11 +27,13 @@ public final class UIFactory {
     /** Sidebar arc (rounded rect, 30px). */
     public static final int SIDEBAR_ARC = 30;
 
-    private UIFactory() {}
+    private UIFactory() {
+    }
 
     /**
      * Creates a Primary Action button (e.g. "+ Add Transaction").
-     * Pill shape (arc 999), background #2563EB, foreground white, bold 14, no focus paint.
+     * Pill shape (arc 999), background #2563EB, foreground white, bold 14, no focus
+     * paint.
      *
      * @param text button label
      * @return styled JButton
@@ -56,7 +57,8 @@ public final class UIFactory {
         b.setForeground(Color.WHITE);
         b.setFont(b.getFont().deriveFont(Font.BOLD, 14f));
         b.setMargin(BUTTON_MARGIN);
-        // Pill shape: use UIManager Button.arc=999 (set in UIUtils). FlatLaf.style does not support "arc".
+        // Pill shape: use UIManager Button.arc=999 (set in UIUtils). FlatLaf.style does
+        // not support "arc".
         return b;
     }
 
@@ -84,14 +86,14 @@ public final class UIFactory {
      * Resolves sidebar text color for unselected state.
      */
     public static Color getSidebarTextColor() {
-        return new Color(FlatLaf.isDark() ? COLOR_SIDEBAR_TEXT_DARK : COLOR_SIDEBAR_TEXT);
+        return new Color(COLOR_SIDEBAR_TEXT);
     }
 
     /**
      * Resolves sidebar hover background for unselected state.
      */
     public static Color getSidebarHoverColor() {
-        return new Color(FlatLaf.isDark() ? COLOR_SIDEBAR_HOVER_DARK : COLOR_SIDEBAR_HOVER);
+        return new Color(COLOR_SIDEBAR_HOVER);
     }
 
     /**

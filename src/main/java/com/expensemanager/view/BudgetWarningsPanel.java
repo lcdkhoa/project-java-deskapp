@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Budget warnings: light red bg (#FEF2F2), red border (#FECACA), arc 30, warning icon from imgs/dashboard/warn.png.
+ * Budget warnings: light red bg (#FEF2F2), red border (#FECACA), arc 30, warning icon from img/dashboard/warn.png.
  * Card-in-card style: each warning item is a white card (arc 30, 85px height) inside the red panel.
  */
 public class BudgetWarningsPanel extends JPanel {
@@ -36,7 +36,7 @@ public class BudgetWarningsPanel extends JPanel {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         header.setOpaque(false);
         JLabel iconLbl = new JLabel();
-        ImageIcon warnIcon = UIUtils.getIcon("imgs/dashboard/warn.png", 20, 20);
+        ImageIcon warnIcon = UIUtils.getIcon("src/main/java/com/expensemanager/img/dashboard/warn.png", 20, 20);
         if (warnIcon != null) {
             iconLbl.setIcon(warnIcon);
         } else {

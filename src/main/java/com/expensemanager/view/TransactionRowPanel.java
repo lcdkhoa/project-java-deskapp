@@ -1,6 +1,7 @@
 package com.expensemanager.view;
 
 import com.expensemanager.util.CurrencyUtil;
+import com.expensemanager.util.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,6 +10,7 @@ import java.awt.*;
  * Card-like row for Section 2.2: Category icon (circle), Note (bold) + Wallet
  * (gray),
  * Amount (red/green) + Time. Padding for spacing.
+ * iconPath: path to category image (e.g. src/main/java/com/expensemanager/img/category/food.png); rendered as image when path-like.
  */
 public class TransactionRowPanel extends JPanel {
 
@@ -19,14 +21,14 @@ public class TransactionRowPanel extends JPanel {
     private static final int ICON_SIZE = 40;
     private static final int ROW_PADDING = 10;
 
-    public TransactionRowPanel(String icon, Color iconBgColor, String note, String wallet,
+    public TransactionRowPanel(String iconPath, Color iconBgColor, String note, String wallet,
             long amount, String timeHhmm) {
         setLayout(new BorderLayout(12, 0));
         setBorder(BorderFactory.createEmptyBorder(ROW_PADDING, 12, ROW_PADDING, 12));
         setOpaque(true);
         setBackground(Color.WHITE);
 
-        // Left: circular icon
+        // Left: circular icon (image from iconPath or fallback "•")
         JPanel iconWrap = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -40,9 +42,21 @@ public class TransactionRowPanel extends JPanel {
         };
         iconWrap.setOpaque(false);
         iconWrap.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
-        JLabel iconLbl = new JLabel(icon != null && !icon.isEmpty() ? icon : "•");
-        iconLbl.setFont(iconLbl.getFont().deriveFont(18f));
-        iconLbl.setForeground(Color.WHITE);
+        JLabel iconLbl = new JLabel();
+        if (iconPath != null && !iconPath.isBlank() && (iconPath.contains("/") || iconPath.toLowerCase().endsWith(".png"))) {
+            ImageIcon img = UIUtils.getIcon(iconPath, 24, 24);
+            if (img != null) {
+                iconLbl.setIcon(img);
+            } else {
+                iconLbl.setText("•");
+                iconLbl.setFont(iconLbl.getFont().deriveFont(18f));
+                iconLbl.setForeground(Color.WHITE);
+            }
+        } else {
+            iconLbl.setText("•");
+            iconLbl.setFont(iconLbl.getFont().deriveFont(18f));
+            iconLbl.setForeground(Color.WHITE);
+        }
         iconWrap.add(iconLbl);
         add(iconWrap, BorderLayout.WEST);
 

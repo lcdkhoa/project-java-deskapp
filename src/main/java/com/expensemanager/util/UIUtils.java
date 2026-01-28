@@ -2,6 +2,9 @@ package com.expensemanager.util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
@@ -110,17 +113,39 @@ public final class UIUtils {
     }
 
     /**
-     * Load and scale an icon image from the resources path.
+     * Load and scale an icon image from a filesystem path.
+     * Supports both legacy paths (e.g. "imgs/dashboard/down.png") and the new location
+     * under "src/main/java/com/expensemanager/img".
      * Handles missing files gracefully by returning null.
      *
-     * @param path relative path from project root (e.g., "imgs/dashboard/down.png")
+     * @param path relative path from project root (e.g., "src/main/java/com/expensemanager/img/dashboard/down.png")
      * @param width target width in pixels
      * @param height target height in pixels
      * @return scaled ImageIcon, or null if file not found
      */
     public static ImageIcon getIcon(String path, int width, int height) {
         try {
-            java.awt.Image img = javax.imageio.ImageIO.read(new java.io.File(path));
+            if (path == null || path.isBlank()) {
+                return null;
+            }
+
+            Path filePath = Paths.get(path);
+            if (!Files.exists(filePath)) {
+                // Map legacy "imgs/..." to new folder "src/main/java/com/expensemanager/img/..."
+                String normalized = path.replace("\\", "/");
+                if (normalized.startsWith("imgs/")) {
+                    filePath = Paths.get("src/main/java/com/expensemanager/img", normalized.substring("imgs/".length()));
+                } else {
+                    // Best-effort: treat input as relative inside the new img folder
+                    filePath = Paths.get("src/main/java/com/expensemanager/img", normalized);
+                }
+            }
+
+            if (!Files.exists(filePath)) {
+                return null;
+            }
+
+            java.awt.Image img = javax.imageio.ImageIO.read(filePath.toFile());
             if (img != null) {
                 img = img.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
                 return new ImageIcon(img);

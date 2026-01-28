@@ -1,6 +1,5 @@
 package com.expensemanager.view;
 
-import com.expensemanager.FlatLaf;
 import com.expensemanager.util.UIUtils;
 import com.expensemanager.util.UIFactory;
 
@@ -9,17 +8,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
-import java.awt.image.RGBImageFilter;
 
-/**
- * Sidebar navigation button: rounded rect (30px arc), one selected at a time.
- * Selected: #2563EB bg, white text and icon. Unselected: transparent bg,
- * #374151 text and icon.
- * Hover (unselected): #F3F4F6. Left-aligned text and icon.
- * Fixed height: 48px. Font: 24px Regular/Medium.
- */
 public class SidebarButton extends JToggleButton {
 
     private final String cardName;
@@ -192,7 +181,7 @@ public class SidebarButton extends JToggleButton {
         } else if (hover) {
             bg = UIFactory.getSidebarHoverColor();
         } else {
-            bg = UIUtils.getSidebarBackground(FlatLaf.isDark());
+            bg = UIUtils.getSidebarBackground(false);
         }
         g2.setColor(bg);
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), UIFactory.SIDEBAR_ARC, UIFactory.SIDEBAR_ARC);

@@ -64,7 +64,7 @@ public class DashboardController {
 
         // Previous button with left.png icon - centered vertically
         JButton prevBtn = new JButton();
-        ImageIcon leftIcon = com.expensemanager.util.UIUtils.getIcon("imgs/dashboard/left.png", 24, 24);
+        ImageIcon leftIcon = com.expensemanager.util.UIUtils.getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 24, 24);
         if (leftIcon != null) {
             prevBtn.setIcon(leftIcon);
         } else {
@@ -84,7 +84,7 @@ public class DashboardController {
 
         // Next button with right.png icon - centered vertically
         JButton nextBtn = new JButton();
-        ImageIcon rightIcon = com.expensemanager.util.UIUtils.getIcon("imgs/dashboard/right.png", 24, 24);
+        ImageIcon rightIcon = com.expensemanager.util.UIUtils.getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 24, 24);
         if (rightIcon != null) {
             nextBtn.setIcon(rightIcon);
         } else {
@@ -215,18 +215,18 @@ public class DashboardController {
     private void refreshKpi(long expense, long income, long remaining, double budgetUsedPct, long totalBudget) {
         JPanel p = getKpiCardsPanel();
         p.removeAll();
-        p.add(new KPICard("Monthly Expense", CurrencyUtil.formatNoSymbol(Math.abs(expense)), "imgs/dashboard/down.png",
+        p.add(new KPICard("Monthly Expense", CurrencyUtil.formatNoSymbol(Math.abs(expense)), "src/main/java/com/expensemanager/img/dashboard/down.png",
                 RED), "grow");
-        p.add(new KPICard("Monthly Income", CurrencyUtil.formatNoSymbol(income), "imgs/dashboard/up.png", GREEN),
+        p.add(new KPICard("Monthly Income", CurrencyUtil.formatNoSymbol(income), "src/main/java/com/expensemanager/img/dashboard/up.png", GREEN),
                 "grow");
         boolean remainingNeg = remaining < 0;
-        p.add(new KPICard("Remaining", CurrencyUtil.formatNoSymbol(remaining), "imgs/dashboard/remains.png",
+        p.add(new KPICard("Remaining", CurrencyUtil.formatNoSymbol(remaining), "src/main/java/com/expensemanager/img/dashboard/remains.png",
                 remainingNeg ? RED : BLUE), "grow");
         if (!Double.isNaN(budgetUsedPct)) {
-            p.add(new KPICard("Budget Used", String.format("%.0f%%", budgetUsedPct), "imgs/dashboard/used.png", PURPLE),
+            p.add(new KPICard("Budget Used", String.format("%.0f%%", budgetUsedPct), "src/main/java/com/expensemanager/img/dashboard/used.png", PURPLE),
                     "grow");
         } else {
-            p.add(new KPICard("Budget Used", "-", "imgs/dashboard/used.png", Color.GRAY), "grow");
+            p.add(new KPICard("Budget Used", "-", "src/main/java/com/expensemanager/img/dashboard/used.png", Color.GRAY), "grow");
         }
         p.revalidate();
         p.repaint();
@@ -434,14 +434,14 @@ public class DashboardController {
         // White gaps between slices: thick white outline
         plot.setSectionOutlinesVisible(true);
 
-        // Set colors and white outlines from Category.color field
+        // Set colors and white outlines from Category.legend_chart_color
         // Only set for categories that are in the dataset (expense > 0)
         // Use thinner white stroke for narrow white gaps (no gray lines)
         BasicStroke whiteStroke = new BasicStroke(2.0f); // Narrow white gap
         for (Category cat : allCategories) {
             long expense = categoryExpenses.get(cat.getId());
             if (expense > 0) {
-                Color catColor = parseColor(cat.getColor());
+                Color catColor = parseColor(cat.getLegendChartColor());
                 plot.setSectionPaint(cat.getId(), catColor);
                 // Set white outline for each section to create narrow white gaps (no gray)
                 plot.setSectionOutlinePaint(cat.getId(), Color.WHITE);
@@ -489,7 +489,7 @@ public class DashboardController {
 
         for (Category cat : categoriesWithExpense) {
             long expense = expenses.getOrDefault(cat.getId(), 0L);
-            Color catColor = parseColor(cat.getColor());
+            Color catColor = parseColor(cat.getLegendChartColor());
             String amountStr = CurrencyUtil.format(expense);
 
             // Legend item panel: [Color Dot] [Category Name] ....... [Amount]
@@ -558,7 +558,7 @@ public class DashboardController {
             double percentage = totalExpense > 0 ? (expense * 100.0 / totalExpense) : 0.0;
             String pctStr = String.format("%.1f%%", percentage);
 
-            Color catColor = parseColor(cat.getColor());
+            Color catColor = parseColor(cat.getLegendChartColor());
             String colorHex = String.format("#%02x%02x%02x", catColor.getRed(), catColor.getGreen(),
                     catColor.getBlue());
 

@@ -68,15 +68,15 @@ public class BudgetRowItem extends JPanel {
         String limitText = CurrencyUtil.format(usedRow.budget);
         JPanel infoRow = new JPanel(new MigLayout("ins 0, fillx", "[pref!][grow][pref!]", "[center]"));
         infoRow.setOpaque(false);
-        
+
         JLabel infoLabel = new JLabel("Spent: " + spentText + " / Limit: " + limitText);
         infoLabel.setFont(infoLabel.getFont().deriveFont(Font.PLAIN, 14f));
         infoLabel.setForeground(new Color(0x6B7280));
         infoRow.add(infoLabel);
-        
+
         // Empty space in middle
         infoRow.add(new JLabel(), "growx");
-        
+
         // Percentage label (right aligned)
         JLabel percentLabel = new JLabel(String.format("%.0f%%", usedRow.percentUsed));
         percentLabel.setFont(percentLabel.getFont().deriveFont(Font.PLAIN, 14f));
@@ -89,7 +89,7 @@ public class BudgetRowItem extends JPanel {
             percentLabel.setForeground(new Color(0xB91C1C)); // Red
         }
         infoRow.add(percentLabel);
-        
+
         add(infoRow, "cell 1 2 2 1, aligny bottom, growx");
 
         // Right: status chip + edit button
@@ -116,9 +116,9 @@ public class BudgetRowItem extends JPanel {
         if (category == null) {
             return null;
         }
-        String dbIcon = category.getIcon();
-        if (dbIcon != null && dbIcon.toLowerCase().endsWith(".png")) {
-            return dbIcon;
+        String path = category.getIconPath();
+        if (path != null && !path.isBlank()) {
+            return path;
         }
         String name = category.getName();
         if (name == null) {
@@ -127,41 +127,41 @@ public class BudgetRowItem extends JPanel {
         // Fallback mapping similar to TransactionView
         switch (name) {
             case "Food":
-                return "imgs/category/food.png";
+                return "src/main/java/com/expensemanager/img/category/food.png";
             case "Transport":
-                return "imgs/category/transport.png";
+                return "src/main/java/com/expensemanager/img/category/transport.png";
             case "Shopping":
-                return "imgs/category/shopping.png";
+                return "src/main/java/com/expensemanager/img/category/shopping.png";
             case "Entertainment":
-                return "imgs/category/entertainment.png";
+                return "src/main/java/com/expensemanager/img/category/entertainment.png";
             case "Bills":
-                return "imgs/category/bill.png";
+                return "src/main/java/com/expensemanager/img/category/bill.png";
             case "Healthcare":
-                return "imgs/category/healthcare.png";
+                return "src/main/java/com/expensemanager/img/category/healthcare.png";
             case "Housing":
-                return "imgs/category/housing.png";
+                return "src/main/java/com/expensemanager/img/category/housing.png";
             case "Education":
-                return "imgs/category/education.png";
+                return "src/main/java/com/expensemanager/img/category/education.png";
             case "Other":
-                return "imgs/category/others.png";
+                return "src/main/java/com/expensemanager/img/category/others.png";
             case "Salary":
-                return "imgs/category/salary.png";
+                return "src/main/java/com/expensemanager/img/category/salary.png";
             case "Freelance":
-                return "imgs/category/freelance.png";
+                return "src/main/java/com/expensemanager/img/category/freelance.png";
             case "Affiliate":
-                return "imgs/category/affiliate.png";
+                return "src/main/java/com/expensemanager/img/category/affiliate.png";
             case "Selling":
-                return "imgs/category/selling.png";
+                return "src/main/java/com/expensemanager/img/category/selling.png";
             case "Other Income":
-                return "imgs/category/other_income.png";
+                return "src/main/java/com/expensemanager/img/category/other_income.png";
             default:
-                return "imgs/category/others.png";
+                return "src/main/java/com/expensemanager/img/category/others.png";
         }
     }
 
     private JButton createEditButton() {
         JButton btn = new JButton();
-        ImageIcon penIcon = UIUtils.getIcon("imgs/budget/pen.png", 20, 20);
+        ImageIcon penIcon = UIUtils.getIcon("src/main/java/com/expensemanager/img/budget/pen.png", 20, 20);
         if (penIcon != null) {
             btn.setIcon(penIcon);
         }

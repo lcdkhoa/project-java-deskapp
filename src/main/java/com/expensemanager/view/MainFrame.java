@@ -93,8 +93,8 @@ public class MainFrame extends JFrame {
     }
 
     private SidebarButton createNavButton(String label, String card) {
-        // Load icon from imgs/menu/ folder with mapping
-        String iconPath = "imgs/menu/" + getIconFileName(card);
+        // Load icon from img/menu/ folder with mapping
+        String iconPath = "src/main/java/com/expensemanager/img/menu/" + getIconFileName(card);
         ImageIcon icon = UIUtils.getIcon(iconPath, 20, 20);
 
         SidebarButton b = new SidebarButton(card, label, icon);
