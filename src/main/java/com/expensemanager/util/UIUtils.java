@@ -2,6 +2,7 @@ package com.expensemanager.util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +42,8 @@ public final class UIUtils {
 
     private static final int ARC = 12;
 
-    private UIUtils() {}
+    private UIUtils() {
+    }
 
     /**
      * Resolve base font: Segoe UI or Inter, size 14. Called after LAF setup.
@@ -58,13 +60,16 @@ public final class UIUtils {
     }
 
     /**
-     * Apply FlatLaf overrides: rounded corners (arc=12), no focus border, global font.
+     * Apply FlatLaf overrides: rounded corners (arc=12), no focus border, global
+     * font.
      * Call after FlatLightLaf/FlatDarkLaf.setup().
      *
-     * @param dark whether dark theme is active (reserved for future per-theme tweaks)
+     * @param dark whether dark theme is active (reserved for future per-theme
+     *             tweaks)
      */
     public static void applyTheme(boolean dark) {
-        // Primary JButtons: pill shape (arc 999). ToggleButton: rounded rect (12). Other: 12.
+        // Primary JButtons: pill shape (arc 999). ToggleButton: rounded rect (12).
+        // Other: 12.
         UIManager.put("Button.arc", 999);
         UIManager.put("ToggleButton.arc", ARC);
         UIManager.put("Component.arc", ARC);
@@ -113,13 +118,17 @@ public final class UIUtils {
     }
 
     /**
-     * Load and scale an icon image from a filesystem path.
-     * Supports both legacy paths (e.g. "imgs/dashboard/down.png") and the new location
-     * under "src/main/java/com/expensemanager/img".
-     * Handles missing files gracefully by returning null.
+     * Load and scale an icon image from classpath or filesystem.
      *
-     * @param path relative path from project root (e.g., "src/main/java/com/expensemanager/img/dashboard/down.png")
-     * @param width target width in pixels
+     * Packaging note:
+     * - When building a distributable (.exe via jpackage), paths like
+     * "src/main/java/..." do not exist.
+     * - This method first attempts to load from classpath (resources inside JAR),
+     * then falls back to filesystem for dev convenience.
+     *
+     * @param path   relative path from project root (e.g.,
+     *               "src/main/java/com/expensemanager/img/dashboard/down.png")
+     * @param width  target width in pixels
      * @param height target height in pixels
      * @return scaled ImageIcon, or null if file not found
      */
@@ -129,23 +138,37 @@ public final class UIUtils {
                 return null;
             }
 
-            Path filePath = Paths.get(path);
-            if (!Files.exists(filePath)) {
-                // Map legacy "imgs/..." to new folder "src/main/java/com/expensemanager/img/..."
-                String normalized = path.replace("\\", "/");
-                if (normalized.startsWith("imgs/")) {
-                    filePath = Paths.get("src/main/java/com/expensemanager/img", normalized.substring("imgs/".length()));
-                } else {
-                    // Best-effort: treat input as relative inside the new img folder
-                    filePath = Paths.get("src/main/java/com/expensemanager/img", normalized);
+            String normalized = path.replace("\\", "/");
+
+            // 1) Try classpath resource
+            String resourcePath = toClasspathResourcePath(normalized);
+            java.awt.Image img = null;
+            try (InputStream in = UIUtils.class.getResourceAsStream(resourcePath)) {
+                if (in != null) {
+                    img = javax.imageio.ImageIO.read(in);
                 }
             }
 
-            if (!Files.exists(filePath)) {
-                return null;
+            // 2) Fallback to filesystem (dev)
+            if (img == null) {
+                Path filePath = Paths.get(path);
+                if (!Files.exists(filePath)) {
+                    // Map legacy "imgs/..." to new folder
+                    // "src/main/java/com/expensemanager/img/..."
+                    if (normalized.startsWith("imgs/")) {
+                        filePath = Paths.get("src/main/java/com/expensemanager/img",
+                                normalized.substring("imgs/".length()));
+                    } else {
+                        // Best-effort: treat input as relative inside the new img folder
+                        filePath = Paths.get("src/main/java/com/expensemanager/img", normalized);
+                    }
+                }
+                if (!Files.exists(filePath)) {
+                    return null;
+                }
+                img = javax.imageio.ImageIO.read(filePath.toFile());
             }
 
-            java.awt.Image img = javax.imageio.ImageIO.read(filePath.toFile());
             if (img != null) {
                 img = img.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
                 return new ImageIcon(img);
@@ -154,5 +177,24 @@ public final class UIUtils {
             // File not found or read error - return null (caller should handle)
         }
         return null;
+    }
+
+    private static String toClasspathResourcePath(String normalizedPath) {
+        // Convert known dev paths to resource paths within JAR
+        // e.g. "src/main/java/com/expensemanager/img/dashboard/down.png" ->
+        // "/com/expensemanager/img/dashboard/down.png"
+        String p = normalizedPath;
+        if (p.startsWith("src/main/java/")) {
+            p = p.substring("src/main/java/".length());
+        }
+        if (p.startsWith("imgs/")) {
+            p = "com/expensemanager/img/" + p.substring("imgs/".length());
+        }
+        if (!p.startsWith("com/")) {
+            // If caller passed "dashboard/down.png" etc., assume under
+            // com/expensemanager/img/
+            p = "com/expensemanager/img/" + p;
+        }
+        return "/" + p;
     }
 }
