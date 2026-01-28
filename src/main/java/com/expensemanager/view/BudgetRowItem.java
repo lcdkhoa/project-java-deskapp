@@ -1,5 +1,6 @@
 package com.expensemanager.view;
 
+import com.expensemanager.controller.BudgetController;
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;

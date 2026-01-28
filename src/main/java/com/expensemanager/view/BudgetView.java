@@ -1,13 +1,11 @@
 package com.expensemanager.view;
 
+import com.expensemanager.controller.BudgetController;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Budget - Section 3. Add/Edit Budget, Monthly Overview, Budget by Category.
- */
 public class BudgetView extends JPanel {
     private final MainFrame main;
     private final BudgetController controller;
@@ -19,7 +17,7 @@ public class BudgetView extends JPanel {
         setOpaque(true);
         setLayout(new MigLayout("wrap 1, fill, insets 20 24 24 24, gapy 24", "[grow]", "[][grow]"));
 
-        // Header row: title/subtitle + Add Budget button
+        // Header row
         JPanel header = new JPanel(new MigLayout("ins 0, fillx", "[grow][pref!]", "[]"));
         header.setOpaque(false);
 
@@ -42,10 +40,17 @@ public class BudgetView extends JPanel {
         add(controller.getContentPanel(), "grow, push");
     }
 
-    void onShown() { refresh(); }
-    void refresh() { controller.refresh(); }
+    void onShown() {
+        refresh();
+    }
 
-    MainFrame getMain() { return main; }
+    void refresh() {
+        controller.refresh();
+    }
+
+    public MainFrame getMain() {
+        return main;
+    }
 
     private JButton createAddBudgetButton() {
         JButton btn = new JButton("+ Add Budget") {

@@ -1,6 +1,6 @@
-package com.expensemanager.view;
+package com.expensemanager.controller;
 
-import com.expensemanager.AppContext;
+import com.expensemanager.util.AppContext;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.dao.TransactionDAO;
 import com.expensemanager.db.DatabaseConnection;
@@ -8,6 +8,8 @@ import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
 import com.expensemanager.util.DateUtil;
 import com.expensemanager.util.MonthKeyUtil;
+import com.expensemanager.view.TransactionRowPanel;
+import com.expensemanager.view.TransactionsView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controller for Transactions list. Section 2.2: grouped by date (Today, Yesterday, Dec 19, 2025),
+ * Controller for Transactions list. Section 2.2: grouped by date (Today,
+ * Yesterday, Dec 19, 2025),
  * date desc, time desc. Custom card-style rows.
  */
 public class TransactionsController {
@@ -46,11 +49,13 @@ public class TransactionsController {
     public JPanel getFilterPanel() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p.add(new JLabel("Search:"));
-        p.add(new JTextField(20) {{
-            setToolTipText("Search by note");
-        }});
+        p.add(new JTextField(20) {
+            {
+                setToolTipText("Search by note");
+            }
+        });
         p.add(new JLabel("Month:"));
-        p.add(new JComboBox<>(new String[]{"Current"}));
+        p.add(new JComboBox<>(new String[] { "Current" }));
         p.add(new JButton("Apply"));
         return p;
     }
@@ -59,7 +64,7 @@ public class TransactionsController {
         return listScroll;
     }
 
-    void refresh() {
+    public void refresh() {
         String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(java.time.YearMonth.now());
         listPanel.removeAll();
@@ -67,7 +72,8 @@ public class TransactionsController {
             TransactionDAO txDao = new TransactionDAO();
             CategoryDAO cDao = new CategoryDAO();
             Map<String, Category> idToCat = new HashMap<>();
-            for (Category c : cDao.findAll(conn)) idToCat.put(c.getId(), c);
+            for (Category c : cDao.findAll(conn))
+                idToCat.put(c.getId(), c);
 
             List<Transaction> list = txDao.listByMonth(conn, userId, monthKey);
             if (list.isEmpty()) {
@@ -80,7 +86,8 @@ public class TransactionsController {
             for (Transaction t : list) {
                 LocalDate d = t.getTransactionDate();
                 if (d != null && !d.equals(lastDate)) {
-                    if (lastDate != null) listPanel.add(Box.createVerticalStrut(HEADER_GAP));
+                    if (lastDate != null)
+                        listPanel.add(Box.createVerticalStrut(HEADER_GAP));
                     JLabel header = new JLabel(DateUtil.formatDateForGroup(d));
                     header.setFont(header.getFont().deriveFont(Font.BOLD, 12f));
                     header.setForeground(new Color(0x6B7280));
@@ -92,9 +99,11 @@ public class TransactionsController {
                 }
                 Category cat = idToCat.get(t.getCategoryId());
                 String iconPath = (cat != null && cat.getIconPath() != null && !cat.getIconPath().isBlank())
-                        ? cat.getIconPath() : "src/main/java/com/expensemanager/img/category/others.png";
+                        ? cat.getIconPath()
+                        : "src/main/java/com/expensemanager/img/category/others.png";
                 Color iconColor = parseColor(cat != null ? cat.getLegendChartColor() : null);
-                String wallet = WALLET_DISPLAY.getOrDefault(t.getWalletType(), t.getWalletType() != null ? t.getWalletType() : "");
+                String wallet = WALLET_DISPLAY.getOrDefault(t.getWalletType(),
+                        t.getWalletType() != null ? t.getWalletType() : "");
                 String time = t.getTransactionTime() != null ? t.getTransactionTime().toString().substring(0, 5) : "";
                 TransactionRowPanel row = new TransactionRowPanel(
                         iconPath, iconColor, t.getNote(), wallet, t.getAmount(), time);
@@ -110,8 +119,10 @@ public class TransactionsController {
     }
 
     private static Color parseColor(String hex) {
-        if (hex == null || hex.isBlank()) return new Color(0x9CA3AF);
-        if (!hex.startsWith("#")) hex = "#" + hex;
+        if (hex == null || hex.isBlank())
+            return new Color(0x9CA3AF);
+        if (!hex.startsWith("#"))
+            hex = "#" + hex;
         try {
             return Color.decode(hex);
         } catch (Exception e) {

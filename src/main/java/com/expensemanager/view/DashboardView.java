@@ -1,26 +1,17 @@
 package com.expensemanager.view;
 
+import com.expensemanager.controller.DashboardController;
 import com.expensemanager.util.UIFactory;
-
 import net.miginfocom.swing.MigLayout;
-
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Dashboard - Figma layout: MigLayout wrap 1, insets 0.
- * Row 1: Header (White) Title + Add Transaction.
- * Row 2: Date Selector (transparent row, white rounded card, arc 20).
- * Row 3: KPI cards. Row 4: Charts (growy, pushy to fill). Row 5: Budget Warning
- * (South).
- * Light mode only. Main BG White (Color.WHITE).
- */
 public class DashboardView extends JPanel {
-    private static final Color MAIN_BG = Color.WHITE; // Changed from Light Gray to White
+    private static final Color MAIN_BG = Color.WHITE;
     private static final Color SUBTITLE_GRAY = new Color(0x6B7280);
-    private static final Color CARD_BORDER = new Color(229, 231, 235); // #E5E7EB
+    private static final Color CARD_BORDER = new Color(229, 231, 235);
     private static final int CARD_GAP = 20;
-    private static final int HEADER_HEIGHT = 70; // 60–80px
+    private static final int HEADER_HEIGHT = 70;
     private static final int DATE_STRIP_HEIGHT = 70;
     private static final int CARD_ARC = 30;
 
@@ -31,11 +22,9 @@ public class DashboardView extends JPanel {
         this.main = main;
         this.controller = new DashboardController(this);
         setBackground(MAIN_BG);
-        setOpaque(true); // Ensure panel is opaque to show white background
+        setOpaque(true);
         setLayout(new MigLayout("ins 0, wrap 1, gap " + CARD_GAP + " " + CARD_GAP, "[grow,fill]",
                 "[] [][][grow,fill] []"));
-
-        // Ensure any parent ScrollPane viewport also has white background
         addHierarchyListener(e -> {
             Component parent = getParent();
             while (parent != null) {
@@ -50,23 +39,22 @@ public class DashboardView extends JPanel {
             }
         });
 
-        // Row 1 (Header): White BG, ~60–80px. Title left, + Add Transaction right.
+        // (Header)
         JPanel header = buildHeaderPanel();
         add(header, "growx, h " + HEADER_HEIGHT + ", wrap");
 
-        // Row 2 (Date Selector): Transparent row, white rounded card (arc 20) centered.
+        // (Date Selector)
         add(buildDateSelectorStrip(), "growx, wrap");
 
-        // Row 3 (KPI Cards)
+        // (KPI Cards)
         add(controller.getKpiCardsPanel(), "growx, wrap");
 
-        // Row 4 (Charts): growy, pushy to fill and touch Budget Warning
-        // Set minimum height to force scrolling
+        // (Charts)
         JPanel chartsPanel = controller.getChartsPanel();
-        chartsPanel.setMinimumSize(new Dimension(0, 600)); // Minimum height to force scrollbar
+        chartsPanel.setMinimumSize(new Dimension(0, 600));
         add(chartsPanel, "growx, growy, pushy, wrap");
 
-        // Row 5 (Footer): Budget Warning at bottom
+        // Budget Warning
         add(controller.getBudgetWarningsPanel(), "growx");
     }
 
@@ -92,12 +80,10 @@ public class DashboardView extends JPanel {
     }
 
     private JPanel buildDateSelectorStrip() {
-        // Date selector with MigLayout: buttons at edges, label centered
         JPanel inner = controller.getMonthSelectorPanel();
         return new DateStripCard(inner);
     }
 
-    /** White date selector card: #FFFFFF, arc 30, 1px border #E5E7EB, height 70. */
     private static final class DateStripCard extends JPanel {
         DateStripCard(JPanel content) {
             setLayout(new BorderLayout());
@@ -128,7 +114,7 @@ public class DashboardView extends JPanel {
         refresh();
     }
 
-    void refresh() {
+    public void refresh() {
         controller.refresh();
     }
 

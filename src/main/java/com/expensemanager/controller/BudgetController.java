@@ -1,6 +1,6 @@
-package com.expensemanager.view;
+package com.expensemanager.controller;
 
-import com.expensemanager.AppContext;
+import com.expensemanager.util.AppContext;
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.dao.TransactionDAO;
@@ -9,6 +9,11 @@ import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.util.MonthKeyUtil;
+import com.expensemanager.view.BudgetCard;
+import com.expensemanager.view.BudgetDialog;
+import com.expensemanager.view.BudgetProgressBar;
+import com.expensemanager.view.BudgetRowItem;
+import com.expensemanager.view.BudgetView;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -41,15 +46,15 @@ public class BudgetController {
         return contentPanel;
     }
 
-    void openAddBudget() {
+    public void openAddBudget() {
         new BudgetDialog(view.getMain(), currentMonth, BudgetDialog.Mode.ADD, null, null).setVisible(true);
     }
 
-    void openEditBudget(Budget budget, Category category) {
+    public void openEditBudget(Budget budget, Category category) {
         new BudgetDialog(view.getMain(), currentMonth, BudgetDialog.Mode.EDIT, budget, category).setVisible(true);
     }
 
-    void refresh() {
+    public void refresh() {
         contentPanel.removeAll();
         String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(currentMonth);
@@ -170,5 +175,4 @@ public class BudgetController {
         contentPanel.revalidate();
         contentPanel.repaint();
     }
-
 }

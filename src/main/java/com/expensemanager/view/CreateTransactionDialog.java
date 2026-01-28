@@ -1,6 +1,6 @@
 package com.expensemanager.view;
 
-import com.expensemanager.AppContext;
+import com.expensemanager.util.AppContext;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.dao.TransactionDAO;
 import com.expensemanager.db.DatabaseConnection;

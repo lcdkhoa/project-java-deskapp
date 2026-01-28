@@ -1,6 +1,6 @@
-package com.expensemanager.view;
+package com.expensemanager.controller;
 
-import com.expensemanager.AppContext;
+import com.expensemanager.util.AppContext;
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.dao.TransactionDAO;
@@ -9,16 +9,21 @@ import com.expensemanager.model.Category;
 import com.expensemanager.util.ChartUtils;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.util.MonthKeyUtil;
+import com.expensemanager.view.BudgetWarningsPanel;
+import com.expensemanager.view.DashboardView;
+import com.expensemanager.view.KPICard;
+import com.expensemanager.view.ModernCard;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.RingPlot;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.labels.PieToolTipGenerator;
 import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.plot.RingPlot;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.TextTitle;
-import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.HorizontalAlignment;
+import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
@@ -64,7 +69,8 @@ public class DashboardController {
 
         // Previous button with left.png icon - centered vertically
         JButton prevBtn = new JButton();
-        ImageIcon leftIcon = com.expensemanager.util.UIUtils.getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 24, 24);
+        ImageIcon leftIcon = com.expensemanager.util.UIUtils
+                .getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 24, 24);
         if (leftIcon != null) {
             prevBtn.setIcon(leftIcon);
         } else {
@@ -84,7 +90,8 @@ public class DashboardController {
 
         // Next button with right.png icon - centered vertically
         JButton nextBtn = new JButton();
-        ImageIcon rightIcon = com.expensemanager.util.UIUtils.getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 24, 24);
+        ImageIcon rightIcon = com.expensemanager.util.UIUtils
+                .getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 24, 24);
         if (rightIcon != null) {
             nextBtn.setIcon(rightIcon);
         } else {
@@ -183,7 +190,7 @@ public class DashboardController {
         return budgetWarningsPanel;
     }
 
-    void refresh() {
+    public void refresh() {
         String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(currentMonth);
         try (Connection conn = DatabaseConnection.getConnection()) {
@@ -215,18 +222,23 @@ public class DashboardController {
     private void refreshKpi(long expense, long income, long remaining, double budgetUsedPct, long totalBudget) {
         JPanel p = getKpiCardsPanel();
         p.removeAll();
-        p.add(new KPICard("Monthly Expense", CurrencyUtil.formatNoSymbol(Math.abs(expense)), "src/main/java/com/expensemanager/img/dashboard/down.png",
+        p.add(new KPICard("Monthly Expense", CurrencyUtil.formatNoSymbol(Math.abs(expense)),
+                "src/main/java/com/expensemanager/img/dashboard/down.png",
                 RED), "grow");
-        p.add(new KPICard("Monthly Income", CurrencyUtil.formatNoSymbol(income), "src/main/java/com/expensemanager/img/dashboard/up.png", GREEN),
+        p.add(new KPICard("Monthly Income", CurrencyUtil.formatNoSymbol(income),
+                "src/main/java/com/expensemanager/img/dashboard/up.png", GREEN),
                 "grow");
         boolean remainingNeg = remaining < 0;
-        p.add(new KPICard("Remaining", CurrencyUtil.formatNoSymbol(remaining), "src/main/java/com/expensemanager/img/dashboard/remains.png",
+        p.add(new KPICard("Remaining", CurrencyUtil.formatNoSymbol(remaining),
+                "src/main/java/com/expensemanager/img/dashboard/remains.png",
                 remainingNeg ? RED : BLUE), "grow");
         if (!Double.isNaN(budgetUsedPct)) {
-            p.add(new KPICard("Budget Used", String.format("%.0f%%", budgetUsedPct), "src/main/java/com/expensemanager/img/dashboard/used.png", PURPLE),
+            p.add(new KPICard("Budget Used", String.format("%.0f%%", budgetUsedPct),
+                    "src/main/java/com/expensemanager/img/dashboard/used.png", PURPLE),
                     "grow");
         } else {
-            p.add(new KPICard("Budget Used", "-", "src/main/java/com/expensemanager/img/dashboard/used.png", Color.GRAY), "grow");
+            p.add(new KPICard("Budget Used", "-", "src/main/java/com/expensemanager/img/dashboard/used.png",
+                    Color.GRAY), "grow");
         }
         p.revalidate();
         p.repaint();

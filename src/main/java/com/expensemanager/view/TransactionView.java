@@ -1,6 +1,6 @@
 package com.expensemanager.view;
 
-import com.expensemanager.AppContext;
+import com.expensemanager.util.AppContext;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.dao.TransactionDAO;
 import com.expensemanager.db.DatabaseConnection;
@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Calendar;
 
 public class TransactionView extends JPanel {
-
-    // Page background must be pure white per design.
     private static final Color BG_PAGE = Color.WHITE;
     private static final Color CARD_BG = Color.WHITE;
     private static final Color BORDER_COLOR = new Color(0xE5E7EB);
@@ -62,16 +60,16 @@ public class TransactionView extends JPanel {
         setLayout(new MigLayout("wrap 1, fill, insets 20", "[grow]", "[][][][grow]"));
         setBackground(BG_PAGE);
 
-        // Row 1: Page header (title, subtitle, Add Transaction button)
+        // Page header
         add(createHeaderPanel(), "growx");
 
-        // Row 2: Search bar (full width)
+        // Search bar
         add(createSearchRow(), "growx");
 
-        // Row 3: Filters + Date range (grouped card)
+        // Filters + Date range
         add(createFilterCard(), "growx");
 
-        // Row 5: Transaction list (scrollable, main content)
+        // Transaction list
         listPanel = new JPanel(new MigLayout("wrap 1, fillx, insets 0 0 16 0, gapy 12", "[grow,fill]", "[]"));
         listPanel.setOpaque(true);
         listPanel.setBackground(BG_PAGE);
@@ -89,10 +87,7 @@ public class TransactionView extends JPanel {
         refresh();
     }
 
-    /**
-     * Row 1: Page title, subtitle, and Add Transaction button.
-     * MigLayout("fillx, insets 0", "[grow][right]", "[]")
-     */
+    // Page header
     private JComponent createHeaderPanel() {
         JPanel header = new JPanel(new MigLayout("fillx, insets 0", "[grow][right]", "[]"));
         header.setOpaque(false);
@@ -120,10 +115,7 @@ public class TransactionView extends JPanel {
         return header;
     }
 
-    /**
-     * Row 2: Search bar occupying full width.
-     * MigLayout("fillx, insets 10 0 10 0", "[grow]", "[]")
-     */
+    // Search bar
     private JComponent createSearchRow() {
         JPanel row = new JPanel(new MigLayout("fillx, insets 10 0 10 0", "[grow]", "[]"));
         row.setOpaque(false);
@@ -131,10 +123,7 @@ public class TransactionView extends JPanel {
         return row;
     }
 
-    /**
-     * Grouped card containing Category/Wallet/Sort and Date Range (From/To),
-     * matching the Figma layout.
-     */
+    // Filters + Date range
     private JComponent createFilterCard() {
         JPanel card = new JPanel(new MigLayout("fillx, insets 16, wrap 3, gapx 18, gapy 14",
                 "[grow,fill][grow,fill][grow,fill]", "[]"));
@@ -157,18 +146,18 @@ public class TransactionView extends JPanel {
         outer.setOpaque(false);
         outer.add(card, BorderLayout.CENTER);
 
-        // First row: Category / Wallet / Sort (labels above inputs)
+        // Category / Wallet / Sort
         card.add(createLabeledInput("Category", createCategoryCombo()), "growx");
         card.add(createLabeledInput("Wallet", createWalletCombo()), "growx");
         card.add(createLabeledInput("Sort by", createSortCombo()), "growx");
 
-        // Second row: Date Range label
+        // Date Range label
         JLabel dr = new JLabel("Date Range (Max 60 days)");
         dr.setFont(dr.getFont().deriveFont(Font.PLAIN, 12f));
         dr.setForeground(WALLET_COLOR);
         card.add(dr, "span 3, gaptop 2");
 
-        // Third row: From / To (labels above inputs)
+        // From / To
         JPanel datesRow = new JPanel(new MigLayout("ins 0, fillx, gapx 12", "[grow,fill][grow,fill]", "[]"));
         datesRow.setOpaque(false);
 
@@ -206,7 +195,6 @@ public class TransactionView extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Search bar background must be pure white per design.
                 g2.setColor(Color.WHITE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
                 g2.setColor(BORDER_COLOR);
@@ -217,7 +205,6 @@ public class TransactionView extends JPanel {
             }
         };
         wrapper.setOpaque(false);
-        // Force the search bar to be exactly ~50px high so it does not collapse.
         wrapper.setPreferredSize(new Dimension(0, searchHeight));
         wrapper.setMinimumSize(new Dimension(0, searchHeight));
 
@@ -243,8 +230,6 @@ public class TransactionView extends JPanel {
                 g2.dispose();
             }
         };
-        // Match the full search bar height so the rounded corners are not visually
-        // "flattened".
         iconLabel.setPreferredSize(new Dimension(48, searchHeight));
 
         searchField = new JTextField();
@@ -318,10 +303,6 @@ public class TransactionView extends JPanel {
         return sortCombo;
     }
 
-    /**
-     * Styled combo box matching CreateTransactionDialog wallet dropdown design.
-     * White background, rounded border, custom arrow, 48px height.
-     */
     private <T> JComboBox<T> createStyledComboBox() {
         JComboBox<T> combo = new JComboBox<T>() {
             @Override
@@ -343,7 +324,6 @@ public class TransactionView extends JPanel {
 
             @Override
             protected void paintBorder(Graphics g) {
-                // Border is painted inside paintComponent.
             }
         };
         combo.setOpaque(false);
