@@ -21,7 +21,7 @@ public class TransactionRowPanel extends JPanel {
     private static final Color EXPENSE_COLOR = new Color(0xB91C1C);
     private static final Color INCOME_COLOR = new Color(0x16A34A);
     private static final Color BORDER_COLOR = new Color(0xE5E7EB);
-    private static final int ICON_SIZE = 40;
+    private static final int ICON_SIZE = 48;
     private static final int ROW_PADDING = 14;
     private static final int CARD_ARC = 30;
 
@@ -33,50 +33,30 @@ public class TransactionRowPanel extends JPanel {
 
     public static final String DEFAULT_CATEGORY_ICON = "src/main/java/com/expensemanager/img/category/others.png";
 
-    private final Color iconBgColor;
-
     public TransactionRowPanel(String iconPath, Color iconBgColor, String note, String wallet,
             long amount, String timeHhmm) {
         this(iconPath, iconBgColor, note, null, wallet, amount, timeHhmm);
     }
 
+    @SuppressWarnings("unused")
     public TransactionRowPanel(String iconPath, Color iconBgColor, String note, String categoryName, String wallet,
             long amount, String timeHhmm) {
-        this.iconBgColor = iconBgColor;
+        // iconBgColor is kept for backward compatibility but no longer used
         setLayout(new BorderLayout(12, 0));
         setBorder(BorderFactory.createEmptyBorder(ROW_PADDING, 16, ROW_PADDING, 16));
         setOpaque(false);
 
-        // Left: circular icon (image from iconPath or fallback "•")
-        JPanel iconWrap = new JPanel(new GridBagLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(TransactionRowPanel.this.iconBgColor != null ? TransactionRowPanel.this.iconBgColor
-                        : WALLET_COLOR);
-                int s = Math.min(getWidth(), getHeight());
-                g2.fillOval((getWidth() - s) / 2, (getHeight() - s) / 2, s, s);
-                g2.dispose();
-            }
-        };
+        // Left: category icon only (no circle background), 40x40
+        JPanel iconWrap = new JPanel(new GridBagLayout());
         iconWrap.setOpaque(false);
         iconWrap.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
         JLabel iconLbl = new JLabel();
         if (iconPath != null && !iconPath.isBlank()
                 && (iconPath.contains("/") || iconPath.toLowerCase().endsWith(".png"))) {
-            ImageIcon img = UIUtils.getIcon(iconPath, 24, 24);
+            ImageIcon img = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
             if (img != null) {
                 iconLbl.setIcon(img);
-            } else {
-                iconLbl.setText("•");
-                iconLbl.setFont(iconLbl.getFont().deriveFont(18f));
-                iconLbl.setForeground(Color.WHITE);
             }
-        } else {
-            iconLbl.setText("•");
-            iconLbl.setFont(iconLbl.getFont().deriveFont(18f));
-            iconLbl.setForeground(Color.WHITE);
         }
         iconWrap.add(iconLbl);
         add(iconWrap, BorderLayout.WEST);
