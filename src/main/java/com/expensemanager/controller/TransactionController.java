@@ -157,14 +157,16 @@ public class TransactionController implements TransactionDialogListener {
         Color iconBg = parseColor(cat != null ? cat.getLegendChartColor() : null);
 
         String iconPath = null;
+        String categoryName = null;
         if (cat != null) {
             iconPath = cat.getIconPath();
+            categoryName = cat.getName();
         }
         if (iconPath == null) {
             iconPath = TransactionRowPanel.DEFAULT_CATEGORY_ICON;
         }
 
-        TransactionRowPanel row = new TransactionRowPanel(iconPath, iconBg, note, wallet, amount, time);
+        TransactionRowPanel row = new TransactionRowPanel(iconPath, iconBg, note, categoryName, wallet, amount, time);
         listPanel.add(row, "growx");
     }
 
