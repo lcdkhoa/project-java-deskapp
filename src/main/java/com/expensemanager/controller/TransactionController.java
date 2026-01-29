@@ -2,8 +2,10 @@ package com.expensemanager.controller;
 
 import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
+import com.expensemanager.model.WalletType;
 import com.expensemanager.service.CategoryService;
 import com.expensemanager.service.TransactionService;
+import com.expensemanager.service.WalletTypeService;
 import com.expensemanager.util.AppContext;
 import com.expensemanager.util.DateUtil;
 import com.expensemanager.view.TransactionView.CreateTransactionDialog;
@@ -25,11 +27,6 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Controller for Transactions page - handles filter/search logic and data
- * loading.
- * Uses Service layer for business logic.
- */
 public class TransactionController implements TransactionDialogListener {
 
     private static final Color BG_PAGE = Color.WHITE;
@@ -41,6 +38,7 @@ public class TransactionController implements TransactionDialogListener {
     // Services
     private final TransactionService transactionService;
     private final CategoryService categoryService;
+    private final WalletTypeService walletTypeService;
 
     private final DateTimeFormatter filterDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
@@ -48,6 +46,7 @@ public class TransactionController implements TransactionDialogListener {
         this.view = view;
         this.transactionService = new TransactionService();
         this.categoryService = new CategoryService();
+        this.walletTypeService = new WalletTypeService();
 
         this.listPanel = new JPanel(
                 new MigLayout("wrap 1, fillx, insets 0 0 16 0, gapy 12", "[grow,fill]", "[]"));
@@ -67,25 +66,22 @@ public class TransactionController implements TransactionDialogListener {
         return scrollPane;
     }
 
-    /**
-     * Open dialog to add a new transaction.
-     */
     public void openAddTransaction() {
         new CreateTransactionDialog(view.getMain(), this).setVisible(true);
     }
 
-    /**
-     * Get all categories for filter dropdown.
-     */
     public List<Category> getAllCategories() {
         return categoryService.getAllCategories();
     }
 
-    // TransactionDialogListener implementation
-
     @Override
     public List<Category> getCategoriesByType(String type) {
         return categoryService.getCategoriesByType(type);
+    }
+
+    @Override
+    public List<WalletType> getWalletTypes() {
+        return walletTypeService.getAllWalletTypes();
     }
 
     @Override
@@ -100,9 +96,6 @@ public class TransactionController implements TransactionDialogListener {
         view.getMain().refreshBudget();
     }
 
-    /**
-     * Reload transaction list based on current filters in view.
-     */
     public void refresh() {
         listPanel.removeAll();
 
@@ -118,10 +111,8 @@ public class TransactionController implements TransactionDialogListener {
         String searchNote = view.getSearchText();
 
         try {
-            // Use service layer for category map
-            Map<String, Category> idToCat = categoryService.getCategoryMap();
 
-            // Use service layer for transaction search
+            Map<String, Category> idToCat = categoryService.getCategoryMap();
             List<Transaction> list = transactionService.searchTransactions(
                     userId, categoryId, walletType, startDate, endDate, sortKey, searchNote);
 

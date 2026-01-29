@@ -3,6 +3,7 @@ package com.expensemanager.view.TransactionView;
 import com.expensemanager.util.AppContext;
 import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
+import com.expensemanager.model.WalletType;
 import com.expensemanager.util.MonthKeyUtil;
 import com.expensemanager.view.CommonComponents.MainFrame;
 
@@ -19,13 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Dialog for creating transactions.
- * Uses TransactionDialogListener for communication with controller (no direct
- * DB access).
- */
 public class CreateTransactionDialog extends JDialog {
-    private final MainFrame main;
     private final TransactionDialogListener listener;
     private JTextField amountF;
     private JToggleButton expenseBtn;
@@ -43,8 +38,8 @@ public class CreateTransactionDialog extends JDialog {
     private CategoryItemPanel selectedCategoryPanel;
     private JPanel categoryGridPanel;
 
-    private static final String[] WALLET_OPTIONS = { "Cash", "Bank Transfer", "Visa Card", "Ví điện tử" };
-    private static final String[] WALLET_VALUES = { "cash", "bank_transfer", "card", "e_wallet" };
+    // Wallet types loaded from DB
+    private List<WalletType> walletTypes;
 
     private static final Color EXPENSE_COLOR = new Color(0xE7000B);
     private static final Color INCOME_COLOR = new Color(0x00A63E);
@@ -53,20 +48,18 @@ public class CreateTransactionDialog extends JDialog {
 
     public CreateTransactionDialog(MainFrame main, TransactionDialogListener listener) {
         super(main, "Create Transaction", true);
-        this.main = main;
         this.listener = listener;
         this.categoryPanels = new HashMap<>();
+        this.walletTypes = listener.getWalletTypes();
 
         setSize(510, 700);
         setLocationRelativeTo(main);
         setLayout(new BorderLayout());
 
-        // Main form panel with MigLayout - width 510px, components centered
-        // Content width = 510 - 40 (padding) = 470px
         JPanel form = new JPanel(new MigLayout("ins 20, wrap 1, gapy 15, align center", "[450!]", "[]"));
         form.setBackground(Color.WHITE);
 
-        // Amount field - width 452px, height 60px, centered
+        // Amount field
         JLabel amountLabel = new JLabel("Amount *");
         amountLabel.setFont(amountLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(amountLabel, "alignx left");
@@ -83,7 +76,7 @@ public class CreateTransactionDialog extends JDialog {
         amountPanel.add(vndLabel, BorderLayout.EAST);
         form.add(amountPanel, "w 452!, alignx center, wrap");
 
-        // Transaction Type Toggle Buttons - each 220px, gap 10px, centered
+        // Transaction Type Toggle Buttons
         JLabel typeLabel = new JLabel("Type *");
         typeLabel.setFont(typeLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(typeLabel, "alignx left");
@@ -91,7 +84,7 @@ public class CreateTransactionDialog extends JDialog {
         JPanel typePanel = createTypeTogglePanel();
         form.add(typePanel, "w 450!, alignx center, wrap");
 
-        // Date & Time (side by side) - centered
+        // Date & Time
         JLabel dateTimeLabel = new JLabel("Date & Time *");
         dateTimeLabel.setFont(dateTimeLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(dateTimeLabel, "alignx left");
@@ -131,7 +124,11 @@ public class CreateTransactionDialog extends JDialog {
         form.add(walletLabel, "alignx left");
 
         walletCombo = createStyledComboBox(452, 48, 30);
-        walletCombo.setModel(new DefaultComboBoxModel<>(WALLET_OPTIONS));
+        // Load wallet options from DB
+        String[] walletDisplayNames = walletTypes.stream()
+                .map(WalletType::getDisplayName)
+                .toArray(String[]::new);
+        walletCombo.setModel(new DefaultComboBoxModel<>(walletDisplayNames));
         form.add(walletCombo, "w 452!, alignx center, wrap");
 
         // Note
@@ -1213,7 +1210,8 @@ public class CreateTransactionDialog extends JDialog {
 
         LocalDate d = ((Date) dateSpinner.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalTime t = ((Date) timeSpinner.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
-        String wallet = WALLET_VALUES[walletCombo.getSelectedIndex()];
+        // Get wallet name from selected wallet type
+        String wallet = walletTypes.get(walletCombo.getSelectedIndex()).getName();
         String note = noteF.getText();
         if (note != null && note.length() > 120)
             note = note.substring(0, 120);

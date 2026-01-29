@@ -287,33 +287,28 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Convert wallet type code to display string.
-     * 
-     * @param walletType wallet type code
-     * @return display string
-     */
+    // Cached wallet display names
+    private static Map<String, String> walletDisplayCache;
+
     public static String toWalletDisplay(String walletType) {
         if (walletType == null || walletType.isBlank()) {
             return "";
         }
-        switch (walletType) {
-            case "cash":
-                return "Cash";
-            case "bank_transfer":
-                return "Bank Transfer";
-            case "card":
-                return "Card";
-            case "e_wallet":
-                return "E-wallet";
-            default:
-                return walletType;
+
+        // Load cache if not initialized
+        if (walletDisplayCache == null) {
+            WalletTypeService walletTypeService = new WalletTypeService();
+            walletDisplayCache = walletTypeService.getWalletDisplayNameMap();
         }
+
+        // Return from cache or fallback to code
+        return walletDisplayCache.getOrDefault(walletType, walletType);
     }
 
-    /**
-     * Custom exception for service layer errors.
-     */
+    public static void clearWalletDisplayCache() {
+        walletDisplayCache = null;
+    }
+
     public static class ServiceException extends Exception {
         public ServiceException(String message) {
             super(message);
