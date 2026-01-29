@@ -11,6 +11,7 @@ import com.expensemanager.util.MonthKeyUtil;
 import com.expensemanager.view.BudgetView.BudgetCard;
 import com.expensemanager.view.BudgetView.BudgetDialog;
 import com.expensemanager.view.BudgetView.BudgetDialogListener;
+import com.expensemanager.view.BudgetView.DeleteBudgetDialog;
 import com.expensemanager.view.BudgetView.BudgetProgressBar;
 import com.expensemanager.view.BudgetView.BudgetRowItem;
 import com.expensemanager.view.BudgetView.BudgetView;
@@ -60,24 +61,16 @@ public class BudgetController implements BudgetDialogListener {
         if (budget == null) {
             return;
         }
-        int option = JOptionPane.showOptionDialog(
-                view.getMain(),
-                "Are you sure you want to delete this budget?",
-                "Delete Budget",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                new String[] { "Yes", "Cancel" },
-                "Cancel");
-        if (option != JOptionPane.YES_OPTION) {
-            return;
-        }
-        try {
-            budgetService.deleteBudget(budget.getId());
-            onRefreshRequired();
-        } catch (BudgetService.ServiceException ex) {
-            JOptionPane.showMessageDialog(view.getMain(), ex.getMessage());
-        }
+        final Budget toDelete = budget;
+        Runnable onConfirm = () -> {
+            try {
+                budgetService.deleteBudget(toDelete.getId());
+                onRefreshRequired();
+            } catch (BudgetService.ServiceException ex) {
+                JOptionPane.showMessageDialog(view.getMain(), ex.getMessage());
+            }
+        };
+        new DeleteBudgetDialog(view.getMain(), onConfirm).setVisible(true);
     }
 
     @Override
