@@ -98,18 +98,27 @@ public class BudgetRowItem extends JPanel {
         // Span from column 0 to include icon area
         add(infoRow, "cell 0 2 3 1, aligny bottom, growx");
 
-        // Right: status chip + edit button
-        JPanel rightPanel = new JPanel(new MigLayout("ins 0, gap 8", "[][pref!]", "[center]"));
+        // Right: status chip + delete button + edit button
+        JPanel rightPanel = new JPanel(new MigLayout("ins 0, gap 8", "[][pref!][pref!]", "[center]"));
         rightPanel.setOpaque(false);
 
         Status status = Status.fromPercent(usedRow.percentUsed);
         StatusChip chip = new StatusChip(status);
         rightPanel.add(chip, "aligny center");
 
+        JButton deleteButton = createDeleteButton();
+        rightPanel.add(deleteButton, "aligny center");
+
         JButton editButton = createEditButton();
         rightPanel.add(editButton, "aligny center");
 
         add(rightPanel, "cell 2 0, alignx right, aligny center");
+
+        deleteButton.addActionListener(e -> {
+            if (rowBudget != null && rowController != null) {
+                rowController.deleteBudget(rowBudget);
+            }
+        });
 
         editButton.addActionListener(e -> {
             if (rowBudget != null && rowController != null) {
@@ -123,46 +132,24 @@ public class BudgetRowItem extends JPanel {
             return null;
         }
         String path = category.getIconPath();
-        if (path != null && !path.isBlank()) {
-            return path;
+        return path;
+
+    }
+
+    private JButton createDeleteButton() {
+        JButton btn = new JButton();
+        ImageIcon deleteIcon = UIUtils.getIcon("src/main/java/com/expensemanager/img/budget/delete.png", 20, 20);
+        if (deleteIcon != null) {
+            btn.setIcon(deleteIcon);
         }
-        String name = category.getName();
-        if (name == null) {
-            return null;
-        }
-        // Fallback mapping similar to TransactionView
-        switch (name) {
-            case "Food":
-                return "src/main/java/com/expensemanager/img/category/food.png";
-            case "Transport":
-                return "src/main/java/com/expensemanager/img/category/transport.png";
-            case "Shopping":
-                return "src/main/java/com/expensemanager/img/category/shopping.png";
-            case "Entertainment":
-                return "src/main/java/com/expensemanager/img/category/entertainment.png";
-            case "Bills":
-                return "src/main/java/com/expensemanager/img/category/bill.png";
-            case "Healthcare":
-                return "src/main/java/com/expensemanager/img/category/healthcare.png";
-            case "Housing":
-                return "src/main/java/com/expensemanager/img/category/housing.png";
-            case "Education":
-                return "src/main/java/com/expensemanager/img/category/education.png";
-            case "Other":
-                return "src/main/java/com/expensemanager/img/category/others.png";
-            case "Salary":
-                return "src/main/java/com/expensemanager/img/category/salary.png";
-            case "Freelance":
-                return "src/main/java/com/expensemanager/img/category/freelance.png";
-            case "Affiliate":
-                return "src/main/java/com/expensemanager/img/category/affiliate.png";
-            case "Selling":
-                return "src/main/java/com/expensemanager/img/category/selling.png";
-            case "Other Income":
-                return "src/main/java/com/expensemanager/img/category/other_income.png";
-            default:
-                return "src/main/java/com/expensemanager/img/category/others.png";
-        }
+        btn.setPreferredSize(new Dimension(28, 28));
+        btn.setMinimumSize(new Dimension(28, 28));
+        btn.setOpaque(false);
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
     }
 
     private JButton createEditButton() {

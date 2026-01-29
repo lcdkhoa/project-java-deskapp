@@ -56,6 +56,30 @@ public class BudgetController implements BudgetDialogListener {
         new BudgetDialog(view.getMain(), currentMonth, BudgetDialog.Mode.EDIT, budget, category, this).setVisible(true);
     }
 
+    public void deleteBudget(Budget budget) {
+        if (budget == null) {
+            return;
+        }
+        int option = JOptionPane.showOptionDialog(
+                view.getMain(),
+                "Are you sure you want to delete this budget?",
+                "Delete Budget",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                new String[] { "Yes", "Cancel" },
+                "Cancel");
+        if (option != JOptionPane.YES_OPTION) {
+            return;
+        }
+        try {
+            budgetService.deleteBudget(budget.getId());
+            onRefreshRequired();
+        } catch (BudgetService.ServiceException ex) {
+            JOptionPane.showMessageDialog(view.getMain(), ex.getMessage());
+        }
+    }
+
     @Override
     public List<Category> getAvailableCategories() {
         String userId = AppContext.getUserId();
