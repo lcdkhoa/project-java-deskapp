@@ -8,7 +8,7 @@ import com.expensemanager.service.CategoryService;
 import com.expensemanager.service.TransactionService;
 import com.expensemanager.service.WalletTypeService;
 import com.expensemanager.view.CommonComponents.MainFrame;
-import com.expensemanager.util.UIFactory;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 import com.expensemanager.view.TransactionView.CreateTransactionDialog;
 import com.expensemanager.view.TransactionView.TransactionDialogListener;
 import net.miginfocom.swing.MigLayout;
@@ -89,7 +89,7 @@ public class DashboardView extends JPanel implements TransactionDialogListener {
         left.add(subtitle);
         header.add(left, "aligny center");
 
-        JButton addTx = UIFactory.createPrimaryButton("+ Add Transaction");
+        JButton addTx = StyledComponents.createTitleButton("Add Transaction", StyledComponents.createPlusIcon(), 180);
         addTx.addActionListener(e -> new CreateTransactionDialog(main, this).setVisible(true));
         header.add(addTx, "aligny center");
         return header;

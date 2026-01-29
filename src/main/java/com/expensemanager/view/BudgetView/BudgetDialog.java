@@ -26,7 +26,6 @@ public class BudgetDialog extends JDialog {
         ADD, EDIT
     }
 
-    private static final Color PRIMARY_COLOR = new Color(0x2563EB);
     private static final int CARD_ARC = 30;
     private static final int CONTROL_HEIGHT = 48;
 
@@ -106,12 +105,12 @@ public class BudgetDialog extends JDialog {
         JPanel footer = new JPanel(new MigLayout("ins 0 20 20 20, gap 10", "[grow][grow]", "[]"));
         footer.setBackground(Color.WHITE);
 
-        JButton cancel = createFooterButton("Cancel", false);
+        JButton cancel = StyledComponents.createSecondaryFunctionButton("Cancel", 0);
         cancel.addActionListener(e -> dispose());
         footer.add(cancel, "growx, h 48!");
 
-        JButton save = mode == Mode.ADD ? createFooterButton("Add Budget", true)
-                : createFooterButton("Update Budget", true);
+        String saveText = mode == Mode.ADD ? "Add Budget" : "Update Budget";
+        JButton save = StyledComponents.createPrimaryFunctionButton(saveText, 0);
         save.addActionListener(e -> onSave());
         footer.add(save, "growx, h 48!");
 
@@ -149,10 +148,6 @@ public class BudgetDialog extends JDialog {
             }
         });
         return combo;
-    }
-
-    private JButton createFooterButton(String text, boolean primary) {
-        return StyledComponents.createFooterButton(text, primary, PRIMARY_COLOR);
     }
 
     private void refillCategories() {

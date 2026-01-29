@@ -45,7 +45,6 @@ public class CreateTransactionDialog extends JDialog {
     private static final Color EXPENSE_COLOR = new Color(0xE7000B);
     private static final Color INCOME_COLOR = new Color(0x00A63E);
     private static final Color INACTIVE_BG = new Color(0xF3F4F6);
-    private static final Color SAVE_BUTTON_COLOR = new Color(0x155DFC);
 
     public CreateTransactionDialog(MainFrame main, TransactionDialogListener listener) {
         super(main, "Create Transaction", true);
@@ -1088,12 +1087,11 @@ public class CreateTransactionDialog extends JDialog {
     }
 
     private JButton createFooterButton(String text, boolean isSave) {
-        JButton btn = com.expensemanager.view.CommonComponents.StyledComponents.createFooterButton(text, isSave,
-                SAVE_BUTTON_COLOR);
-        btn.setPreferredSize(new Dimension(220, 48));
-        btn.setMinimumSize(new Dimension(220, 48));
-        btn.setMaximumSize(new Dimension(220, 48));
-        return btn;
+        if (isSave) {
+            return com.expensemanager.view.CommonComponents.StyledComponents.createPrimaryFunctionButton(text, 210);
+        } else {
+            return com.expensemanager.view.CommonComponents.StyledComponents.createSecondaryFunctionButton(text, 210);
+        }
     }
 
     private void refillCategories() {

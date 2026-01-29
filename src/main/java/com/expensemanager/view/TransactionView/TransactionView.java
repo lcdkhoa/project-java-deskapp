@@ -2,7 +2,6 @@ package com.expensemanager.view.TransactionView;
 
 import com.expensemanager.controller.TransactionController;
 import com.expensemanager.model.Category;
-import com.expensemanager.util.UIFactory;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.StyledComponents;
 
@@ -76,9 +75,7 @@ public class TransactionView extends JPanel {
 
         header.add(titlePanel, "growx");
 
-        JButton addTx = UIFactory.createPrimaryButton("Add Transaction", UIFactory.createPlusIcon());
-        addTx.setIconTextGap(8);
-        addTx.setPreferredSize(new Dimension(190, CONTROL_HEIGHT));
+        JButton addTx = StyledComponents.createTitleButton("Add Transaction", StyledComponents.createPlusIcon(), 180);
         addTx.addActionListener(e -> controller.openAddTransaction());
         header.add(addTx, "right");
 
