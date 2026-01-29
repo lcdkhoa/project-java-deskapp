@@ -3,6 +3,7 @@ package com.expensemanager.view.BudgetView;
 import com.expensemanager.util.AppContext;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.view.CommonComponents.MainFrame;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.db.DatabaseConnection;
@@ -79,13 +80,14 @@ public class AddBudgetDialog extends JDialog {
         g.gridx = 1;
         form.add(amountF, g);
 
-        JPanel buttons = new JPanel(new FlowLayout());
-        JButton save = new JButton("Save");
-        save.addActionListener(e -> onSave());
-        JButton cancel = new JButton("Cancel");
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 10));
+        buttons.setBackground(Color.WHITE);
+        JButton cancel = StyledComponents.createSecondaryFunctionButton("Cancel", 110);
         cancel.addActionListener(e -> dispose());
-        buttons.add(save);
+        JButton save = StyledComponents.createPrimaryFunctionButton("Save", 110);
+        save.addActionListener(e -> onSave());
         buttons.add(cancel);
+        buttons.add(save);
 
         add(form, BorderLayout.CENTER);
         add(buttons, BorderLayout.SOUTH);
