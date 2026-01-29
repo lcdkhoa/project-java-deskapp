@@ -11,7 +11,7 @@ public class CategoryItemPanel extends JPanel {
     private static final int PANEL_WIDTH = 140;
     private static final int PANEL_HEIGHT = 75;
     private static final int ARC = 30;
-    private static final int ICON_SIZE = 24;
+    private static final int ICON_SIZE = 30;
     private static final Color SELECTED_BORDER_COLOR = new Color(0x155DFC);
     private static final Color DEFAULT_BORDER_COLOR = new Color(0xE5E7EB);
     private static final int SELECTED_BORDER_WIDTH = 2;
@@ -43,6 +43,7 @@ public class CategoryItemPanel extends JPanel {
         loadIcon();
         JPanel iconPanel = new JPanel(new BorderLayout());
         iconPanel.setOpaque(false);
+        iconPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
         iconPanel.add(iconLabel, BorderLayout.CENTER);
         add(iconPanel, BorderLayout.CENTER);
 
@@ -50,7 +51,7 @@ public class CategoryItemPanel extends JPanel {
         nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.PLAIN, 14f));
         nameLabel.setForeground(Color.BLACK);
-        nameLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        nameLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         add(nameLabel, BorderLayout.SOUTH);
 
         addMouseListener(new MouseAdapter() {
