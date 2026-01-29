@@ -6,14 +6,10 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Budget summary card: same structure as KPICard (Dashboard).
- * Row 1 = Icon + Title, Row 2 = Value. White bg, arc 30, 1px border #E5E7EB.
- */
 public class BudgetCard extends ModernCard {
 
     private static final Color TITLE_COLOR = new Color(0x6B7280);
-    private static final int ICON_SIZE = 16;
+    private static final int ICON_SIZE = 30;
     private static final int TITLE_FONT_SIZE = 20;
     private static final int VALUE_FONT_SIZE = 32;
     private static final int CARD_HEIGHT = 125;
@@ -22,9 +18,6 @@ public class BudgetCard extends ModernCard {
     private final JLabel valueLabel;
     private final JLabel iconLabel;
 
-    /**
-     * Same contract as KPICard: title (gray), value (colored), icon path, value color.
-     */
     public BudgetCard(String title, String valueText, String iconPath, Color valueColor) {
         super(null);
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -34,7 +27,7 @@ public class BudgetCard extends ModernCard {
         setMinimumSize(new Dimension(0, CARD_HEIGHT));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, CARD_HEIGHT));
 
-        // Row 1: Icon + Title (same row, left-aligned, vertically centered)
+        // Icon + Title
         JPanel row1 = new JPanel(new MigLayout("ins 0, gap 8 0", "[][]", "[center]"));
         row1.setOpaque(false);
 
@@ -54,7 +47,7 @@ public class BudgetCard extends ModernCard {
         row1.add(titleLabel, "align left, aligny center");
         add(row1, "wrap");
 
-        // Row 2: Value (large, colored, left-aligned)
+        // Value
         valueLabel = new JLabel(valueText);
         valueLabel.setFont(valueLabel.getFont().deriveFont(Font.PLAIN, VALUE_FONT_SIZE));
         valueLabel.setForeground(valueColor != null ? valueColor : new Color(0x111827));

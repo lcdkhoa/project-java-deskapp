@@ -6,14 +6,10 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * KPI card with custom icons from img/dashboard/. MigLayout: Row 1 (Icon + Title), Row 2 (Value).
- * Expense: red; Income: green; Remaining: blue; Budget Used: purple.
- */
 public class KPICard extends ModernCard {
 
     private static final Color TITLE_COLOR = new Color(0x6B7280);
-    private static final int ICON_SIZE = 16; // Changed from 32 to 16 to fix pixelation
+    private static final int ICON_SIZE = 30;
     private static final int TITLE_FONT_SIZE = 20;
     private static final int VALUE_FONT_SIZE = 32;
 
@@ -21,24 +17,15 @@ public class KPICard extends ModernCard {
     private final JLabel valueLabel;
     private final JLabel iconLabel;
 
-    /**
-     * @param title      Gray, small (e.g. "Monthly Expense")
-     * @param valueText  Large bold, colored (e.g. "16,435,000" or "85%")
-     * @param iconPath   Path to icon image (e.g., "src/main/java/com/expensemanager/img/dashboard/down.png")
-     * @param valueColor Value text: #EF4444 expense, #10B981 income, #3B82F6 remaining, purple budget
-     */
     public KPICard(String title, String valueText, String iconPath, Color valueColor) {
         super(null);
-        // Override ModernCard's border padding from 20 to 15 for more compact card
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        // Override ModernCard's BorderLayout with MigLayout: wrap 1 for strict vertical stacking
-        // gapy 10 for gap between title and value rows
         setLayout(new MigLayout("ins 0, wrap 1, gapy 10", "[]", "[]"));
 
-        // Row 1 (Title Row): Icon + Title - same row, vertically centered
+        // Icon + Title
         JPanel row1 = new JPanel(new MigLayout("ins 0, gap 8 0", "[][]", "[center]"));
         row1.setOpaque(false);
-        
+
         iconLabel = new JLabel();
         ImageIcon icon = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
         if (icon != null) {
@@ -56,7 +43,8 @@ public class KPICard extends ModernCard {
         row1.add(titleLabel, "align left, aligny center");
         add(row1, "wrap");
 
-        // Row 2 (Value Row): Big Value Number (32px Plain) - strictly below title, no text wrapping
+        // Row 2 (Value Row): Big Value Number (32px Plain) - strictly below title, no
+        // text wrapping
         valueLabel = new JLabel(valueText);
         valueLabel.setFont(valueLabel.getFont().deriveFont(Font.PLAIN, VALUE_FONT_SIZE)); // 32px Plain (not bold)
         valueLabel.setForeground(valueColor);

@@ -42,9 +42,6 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Controller for Dashboard. Section 1. KPIs, charts, budget warnings from DB.
- */
 public class DashboardController {
     private final DashboardView view;
     private YearMonth currentMonth;
@@ -67,49 +64,44 @@ public class DashboardController {
         p.setOpaque(false);
         p.setBackground(Color.WHITE);
 
-        // Previous button with left.png icon - centered vertically
         JButton prevBtn = new JButton();
         ImageIcon leftIcon = com.expensemanager.util.UIUtils
-                .getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 24, 24);
-        if (leftIcon != null) {
-            prevBtn.setIcon(leftIcon);
-        } else {
-            prevBtn.setText("<");
-        }
+                .getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 16, 16);
+        prevBtn.setIcon(leftIcon);
+        prevBtn.setBorder(BorderFactory.createEmptyBorder());
         prevBtn.setBorderPainted(false);
         prevBtn.setContentAreaFilled(false);
         prevBtn.setOpaque(false);
+        prevBtn.setFocusPainted(false);
+        prevBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        prevBtn.putClientProperty("JButton.buttonType", "roundRect");
         prevBtn.addActionListener(e -> {
             prevMonth();
             view.refresh();
         });
-        p.add(prevBtn, "cell 0 0, aligny center");
+        p.add(prevBtn, "cell 0 0, alignx center, aligny center, gaptop 30");
+        p.add(monthLabel, "cell 1 0, alignx center, aligny center, gaptop 24");
 
-        // Month label - centered both horizontally and vertically
-        p.add(monthLabel, "cell 1 0, alignx center, aligny center");
-
-        // Next button with right.png icon - centered vertically
         JButton nextBtn = new JButton();
         ImageIcon rightIcon = com.expensemanager.util.UIUtils
-                .getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 24, 24);
-        if (rightIcon != null) {
-            nextBtn.setIcon(rightIcon);
-        } else {
-            nextBtn.setText(">");
-        }
+                .getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 16, 16);
+        nextBtn.setIcon(rightIcon);
+        nextBtn.setBorder(BorderFactory.createEmptyBorder());
         nextBtn.setBorderPainted(false);
         nextBtn.setContentAreaFilled(false);
         nextBtn.setOpaque(false);
+        nextBtn.setFocusPainted(false);
+        nextBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nextBtn.putClientProperty("JButton.buttonType", "roundRect");
         nextBtn.addActionListener(e -> {
             nextMonth();
             view.refresh();
         });
-        p.add(nextBtn, "cell 2 0, aligny center");
+        p.add(nextBtn, "cell 2 0, alignx center, aligny center, gaptop 30");
 
-        // Back to current month link - centered below the date label
         backToCurrentLink = new JLabel("Back to current month");
         backToCurrentLink.setFont(backToCurrentLink.getFont().deriveFont(12f));
-        backToCurrentLink.setForeground(new Color(0x2563EB)); // Blue color
+        backToCurrentLink.setForeground(new Color(0x2563EB));
         backToCurrentLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backToCurrentLink.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -119,7 +111,7 @@ public class DashboardController {
             }
         });
         backToCurrentLink.setVisible(!isCurrentMonth());
-        p.add(backToCurrentLink, "cell 1 1, center");
+        p.add(backToCurrentLink, "cell 1 1, center, gapbottom 10");
 
         return p;
     }
@@ -212,8 +204,6 @@ public class DashboardController {
         }
     }
 
-    // Section 1.2: Expense #EF4444, Income #10B981, Remaining #3B82F6, Budget Used
-    // purple
     private static final Color RED = new Color(0xEF4444);
     private static final Color GREEN = new Color(0x10B981);
     private static final Color BLUE = new Color(0x3B82F6);
@@ -249,17 +239,11 @@ public class DashboardController {
         JPanel p = getChartsPanel();
         p.removeAll();
 
-        // Last 7 Days (Section 1.3: no axes, bar bo tròn, soft blue)
-        // Data Range: Based on selectedDate (currentMonth)
-        // If currentMonth == Current Month: Show last 7 days leading up to Today
-        // If currentMonth != Current Month: Show last 7 days of that month
         LocalDate referenceDate;
         YearMonth now = YearMonth.now();
         if (currentMonth.equals(now)) {
-            // Current month: show last 7 days up to today
             referenceDate = LocalDate.now();
         } else {
-            // Past/Future month: show last 7 days of that month
             referenceDate = currentMonth.atEndOfMonth();
         }
         LocalDate start = referenceDate.minusDays(6);
@@ -267,7 +251,7 @@ public class DashboardController {
         Map<LocalDate, Long> byDate = txDao.getExpenseByDateRange(conn, userId, start, end);
         DefaultCategoryDataset barSet = new DefaultCategoryDataset();
         boolean hasData = false;
-        // Store date mapping for tooltip
+        // Store date mapping for tooltip when hover on the bar chart
         Map<String, LocalDate> dateLabelToDate = new HashMap<>();
         for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
             long value = byDate.getOrDefault(d, 0L);
@@ -302,12 +286,10 @@ public class DashboardController {
         }
         p.add(barCard, "grow");
 
-        // By Category (Donut) - new design with custom legend and HTML tooltip
+        // By Category (Donut)
         p.add(buildCategoryChartPanel(conn, userId, monthKey, txDao, cDao), "grow");
 
-        // Monthly Cashflow (Line): smooth spline, no dots, teal, no axes/grid (Section
-        // 1.5)
-        // Divide values by 1000 to reduce chart height
+        // Monthly Cashflow (Line)
         Map<LocalDate, Long> cf = txDao.getCashflowByDay(conn, userId, monthKey);
         XYSeries series = new XYSeries("Cashflow");
         boolean hasCashflowData = false;
@@ -317,7 +299,6 @@ public class DashboardController {
             long value = cf.getOrDefault(d, 0L);
             if (value != 0)
                 hasCashflowData = true;
-            // Divide by 1000 to reduce chart height (1 unit = 1000)
             series.add(i, value / 1000.0);
         }
 
@@ -344,7 +325,7 @@ public class DashboardController {
             if (linePlot.getRenderer() instanceof org.jfree.chart.renderer.xy.XYSplineRenderer) {
                 org.jfree.chart.renderer.xy.XYSplineRenderer renderer = (org.jfree.chart.renderer.xy.XYSplineRenderer) linePlot
                         .getRenderer();
-                renderer.setSeriesStroke(0, new BasicStroke(3.0f)); // Thicker line (was default ~1.0f)
+                renderer.setSeriesStroke(0, new BasicStroke(2.5f));
             }
 
             ChartPanel linePanel = ChartUtils.createChartPanel(line);
@@ -357,11 +338,6 @@ public class DashboardController {
         p.repaint();
     }
 
-    /**
-     * Build By Category chart panel with split layout: chart on left, custom legend
-     * on right.
-     * Shows all categories (including 0 values in legend), only > 0 in chart.
-     */
     private JPanel buildCategoryChartPanel(Connection conn, String userId, String monthKey,
             TransactionDAO txDao, CategoryDAO cDao) throws SQLException {
         // Fetch all expense categories
