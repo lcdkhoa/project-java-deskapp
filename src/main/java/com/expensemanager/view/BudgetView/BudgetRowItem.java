@@ -21,11 +21,14 @@ public class BudgetRowItem extends JPanel {
     private static final int CARD_ARC = 30;
     private static final int ROW_HEIGHT = 125;
 
+    private static final int ICON_SIZE = 48;
+
     public BudgetRowItem(Category category,
             BudgetDAO.BudgetUsedRow usedRow,
             Budget budget,
             BudgetController controller) {
-        super(new MigLayout("fill, insets 15 25 15 25", "[44!]20[grow]20[right]", "[center][center][bottom]"));
+        super(new MigLayout("fill, insets 15 25 15 25", "[" + ICON_SIZE + "!]20[grow]20[right]",
+                "[center][center][bottom]"));
         // Store for edit action
         final Budget rowBudget = budget;
         final Category rowCategory = category;
@@ -37,15 +40,15 @@ public class BudgetRowItem extends JPanel {
 
         String name = category != null ? category.getName() : usedRow.categoryId;
 
-        // Left: category icon only (no colored circle per design)
+        // Left: category icon only (no background), 40x40
         String iconPath = resolveIconPath(category);
         JPanel iconPanel = new JPanel(new GridBagLayout());
         iconPanel.setOpaque(false);
-        iconPanel.setPreferredSize(new Dimension(44, 44));
-        iconPanel.setMinimumSize(new Dimension(44, 44));
+        iconPanel.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
+        iconPanel.setMinimumSize(new Dimension(ICON_SIZE, ICON_SIZE));
 
         JLabel iconLabel = new JLabel();
-        ImageIcon icon = iconPath != null ? UIUtils.getIcon(iconPath, 24, 24) : null;
+        ImageIcon icon = iconPath != null ? UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE) : null;
         if (icon != null) {
             iconLabel.setIcon(icon);
         }
@@ -53,7 +56,7 @@ public class BudgetRowItem extends JPanel {
 
         add(iconPanel, "cell 0 0, aligny center");
 
-        // Row 0: category icon + category label on same line
+        // Row 0: category label on same line as icon
         JLabel nameLabel = new JLabel(name);
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.PLAIN, 16f));
         nameLabel.setForeground(new Color(0x111827));
@@ -64,7 +67,8 @@ public class BudgetRowItem extends JPanel {
         bar.setPercent(usedRow.percentUsed);
         add(bar, "cell 0 1 3 1, growx, h 15!");
 
-        // Row 2: "Spent: X / Limit: Y" (left) + "%" (right) on same line
+        // Row 2: "Spent: X / Limit: Y" starting from column 0 (aligned with icon) + "%"
+        // (right)
         String spentText = CurrencyUtil.format(usedRow.spent);
         String limitText = CurrencyUtil.format(usedRow.budget);
         JPanel infoRow = new JPanel(new MigLayout("ins 0, fillx", "[pref!][grow][pref!]", "[center]"));
@@ -91,7 +95,8 @@ public class BudgetRowItem extends JPanel {
         }
         infoRow.add(percentLabel);
 
-        add(infoRow, "cell 1 2 2 1, aligny bottom, growx");
+        // Span from column 0 to include icon area
+        add(infoRow, "cell 0 2 3 1, aligny bottom, growx");
 
         // Right: status chip + edit button
         JPanel rightPanel = new JPanel(new MigLayout("ins 0, gap 8", "[][pref!]", "[center]"));
