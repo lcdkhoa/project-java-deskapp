@@ -1,4 +1,6 @@
-package com.expensemanager.view;
+package com.expensemanager.view.DashboardView;
+
+import com.expensemanager.view.CommonComponents.ModernCard;
 
 import com.expensemanager.util.UIUtils;
 import net.miginfocom.swing.MigLayout;

@@ -1,19 +1,15 @@
-package com.expensemanager.view;
+package com.expensemanager.view.TransactionView;
 
 import com.expensemanager.util.AppContext;
-import com.expensemanager.dao.CategoryDAO;
-import com.expensemanager.dao.TransactionDAO;
-import com.expensemanager.db.DatabaseConnection;
 import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
 import com.expensemanager.util.MonthKeyUtil;
+import com.expensemanager.view.CommonComponents.MainFrame;
 
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -23,8 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Dialog for creating transactions.
+ * Uses TransactionDialogListener for communication with controller (no direct
+ * DB access).
+ */
 public class CreateTransactionDialog extends JDialog {
     private final MainFrame main;
+    private final TransactionDialogListener listener;
     private JTextField amountF;
     private JToggleButton expenseBtn;
     private JToggleButton incomeBtn;
@@ -49,9 +51,10 @@ public class CreateTransactionDialog extends JDialog {
     private static final Color INACTIVE_BG = new Color(0xF3F4F6);
     private static final Color SAVE_BUTTON_COLOR = new Color(0x155DFC);
 
-    public CreateTransactionDialog(MainFrame main) {
+    public CreateTransactionDialog(MainFrame main, TransactionDialogListener listener) {
         super(main, "Create Transaction", true);
         this.main = main;
+        this.listener = listener;
         this.categoryPanels = new HashMap<>();
 
         setSize(510, 700);
@@ -1085,49 +1088,11 @@ public class CreateTransactionDialog extends JDialog {
     }
 
     private JButton createFooterButton(String text, boolean isSave) {
-        JButton btn = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Fill white background first to avoid gray showing through rounded corners
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-
-                if (isSave) {
-                    g2.setColor(SAVE_BUTTON_COLOR);
-                } else {
-                    g2.setColor(Color.WHITE);
-                }
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-
-                if (!isSave) {
-                    g2.setColor(new Color(0xE5E7EB));
-                    g2.setStroke(new BasicStroke(1));
-                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
-                }
-
-                g2.setColor(isSave ? Color.WHITE : Color.BLACK);
-                Font font = getFont().deriveFont(isSave ? Font.BOLD : Font.PLAIN, 14f);
-                g2.setFont(font);
-                FontMetrics fm = g2.getFontMetrics(font);
-                int x = (getWidth() - fm.stringWidth(getText())) / 2;
-                int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
-                g2.drawString(getText(), x, y);
-
-                g2.dispose();
-            }
-        };
-
+        JButton btn = com.expensemanager.view.CommonComponents.StyledComponents.createFooterButton(text, isSave,
+                SAVE_BUTTON_COLOR);
         btn.setPreferredSize(new Dimension(220, 48));
         btn.setMinimumSize(new Dimension(220, 48));
         btn.setMaximumSize(new Dimension(220, 48));
-        btn.setOpaque(false);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-
         return btn;
     }
 
@@ -1139,83 +1104,80 @@ public class CreateTransactionDialog extends JDialog {
 
         String type = expenseBtn.isSelected() ? "expense" : "income";
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            List<Category> list = new CategoryDAO().findByType(conn, type);
+        // Use listener to get categories (no direct DB access)
+        List<Category> list = listener.getCategoriesByType(type);
 
-            // Define category order based on type
-            String[] categoryOrder;
-            if (type.equals("expense")) {
-                // Expense categories: Food, Transport, Shopping, Entertainment, Bills,
-                // Healthcare,
-                // Housing, Education, Other
-                categoryOrder = new String[] { "Food", "Transport", "Shopping", "Entertainment", "Bills", "Healthcare",
-                        "Housing", "Education", "Other" };
-            } else {
-                // Income categories: Salary, Freelance, Affiliate, Selling, Other Income
-                categoryOrder = new String[] { "Salary", "Freelance", "Affiliate", "Selling", "Other Income" };
+        // Define category order based on type
+        String[] categoryOrder;
+        if (type.equals("expense")) {
+            // Expense categories: Food, Transport, Shopping, Entertainment, Bills,
+            // Healthcare,
+            // Housing, Education, Other
+            categoryOrder = new String[] { "Food", "Transport", "Shopping", "Entertainment", "Bills", "Healthcare",
+                    "Housing", "Education", "Other" };
+        } else {
+            // Income categories: Salary, Freelance, Affiliate, Selling, Other Income
+            categoryOrder = new String[] { "Salary", "Freelance", "Affiliate", "Selling", "Other Income" };
+        }
+
+        // Count valid categories
+        int validCategoryCount = 0;
+        for (String catName : categoryOrder) {
+            Category category = list.stream()
+                    .filter(c -> c.getName().equals(catName))
+                    .findFirst()
+                    .orElse(null);
+            if (category != null) {
+                validCategoryCount++;
             }
+        }
 
-            // Count valid categories
-            int validCategoryCount = 0;
-            for (String catName : categoryOrder) {
-                Category category = list.stream()
-                        .filter(c -> c.getName().equals(catName))
-                        .findFirst()
-                        .orElse(null);
-                if (category != null) {
-                    validCategoryCount++;
-                }
-            }
+        // Calculate number of rows needed (3 columns per row)
+        int rows = (int) Math.ceil(validCategoryCount / 3.0);
+        if (rows == 0)
+            rows = 1; // At least 1 row
 
-            // Calculate number of rows needed (3 columns per row)
-            int rows = (int) Math.ceil(validCategoryCount / 3.0);
-            if (rows == 0)
-                rows = 1; // At least 1 row
+        // Update categoryGridPanel layout with dynamic row count
+        StringBuilder rowConstraints = new StringBuilder();
+        for (int i = 0; i < rows; i++) {
+            if (i > 0)
+                rowConstraints.append(" ");
+            rowConstraints.append("[75!]");
+        }
+        categoryGridPanel
+                .setLayout(new MigLayout("ins 0, gap 10 10", "[140!][140!][140!]", rowConstraints.toString()));
 
-            // Update categoryGridPanel layout with dynamic row count
-            StringBuilder rowConstraints = new StringBuilder();
-            for (int i = 0; i < rows; i++) {
-                if (i > 0)
-                    rowConstraints.append(" ");
-                rowConstraints.append("[75!]");
-            }
-            categoryGridPanel
-                    .setLayout(new MigLayout("ins 0, gap 10 10", "[140!][140!][140!]", rowConstraints.toString()));
+        int index = 0;
+        for (String catName : categoryOrder) {
+            Category category = list.stream()
+                    .filter(c -> c.getName().equals(catName))
+                    .findFirst()
+                    .orElse(null);
 
-            int index = 0;
-            for (String catName : categoryOrder) {
-                Category category = list.stream()
-                        .filter(c -> c.getName().equals(catName))
-                        .findFirst()
-                        .orElse(null);
+            if (category != null) {
+                // Prefer icon_path from DB, fallback to static map then placeholder
+                String iconPath = category.getIconPath();
 
-                if (category != null) {
-                    // Prefer icon_path from DB, fallback to static map then placeholder
-                    String iconPath = category.getIconPath();
+                CategoryItemPanel panel = new CategoryItemPanel(category.getId(), category.getName(), iconPath);
 
-                    CategoryItemPanel panel = new CategoryItemPanel(category.getId(), category.getName(), iconPath);
-
-                    // Add click listener
-                    panel.addMouseListener(new java.awt.event.MouseAdapter() {
-                        @Override
-                        public void mouseClicked(java.awt.event.MouseEvent e) {
-                            // Deselect previous
-                            if (selectedCategoryPanel != null) {
-                                selectedCategoryPanel.setSelected(false);
-                            }
-                            // Select current
-                            panel.setSelected(true);
-                            selectedCategoryPanel = panel;
+                // Add click listener
+                panel.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent e) {
+                        // Deselect previous
+                        if (selectedCategoryPanel != null) {
+                            selectedCategoryPanel.setSelected(false);
                         }
-                    });
+                        // Select current
+                        panel.setSelected(true);
+                        selectedCategoryPanel = panel;
+                    }
+                });
 
-                    categoryPanels.put(category.getId(), panel);
-                    categoryGridPanel.add(panel, "cell " + (index % 3) + " " + (index / 3));
-                    index++;
-                }
+                categoryPanels.put(category.getId(), panel);
+                categoryGridPanel.add(panel, "cell " + (index % 3) + " " + (index / 3));
+                index++;
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error loading categories: " + ex.getMessage());
         }
 
         categoryGridPanel.revalidate();
@@ -1241,8 +1203,7 @@ public class CreateTransactionDialog extends JDialog {
         }
 
         String type = expenseBtn.isSelected() ? "expense" : "income";
-        if (type.equals("expense"))
-            amount = -amount;
+        // Note: amount sign will be handled by service layer
 
         if (selectedCategoryPanel == null) {
             JOptionPane.showMessageDialog(this, "Select a category.");
@@ -1259,7 +1220,7 @@ public class CreateTransactionDialog extends JDialog {
 
         Transaction tx = new Transaction();
         tx.setUserId(AppContext.getUserId());
-        tx.setAmount(amount);
+        tx.setAmount(amount); // Service will handle sign based on type
         tx.setType(type);
         tx.setCategoryId(categoryId);
         tx.setWalletType(wallet);
@@ -1268,13 +1229,12 @@ public class CreateTransactionDialog extends JDialog {
         tx.setTransactionTime(t);
         tx.setMonthKey(MonthKeyUtil.of(d));
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            new TransactionDAO().insert(conn, tx);
-            main.refreshDashboard();
-            main.refreshTransactions();
-            main.refreshBudget();
+        try {
+            // Use listener to save (no direct DB access)
+            listener.onTransactionCreated(tx);
+            listener.onRefreshRequired();
             dispose();
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Save failed: " + ex.getMessage());
         }
     }

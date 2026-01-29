@@ -1,6 +1,7 @@
-package com.expensemanager.view;
+package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.controller.BudgetController;
+import com.expensemanager.view.CommonComponents.MainFrame;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -40,11 +41,11 @@ public class BudgetView extends JPanel {
         add(controller.getContentPanel(), "grow, push");
     }
 
-    void onShown() {
+    public void onShown() {
         refresh();
     }
 
-    void refresh() {
+    public void refresh() {
         controller.refresh();
     }
 

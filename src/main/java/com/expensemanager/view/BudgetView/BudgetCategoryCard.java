@@ -1,4 +1,4 @@
-package com.expensemanager.view;
+package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.util.CurrencyUtil;
 
@@ -6,7 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * White rounded card for Section 3.3: Category icon, name, Spent / Limit, progress bar at bottom.
+ * White rounded card for Section 3.3: Category icon, name, Spent / Limit,
+ * progress bar at bottom.
  */
 public class BudgetCategoryCard extends JPanel {
 
@@ -15,7 +16,8 @@ public class BudgetCategoryCard extends JPanel {
     private static final Color NAME_COLOR = new Color(0x111827);
     private static final Color AMOUNT_COLOR = new Color(0x6B7280);
 
-    public BudgetCategoryCard(String icon, Color iconBgColor, String name, long spent, long budget, double percentUsed) {
+    public BudgetCategoryCard(String icon, Color iconBgColor, String name, long spent, long budget,
+            double percentUsed) {
         setOpaque(false);
         setLayout(new BorderLayout(0, 10));
         setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));

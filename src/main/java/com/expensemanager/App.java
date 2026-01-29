@@ -1,7 +1,7 @@
 package com.expensemanager;
 
 import com.expensemanager.util.AppContext;
-import com.expensemanager.view.MainFrame;
+import com.expensemanager.view.CommonComponents.MainFrame;
 import javax.swing.*;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 

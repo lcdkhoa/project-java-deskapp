@@ -25,4 +25,14 @@ public final class MonthKeyUtil {
     public static String toLabel(String monthKey) {
         return parse(monthKey).format(MONTH_LABEL);
     }
+
+    /**
+     * Create month key from LocalDate.
+     * 
+     * @param date the date
+     * @return month key in yyyy-MM format
+     */
+    public static String fromDate(LocalDate date) {
+        return of(YearMonth.from(date));
+    }
 }

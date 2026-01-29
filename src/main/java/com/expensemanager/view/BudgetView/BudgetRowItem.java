@@ -1,4 +1,4 @@
-package com.expensemanager.view;
+package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.controller.BudgetController;
 import com.expensemanager.dao.BudgetDAO;

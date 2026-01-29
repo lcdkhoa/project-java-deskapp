@@ -1,4 +1,4 @@
-package com.expensemanager.view;
+package com.expensemanager.view.DashboardView;
 
 import org.jfree.chart.renderer.category.BarPainter;
 import org.jfree.chart.renderer.category.BarRenderer;
@@ -9,7 +9,8 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.RectangularShape;
 
 /**
- * BarPainter with rounded top corners only. No shadow. Figma: bars with soft blue, rounded tops.
+ * BarPainter with rounded top corners only. No shadow. Figma: bars with soft
+ * blue, rounded tops.
  */
 public final class RoundedBarPainter implements BarPainter {
 
@@ -17,16 +18,18 @@ public final class RoundedBarPainter implements BarPainter {
 
     @Override
     public void paintBar(Graphics2D g2, BarRenderer renderer, int row, int column,
-                        RectangularShape bar, RectangleEdge base) {
+            RectangularShape bar, RectangleEdge base) {
         Paint p = renderer.getItemPaint(row, column);
-        if (p == null) p = renderer.getDefaultPaint();
+        if (p == null)
+            p = renderer.getDefaultPaint();
         g2.setPaint(p);
         double x = bar.getX();
         double y = bar.getY();
         double w = bar.getWidth();
         double h = bar.getHeight();
         int arc = (int) Math.min(ARC, Math.min(w, h) / 2);
-        if (arc < 1) arc = 1;
+        if (arc < 1)
+            arc = 1;
 
         // Rounded top corners only (top = smaller y for vertical bars)
         GeneralPath path = new GeneralPath();
@@ -43,11 +46,16 @@ public final class RoundedBarPainter implements BarPainter {
 
     @Override
     public void paintBarShadow(Graphics2D g2, BarRenderer renderer, int row, int column,
-                               RectangularShape bar, RectangleEdge base, boolean pegShadow) {}
+            RectangularShape bar, RectangleEdge base, boolean pegShadow) {
+    }
 
     @Override
-    public boolean equals(Object obj) { return obj instanceof RoundedBarPainter; }
+    public boolean equals(Object obj) {
+        return obj instanceof RoundedBarPainter;
+    }
 
     @Override
-    public int hashCode() { return getClass().hashCode(); }
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

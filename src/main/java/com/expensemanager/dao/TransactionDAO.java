@@ -46,7 +46,10 @@ public class TransactionDAO {
         }
     }
 
-    /** 6.4.3 Cashflow per day. Cashflow(day) = SUM(amount) = Income - Expense (amount signs). */
+    /**
+     * 6.4.3 Cashflow per day. Cashflow(day) = SUM(amount) = Income - Expense
+     * (amount signs).
+     */
     public Map<LocalDate, Long> getCashflowByDay(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT transaction_date, SUM(amount) AS cashflow FROM transactions WHERE user_id = ? AND month_key = ? GROUP BY transaction_date ORDER BY transaction_date";
         Map<LocalDate, Long> out = new HashMap<>();
@@ -62,9 +65,45 @@ public class TransactionDAO {
         return out;
     }
 
+    /** Get income per day in month (for Monthly Cash Flow chart). */
+    public Map<LocalDate, Long> getIncomeByDay(Connection conn, String userId, String monthKey) throws SQLException {
+        String sql = "SELECT transaction_date, SUM(amount) AS total FROM transactions WHERE user_id = ? AND month_key = ? AND type = 'income' GROUP BY transaction_date ORDER BY transaction_date";
+        Map<LocalDate, Long> out = new HashMap<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            ps.setString(2, monthKey);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.put(LocalDate.parse(rs.getString("transaction_date")), rs.getLong("total"));
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Get expense per day in month (for Monthly Cash Flow chart). Returns positive
+     * values.
+     */
+    public Map<LocalDate, Long> getExpenseByDay(Connection conn, String userId, String monthKey) throws SQLException {
+        String sql = "SELECT transaction_date, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND month_key = ? AND type = 'expense' GROUP BY transaction_date ORDER BY transaction_date";
+        Map<LocalDate, Long> out = new HashMap<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            ps.setString(2, monthKey);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.put(LocalDate.parse(rs.getString("transaction_date")), rs.getLong("total"));
+                }
+            }
+        }
+        return out;
+    }
+
     /** 6.4.4 Spending Habits by weekday (DOW 0-6). */
     public Map<Integer, Long> getSpendingByWeekday(Connection conn, String userId) throws SQLException {
-        // SQLite: strftime('%w', date) gives 0-6 (Sunday=0). We need consistent ordering; spec says "thứ trong tuần".
+        // SQLite: strftime('%w', date) gives 0-6 (Sunday=0). We need consistent
+        // ordering; spec says "thứ trong tuần".
         String sql = "SELECT CAST(strftime('%w', transaction_date) AS INT) AS weekday, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND type = 'expense' GROUP BY weekday";
         Map<Integer, Long> out = new HashMap<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -95,7 +134,8 @@ public class TransactionDAO {
     }
 
     /** Expense grouped by date in range (for Last 7 Days bar). */
-    public Map<LocalDate, Long> getExpenseByDateRange(Connection conn, String userId, LocalDate start, LocalDate end) throws SQLException {
+    public Map<LocalDate, Long> getExpenseByDateRange(Connection conn, String userId, LocalDate start, LocalDate end)
+            throws SQLException {
         String sql = "SELECT transaction_date, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND type = 'expense' AND transaction_date >= ? AND transaction_date <= ? GROUP BY transaction_date ORDER BY transaction_date";
         Map<LocalDate, Long> out = new HashMap<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -113,10 +153,13 @@ public class TransactionDAO {
 
     public void insert(Connection conn, Transaction t) throws SQLException {
         String sql = "INSERT INTO transactions (id, user_id, amount, type, category_id, wallet_type, note, transaction_date, transaction_time, month_key, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
-        if (t.getId() == null) t.setId(UUID.randomUUID().toString());
+        if (t.getId() == null)
+            t.setId(UUID.randomUUID().toString());
         Instant now = Instant.now();
-        if (t.getCreatedAt() == null) t.setCreatedAt(now);
-        if (t.getUpdatedAt() == null) t.setUpdatedAt(now);
+        if (t.getCreatedAt() == null)
+            t.setCreatedAt(now);
+        if (t.getUpdatedAt() == null)
+            t.setUpdatedAt(now);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getId());
             ps.setString(2, t.getUserId());
@@ -164,17 +207,19 @@ public class TransactionDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return map(rs);
+                if (rs.next())
+                    return map(rs);
             }
         }
         return null;
     }
 
     /**
-     * Search and filter. Sort: date (newest), amount (high). Date range max 60 days, Start <= End.
+     * Search and filter. Sort: date (newest), amount (high). Date range max 60
+     * days, Start <= End.
      */
     public List<Transaction> search(Connection conn, String userId, String categoryId, String walletType,
-                                    LocalDate startDate, LocalDate endDate, String sortBy, String searchNote) throws SQLException {
+            LocalDate startDate, LocalDate endDate, String sortBy, String searchNote) throws SQLException {
         List<String> cond = new ArrayList<>();
         cond.add("user_id = ?");
         List<Object> args = new ArrayList<>();
@@ -199,7 +244,8 @@ public class TransactionDAO {
             cond.add("COALESCE(note,'') LIKE ?");
             args.add("%" + searchNote.trim() + "%");
         }
-        // Spec: search by Note, Category name. Category filter uses categoryId; category name search could be added via JOIN.
+        // Spec: search by Note, Category name. Category filter uses categoryId;
+        // category name search could be added via JOIN.
         // Sort options:
         // - date_desc (default): newest first
         // - date_asc: oldest first
@@ -216,14 +262,16 @@ public class TransactionDAO {
             // Default: newest first
             order = "transaction_date DESC, transaction_time DESC";
         }
-        String sql = "SELECT id, user_id, amount, type, category_id, wallet_type, note, transaction_date, transaction_time, month_key, created_at, updated_at FROM transactions WHERE " + String.join(" AND ", cond) + " ORDER BY " + order;
+        String sql = "SELECT id, user_id, amount, type, category_id, wallet_type, note, transaction_date, transaction_time, month_key, created_at, updated_at FROM transactions WHERE "
+                + String.join(" AND ", cond) + " ORDER BY " + order;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (int i = 0; i < args.size(); i++) {
                 ps.setString(i + 1, String.valueOf(args.get(i)));
             }
             try (ResultSet rs = ps.executeQuery()) {
                 List<Transaction> list = new ArrayList<>();
-                while (rs.next()) list.add(map(rs));
+                while (rs.next())
+                    list.add(map(rs));
                 return list;
             }
         }
@@ -237,7 +285,8 @@ public class TransactionDAO {
             ps.setString(2, monthKey);
             try (ResultSet rs = ps.executeQuery()) {
                 List<Transaction> list = new ArrayList<>();
-                while (rs.next()) list.add(map(rs));
+                while (rs.next())
+                    list.add(map(rs));
                 return list;
             }
         }
@@ -253,14 +302,18 @@ public class TransactionDAO {
         t.setWalletType(rs.getString("wallet_type"));
         t.setNote(rs.getString("note"));
         String d = rs.getString("transaction_date");
-        if (d != null) t.setTransactionDate(LocalDate.parse(d));
+        if (d != null)
+            t.setTransactionDate(LocalDate.parse(d));
         String ti = rs.getString("transaction_time");
-        if (ti != null) t.setTransactionTime(LocalTime.parse(ti.length() > 8 ? ti.substring(0, 8) : ti));
+        if (ti != null)
+            t.setTransactionTime(LocalTime.parse(ti.length() > 8 ? ti.substring(0, 8) : ti));
         t.setMonthKey(rs.getString("month_key"));
         String c = rs.getString("created_at");
-        if (c != null) t.setCreatedAt(DateUtil.parseInstant(c));
+        if (c != null)
+            t.setCreatedAt(DateUtil.parseInstant(c));
         String u = rs.getString("updated_at");
-        if (u != null) t.setUpdatedAt(DateUtil.parseInstant(u));
+        if (u != null)
+            t.setUpdatedAt(DateUtil.parseInstant(u));
         return t;
     }
 }

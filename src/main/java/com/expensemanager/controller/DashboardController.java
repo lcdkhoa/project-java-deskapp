@@ -1,28 +1,29 @@
 package com.expensemanager.controller;
 
 import com.expensemanager.util.AppContext;
-import com.expensemanager.dao.BudgetDAO;
-import com.expensemanager.dao.CategoryDAO;
-import com.expensemanager.dao.TransactionDAO;
-import com.expensemanager.db.DatabaseConnection;
 import com.expensemanager.model.Category;
+import com.expensemanager.service.DashboardService;
 import com.expensemanager.util.ChartUtils;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.util.MonthKeyUtil;
-import com.expensemanager.view.BudgetWarningsPanel;
-import com.expensemanager.view.DashboardView;
-import com.expensemanager.view.KPICard;
-import com.expensemanager.view.ModernCard;
+import com.expensemanager.view.BudgetView.BudgetWarningsPanel;
+import com.expensemanager.view.DashboardView.DashboardView;
+import com.expensemanager.view.DashboardView.KPICard;
+import com.expensemanager.view.CommonComponents.ModernCard;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.labels.PieToolTipGenerator;
 import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.plot.RingPlot;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.ui.HorizontalAlignment;
+import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -34,13 +35,10 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DashboardController {
     private final DashboardView view;
@@ -50,8 +48,12 @@ public class DashboardController {
     private JPanel chartsPanel;
     private BudgetWarningsPanel budgetWarningsPanel;
 
+    // Services
+    private final DashboardService dashboardService;
+
     public DashboardController(DashboardView view) {
         this.view = view;
+        this.dashboardService = new DashboardService();
         this.currentMonth = YearMonth.now();
         this.monthLabel = new JLabel(MonthKeyUtil.toLabel(MonthKeyUtil.of(currentMonth)));
         monthLabel.setFont(monthLabel.getFont().deriveFont(16f));
@@ -124,7 +126,7 @@ public class DashboardController {
 
     private void nextMonth() {
         if (currentMonth.plusMonths(1).isAfter(YearMonth.now()))
-            return; // no future
+            return;
         currentMonth = currentMonth.plusMonths(1);
         monthLabel.setText(MonthKeyUtil.toLabel(MonthKeyUtil.of(currentMonth)));
         updateBackButton();
@@ -168,8 +170,10 @@ public class DashboardController {
     }
 
     private JPanel buildChartsPanel() {
-        // weightx 0.35, 0.3, 0.35. Row [grow,fill]. gap 20.
-        JPanel panel = new JPanel(new MigLayout("ins 0, gap 20", "[grow 35][grow 30][grow 35]", "[grow,fill]"));
+        // Single row: Monthly Cash Flow (30%) | Last 7 Days (30%) | By Category (40%)
+        JPanel panel = new JPanel(
+                new MigLayout("ins 0, gap 20 0", "[grow 30, fill][grow 30, fill][grow 40, fill]",
+                        "[grow, fill]"));
         panel.setBackground(Color.WHITE);
         panel.setOpaque(true);
         return panel;
@@ -185,23 +189,13 @@ public class DashboardController {
     public void refresh() {
         String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(currentMonth);
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            TransactionDAO txDao = new TransactionDAO();
-            BudgetDAO bDao = new BudgetDAO();
-            CategoryDAO cDao = new CategoryDAO();
 
-            long expense = txDao.getMonthlyExpense(conn, userId, monthKey);
-            long income = txDao.getMonthlyIncome(conn, userId, monthKey);
-            long remaining = income - Math.abs(expense);
-            long totalBudget = bDao.getTotalBudget(conn, userId, monthKey);
-            double budgetUsedPct = totalBudget > 0 ? (Math.abs(expense) * 100.0 / totalBudget) : Double.NaN;
+        DashboardService.KPIData kpiData = dashboardService.getKPIData(userId, monthKey);
 
-            refreshKpi(expense, income, remaining, budgetUsedPct, totalBudget);
-            refreshCharts(conn, userId, monthKey, txDao, bDao, cDao);
-            refreshBudgetWarnings(conn, userId, monthKey, bDao, cDao);
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(view, "Error loading dashboard: " + ex.getMessage());
-        }
+        refreshKpi(kpiData.expense, kpiData.income, kpiData.remaining,
+                kpiData.budgetUsedPct, kpiData.totalBudget);
+        refreshCharts(userId, monthKey);
+        refreshBudgetWarnings(userId, monthKey);
     }
 
     private static final Color RED = new Color(0xEF4444);
@@ -234,8 +228,7 @@ public class DashboardController {
         p.repaint();
     }
 
-    private void refreshCharts(Connection conn, String userId, String monthKey, TransactionDAO txDao, BudgetDAO bDao,
-            CategoryDAO cDao) throws SQLException {
+    private void refreshCharts(String userId, String monthKey) {
         JPanel p = getChartsPanel();
         p.removeAll();
 
@@ -246,25 +239,26 @@ public class DashboardController {
         } else {
             referenceDate = currentMonth.atEndOfMonth();
         }
-        LocalDate start = referenceDate.minusDays(6);
-        LocalDate end = referenceDate;
-        Map<LocalDate, Long> byDate = txDao.getExpenseByDateRange(conn, userId, start, end);
+
+        DashboardService.BarChartData barData = dashboardService.getLast7DaysExpense(userId, referenceDate);
+
         DefaultCategoryDataset barSet = new DefaultCategoryDataset();
-        boolean hasData = false;
-        // Store date mapping for tooltip when hover on the bar chart
         Map<String, LocalDate> dateLabelToDate = new HashMap<>();
-        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
-            long value = byDate.getOrDefault(d, 0L);
-            if (value > 0)
-                hasData = true;
+
+        for (int i = 0; i < barData.dates.size(); i++) {
+            LocalDate d = barData.dates.get(i);
+            long value = barData.amounts.get(i);
             String dateLabel = d.getDayOfMonth() + "/" + d.getMonthValue();
             dateLabelToDate.put(dateLabel, d);
             barSet.addValue(value, "Expense", dateLabel);
         }
 
+        // Column 1: Monthly Cash Flow (30%)
+        p.add(buildMonthlyCashFlowPanel(userId, monthKey), "grow");
+
+        // Column 2: Last 7 Days (30%)
         JPanel barCard = new ModernCard();
-        if (!hasData) {
-            // Show "No expense data" message
+        if (!barData.hasData) {
             JLabel noDataLabel = new JLabel("No expense data", SwingConstants.CENTER);
             noDataLabel.setFont(noDataLabel.getFont().deriveFont(Font.PLAIN, 14f));
             noDataLabel.setForeground(new Color(0x6B7280));
@@ -272,11 +266,10 @@ public class DashboardController {
             barCard.add(noDataLabel, BorderLayout.CENTER);
         } else {
             JFreeChart bar = ChartFactory.createBarChart("Last 7 Days Spending", null, "Amount", barSet);
-            applyChartTitleStyle(bar, "Last 7 Days Spending");
+            ChartUtils.applyChartTitle(bar, "Last 7 Days Spending");
             bar.removeLegend();
             ChartUtils.applyBarChart(bar);
 
-            // Set custom tooltip generator for bar chart with date mapping
             org.jfree.chart.plot.CategoryPlot barPlot = bar.getCategoryPlot();
             barPlot.getRenderer().setDefaultToolTipGenerator(new Last7DaysToolTipGenerator(dateLabelToDate));
 
@@ -286,93 +279,34 @@ public class DashboardController {
         }
         p.add(barCard, "grow");
 
-        // By Category (Donut)
-        p.add(buildCategoryChartPanel(conn, userId, monthKey, txDao, cDao), "grow");
-
-        // Monthly Cashflow (Line)
-        Map<LocalDate, Long> cf = txDao.getCashflowByDay(conn, userId, monthKey);
-        XYSeries series = new XYSeries("Cashflow");
-        boolean hasCashflowData = false;
-        int days = currentMonth.lengthOfMonth();
-        for (int i = 1; i <= days; i++) {
-            LocalDate d = currentMonth.atDay(i);
-            long value = cf.getOrDefault(d, 0L);
-            if (value != 0)
-                hasCashflowData = true;
-            series.add(i, value / 1000.0);
-        }
-
-        JPanel lineCard = new ModernCard();
-        if (!hasCashflowData) {
-            // Show "No expense data" message
-            JLabel noDataLabel = new JLabel("No expense data", SwingConstants.CENTER);
-            noDataLabel.setFont(noDataLabel.getFont().deriveFont(Font.PLAIN, 14f));
-            noDataLabel.setForeground(new Color(0x6B7280));
-            lineCard.setLayout(new BorderLayout());
-            lineCard.add(noDataLabel, BorderLayout.CENTER);
-        } else {
-            JFreeChart line = ChartFactory.createXYLineChart("Monthly Cashflow", "Day", "Amount",
-                    new XYSeriesCollection(series));
-            applyChartTitleStyle(line, "Monthly Cashflow");
-            line.removeLegend();
-            ChartUtils.applyLineChart(line);
-
-            // Set custom tooltip generator for line chart
-            XYPlot linePlot = (XYPlot) line.getPlot();
-            linePlot.getRenderer().setDefaultToolTipGenerator(new MonthlyCashflowToolTipGenerator(currentMonth));
-
-            // Increase stroke width to make line thicker
-            if (linePlot.getRenderer() instanceof org.jfree.chart.renderer.xy.XYSplineRenderer) {
-                org.jfree.chart.renderer.xy.XYSplineRenderer renderer = (org.jfree.chart.renderer.xy.XYSplineRenderer) linePlot
-                        .getRenderer();
-                renderer.setSeriesStroke(0, new BasicStroke(2.5f));
-            }
-
-            ChartPanel linePanel = ChartUtils.createChartPanel(line);
-            linePanel.setDisplayToolTips(true);
-            lineCard.add(linePanel, BorderLayout.CENTER);
-        }
-        p.add(lineCard, "grow");
+        // Column 3: By Category (40%)
+        p.add(buildCategoryChartPanel(userId, monthKey), "grow");
 
         p.revalidate();
         p.repaint();
     }
 
-    private JPanel buildCategoryChartPanel(Connection conn, String userId, String monthKey,
-            TransactionDAO txDao, CategoryDAO cDao) throws SQLException {
-        // Fetch all expense categories
-        List<Category> allCategories = cDao.findByType(conn, "expense");
+    private JPanel buildCategoryChartPanel(String userId, String monthKey) {
+        DashboardService.CategoryChartData chartData = dashboardService.getCategoryExpenseData(userId, monthKey);
 
-        // Fetch expense data by category
-        Map<String, Long> expenseByCategory = txDao.getExpenseByCategory(conn, userId, monthKey);
+        List<Category> allCategories = chartData.categories;
+        Map<String, Category> idToCategory = chartData.idToCategory;
+        Map<String, Long> categoryExpenses = chartData.categoryExpenses;
+        long totalExpense = chartData.totalExpense;
 
-        // Create maps for lookup
-        Map<String, Category> idToCategory = new HashMap<>();
-        Map<String, Long> categoryExpenses = new HashMap<>();
-        for (Category cat : allCategories) {
-            idToCategory.put(cat.getId(), cat);
-            categoryExpenses.put(cat.getId(), expenseByCategory.getOrDefault(cat.getId(), 0L));
-        }
-
-        // Calculate total for percentage
-        long totalExpense = categoryExpenses.values().stream().mapToLong(Long::longValue).sum();
-
-        // Build dataset: only add categories with value > 0
         DefaultPieDataset<String> pieSet = new DefaultPieDataset<>();
-        boolean hasCategoryData = false;
         for (Category cat : allCategories) {
-            long expense = categoryExpenses.get(cat.getId());
+            long expense = categoryExpenses.getOrDefault(cat.getId(), 0L);
             if (expense > 0) {
                 pieSet.setValue(cat.getId(), expense);
-                hasCategoryData = true;
             }
         }
 
-        // Create container panel with same padding as ModernCard (20px)
-        JPanel container = new JPanel(new MigLayout("wrap 1, fill", "[center]", "[grow][min]")) {
+        // Layout: Title on top, Pie chart center, Legend at bottom (2 columns)
+        JPanel container = new JPanel(new MigLayout("fill, wrap 1", "[grow, fill]", "[][grow, fill][]")) {
             private static final int ARC = 30;
             private static final Color BORDER_COLOR = new Color(229, 231, 235); // #E5E7EB
-            private static final int PADDING = 20; // Same as ModernCard
+            private static final int PADDING = 15;
 
             {
                 setOpaque(false);
@@ -394,19 +328,20 @@ public class DashboardController {
             }
         };
 
-        if (!hasCategoryData) {
-            // Show "No expense data" message
+        // Title - using common chart title style
+        JLabel titleLabel = ChartUtils.createChartTitleLabel("By Category");
+        container.add(titleLabel, "growx, gapbottom 10");
+
+        if (!chartData.hasData) {
             JLabel noDataLabel = new JLabel("No expense data", SwingConstants.CENTER);
             noDataLabel.setFont(noDataLabel.getFont().deriveFont(Font.PLAIN, 14f));
             noDataLabel.setForeground(new Color(0x6B7280));
-            container.add(noDataLabel, "cell 0 0, grow");
+            container.add(noDataLabel, "grow");
             return container;
         }
 
-        // Create ring chart
-        JFreeChart chart = ChartFactory.createRingChart("By Category", pieSet, false, true, false);
-        applyChartTitleStyle(chart, "By Category");
-        chart.removeLegend(); // Remove default legend
+        JFreeChart chart = ChartFactory.createRingChart(null, pieSet, false, true, false);
+        chart.setBackgroundPaint(null);
 
         // Configure RingPlot
         RingPlot plot = (RingPlot) chart.getPlot();
@@ -419,49 +354,37 @@ public class DashboardController {
             plot.setShadowGenerator(null);
         } catch (Exception ignored) {
         }
-        // White gaps between slices: thick white outline
         plot.setSectionOutlinesVisible(true);
+        plot.setSeparatorsVisible(false); // Hide gray separator lines between sections
 
-        // Set colors and white outlines from Category.legend_chart_color
-        // Only set for categories that are in the dataset (expense > 0)
-        // Use thinner white stroke for narrow white gaps (no gray lines)
-        BasicStroke whiteStroke = new BasicStroke(2.0f); // Narrow white gap
+        BasicStroke whiteStroke = new BasicStroke(3f);
         for (Category cat : allCategories) {
             long expense = categoryExpenses.get(cat.getId());
             if (expense > 0) {
                 Color catColor = parseColor(cat.getLegendChartColor());
                 plot.setSectionPaint(cat.getId(), catColor);
-                // Set white outline for each section to create narrow white gaps (no gray)
                 plot.setSectionOutlinePaint(cat.getId(), Color.WHITE);
                 plot.setSectionOutlineStroke(cat.getId(), whiteStroke);
             }
         }
 
-        // Set HTML tooltip generator
         plot.setToolTipGenerator(new PieCategoryToolTipGenerator(idToCategory, categoryExpenses, totalExpense));
 
-        // Create chart panel
         ChartPanel chartPanel = ChartUtils.createChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(180, 180));
 
-        // Create custom legend panel
+        // Pie chart centered
+        container.add(chartPanel, "grow, align center");
+
+        // Legend at bottom - 2 columns layout
         JPanel legendPanel = createCategoryLegendPanel(allCategories, categoryExpenses, idToCategory);
-
-        // Cell 1 (Top): The ChartPanel (The Donut)
-        container.add(chartPanel, "cell 0 0, grow");
-        // Cell 2 (Bottom): The CustomLegendPanel
-        container.add(legendPanel, "cell 0 1, grow");
+        container.add(legendPanel, "growx, gaptop 10");
 
         return container;
     }
 
-    /**
-     * Create custom legend panel showing only categories with expense > 0, with
-     * colored dots, names,
-     * and amounts. Layout: GridLayout with 2 columns.
-     */
     private JPanel createCategoryLegendPanel(List<Category> categories, Map<String, Long> expenses,
             Map<String, Category> idToCategory) {
-        // Filter categories with expense > 0
         List<Category> categoriesWithExpense = new ArrayList<>();
         for (Category cat : categories) {
             long expense = expenses.getOrDefault(cat.getId(), 0L);
@@ -470,60 +393,221 @@ public class DashboardController {
             }
         }
 
-        // Use GridLayout(0, 2, 10, 10) for 2 columns with 10px gaps
-        JPanel legend = new JPanel(new GridLayout(0, 2, 10, 10));
+        // 2 columns legend at bottom - split items evenly
+        JPanel legend = new JPanel(new MigLayout("ins 0, gap 20 0", "[grow 50, fill][grow 50, fill]", ""));
         legend.setOpaque(false);
-        legend.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        for (Category cat : categoriesWithExpense) {
+        int total = categoriesWithExpense.size();
+        int leftCount = (total + 1) / 2; // Round up for left column (e.g., 9 items -> 5 left, 4 right)
+
+        // Left column
+        JPanel leftColumn = new JPanel(new MigLayout("ins 0, gap 0 6, wrap 1", "[grow, fill]", ""));
+        leftColumn.setOpaque(false);
+
+        // Right column
+        JPanel rightColumn = new JPanel(new MigLayout("ins 0, gap 0 6, wrap 1", "[grow, fill]", ""));
+        rightColumn.setOpaque(false);
+
+        for (int i = 0; i < categoriesWithExpense.size(); i++) {
+            Category cat = categoriesWithExpense.get(i);
             long expense = expenses.getOrDefault(cat.getId(), 0L);
             Color catColor = parseColor(cat.getLegendChartColor());
             String amountStr = CurrencyUtil.format(expense);
 
-            // Legend item panel: [Color Dot] [Category Name] ....... [Amount]
-            JPanel itemPanel = new JPanel(new MigLayout("ins 0, fillx", "[20][]push[]", "[center]"));
+            JPanel itemPanel = new JPanel(new MigLayout("ins 0, fillx", "[]6[grow]push[]", "[center]"));
             itemPanel.setOpaque(false);
 
-            // Colored dot (circle)
+            // Dot - size 14
             JLabel dotLabel = new JLabel("●");
-            dotLabel.setFont(dotLabel.getFont().deriveFont(16f));
+            dotLabel.setFont(dotLabel.getFont().deriveFont(20f));
             dotLabel.setForeground(catColor);
-            itemPanel.add(dotLabel, "cell 0 0, alignx left, aligny center");
+            itemPanel.add(dotLabel, "aligny center");
 
-            // Category name - 16px font
+            // Category name - size 13
             JLabel nameLabel = new JLabel(cat.getName());
             nameLabel.setFont(nameLabel.getFont().deriveFont(Font.PLAIN, 16f));
-            itemPanel.add(nameLabel, "cell 1 0, alignx left, aligny center");
+            nameLabel.setForeground(new Color(0x1F2937));
+            itemPanel.add(nameLabel, "aligny center");
 
-            // Amount - plain font (not bold), 16px font
+            // Amount - size 13, right aligned
             JLabel amountLabel = new JLabel(amountStr);
             amountLabel.setFont(amountLabel.getFont().deriveFont(Font.PLAIN, 16f));
-            itemPanel.add(amountLabel, "cell 2 0, alignx right, aligny center");
+            amountLabel.setForeground(new Color(0x1F2937));
+            itemPanel.add(amountLabel, "aligny center");
 
-            legend.add(itemPanel);
+            if (i < leftCount) {
+                leftColumn.add(itemPanel, "growx");
+            } else {
+                rightColumn.add(itemPanel, "growx");
+            }
         }
+
+        legend.add(leftColumn, "grow, aligny top");
+        legend.add(rightColumn, "grow, aligny top");
 
         return legend;
     }
 
+    private JPanel buildMonthlyCashFlowPanel(String userId, String monthKey) {
+        DashboardService.MonthlyCashFlowData data = dashboardService.getMonthlyCashflow(userId, monthKey, currentMonth);
+
+        JPanel card = new ModernCard();
+        card.setLayout(new BorderLayout());
+
+        if (!data.hasData) {
+            JLabel noDataLabel = new JLabel("No cash flow data", SwingConstants.CENTER);
+            noDataLabel.setFont(noDataLabel.getFont().deriveFont(Font.PLAIN, 14f));
+            noDataLabel.setForeground(new Color(0x6B7280));
+            card.add(noDataLabel, BorderLayout.CENTER);
+            return card;
+        }
+
+        XYSeries incomeSeries = new XYSeries("Green Line: Income");
+        XYSeries expenseSeries = new XYSeries("Red Line: Expense");
+
+        int daysInMonth = data.dayNumbers.size();
+        for (int i = 0; i < daysInMonth; i++) {
+            int day = data.dayNumbers.get(i);
+            long income = data.incomeValues.get(i);
+            long expense = data.expenseValues.get(i);
+            incomeSeries.add(day, income);
+            expenseSeries.add(day, expense);
+        }
+
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.addSeries(incomeSeries);
+        dataset.addSeries(expenseSeries);
+
+        String chartTitle = String.format("Monthly Cash Flow",
+                data.month.getMonth().toString().substring(0, 1)
+                        + data.month.getMonth().toString().substring(1).toLowerCase(),
+                data.month.getYear());
+
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                chartTitle,
+                "Day of Month",
+                "Amount (VND)",
+                dataset);
+
+        ChartUtils.applyChartTitle(chart, chartTitle);
+
+        XYPlot plot = chart.getXYPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(new Color(0xE5E7EB));
+        plot.setRangeGridlinePaint(new Color(0xE5E7EB));
+        plot.setDomainGridlinesVisible(true);
+        plot.setRangeGridlinesVisible(true);
+        plot.setOutlineVisible(false);
+
+        // Day of Month
+        NumberAxis xAxis = (NumberAxis) plot.getDomainAxis();
+        xAxis.setRange(1, daysInMonth);
+        xAxis.setTickUnit(new NumberTickUnit(1));
+        xAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        xAxis.setTickLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+        xAxis.setTickLabelPaint(new Color(0x6B7280));
+        xAxis.setAxisLinePaint(new Color(0x9CA3AF));
+
+        // Configure Y-axis (Amount)
+        NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
+        yAxis.setTickLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+        yAxis.setTickLabelPaint(new Color(0x6B7280));
+        yAxis.setAxisLinePaint(new Color(0x9CA3AF));
+        yAxis.setNumberFormatOverride(new java.text.DecimalFormat("#,##0") {
+            @Override
+            public StringBuffer format(double number, StringBuffer result, java.text.FieldPosition fieldPosition) {
+                if (number >= 1_000_000) {
+                    return super.format(number / 1_000_000, result, fieldPosition).append("M");
+                } else if (number >= 1_000) {
+                    return super.format(number / 1_000, result, fieldPosition).append("K");
+                }
+                return super.format(number, result, fieldPosition);
+            }
+        });
+
+        // Configure renderer with custom shapes and colors
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
+
+        // Income line (green) - series 0
+        Color incomeGreen = new Color(0x22C55E);
+        renderer.setSeriesPaint(0, incomeGreen);
+        renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+        renderer.setSeriesShapesVisible(0, true);
+        renderer.setSeriesShape(0, new java.awt.geom.Ellipse2D.Double(-4, -4, 8, 8));
+        renderer.setSeriesShapesFilled(0, true);
+
+        // Expense line (red) - series 1
+        Color expenseRed = new Color(0xDC2626);
+        renderer.setSeriesPaint(1, expenseRed);
+        renderer.setSeriesStroke(1, new BasicStroke(2.0f));
+        renderer.setSeriesShapesVisible(1, true);
+        renderer.setSeriesShape(1, new java.awt.Rectangle(-4, -4, 8, 8));
+        renderer.setSeriesShapesFilled(1, true);
+
+        // Tooltip generator
+        renderer.setDefaultToolTipGenerator(new MonthlyCashFlowToolTipGenerator(data));
+
+        plot.setRenderer(renderer);
+
+        // Configure legend with compact styling
+        LegendTitle legend = chart.getLegend();
+        if (legend != null) {
+            legend.setPosition(RectangleEdge.TOP);
+            legend.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+            legend.setItemFont(new Font("Segoe UI", Font.PLAIN, 11));
+            legend.setBackgroundPaint(Color.WHITE);
+            legend.setPadding(new RectangleInsets(2, 10, 2, 10));
+        }
+
+        ChartPanel chartPanel = ChartUtils.createChartPanel(chart);
+        chartPanel.setDisplayToolTips(true);
+        card.add(chartPanel, BorderLayout.CENTER);
+
+        return card;
+    }
+
     /**
-     * Parse hex color string to Color object.
+     * Tooltip generator for Monthly Cash Flow chart.
      */
+    private static class MonthlyCashFlowToolTipGenerator implements XYToolTipGenerator {
+        private final DashboardService.MonthlyCashFlowData data;
+
+        MonthlyCashFlowToolTipGenerator(DashboardService.MonthlyCashFlowData data) {
+            this.data = data;
+        }
+
+        @Override
+        public String generateToolTip(org.jfree.data.xy.XYDataset dataset, int series, int item) {
+            int day = (int) dataset.getXValue(series, item);
+            long value = (long) dataset.getYValue(series, item);
+
+            LocalDate date = data.month.atDay(day);
+            String dateStr = String.format("%02d/%02d/%d", date.getDayOfMonth(), date.getMonthValue(), date.getYear());
+            String amountStr = CurrencyUtil.format(value);
+            String type = series == 0 ? "Income" : "Expense";
+            String color = series == 0 ? "#22C55E" : "#DC2626";
+
+            return String.format(
+                    "<html><div style='padding: 5px;'>" +
+                            "<b>%s</b><br>" +
+                            "<span style='color: %s; font-weight: bold;'>%s: %s</span>" +
+                            "</div></html>",
+                    dateStr, color, type, amountStr);
+        }
+    }
+
     private static Color parseColor(String hex) {
         if (hex == null || hex.isBlank())
-            return new Color(0x6B7280); // Default gray
+            return new Color(0x6B7280);
         if (!hex.startsWith("#"))
             hex = "#" + hex;
         try {
             return Color.decode(hex);
         } catch (Exception e) {
-            return new Color(0x6B7280); // Default gray on error
+            return new Color(0x6B7280);
         }
     }
 
-    /**
-     * Custom HTML tooltip generator for category chart.
-     */
     private static class PieCategoryToolTipGenerator implements PieToolTipGenerator {
         private final Map<String, Category> idToCategory;
         private final Map<String, Long> expenses;
@@ -536,6 +620,7 @@ public class DashboardController {
         }
 
         @Override
+        @SuppressWarnings({ "rawtypes" })
         public String generateToolTip(org.jfree.data.general.PieDataset dataset, Comparable key) {
             Category cat = idToCategory.get(key.toString());
             if (cat == null)
@@ -560,11 +645,6 @@ public class DashboardController {
         }
     }
 
-    /**
-     * Custom tooltip generator for Last 7 Days Spending bar chart.
-     * Format: HTML with Date on line 1 (Today/Yesterday/mmm-dd), Amount on line 2
-     * (plain, 14px).
-     */
     private static class Last7DaysToolTipGenerator implements org.jfree.chart.labels.CategoryToolTipGenerator {
         private final Map<String, LocalDate> dateLabelToDate;
 
@@ -590,7 +670,6 @@ public class DashboardController {
                 } else if (date.equals(today.minusDays(1))) {
                     dateStr = "Yesterday";
                 } else {
-                    // Format: mmm-dd (e.g., "Dec-17", "Jan-26")
                     java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
                             .ofPattern("MMM-dd");
                     dateStr = date.format(formatter);
@@ -607,62 +686,12 @@ public class DashboardController {
         }
     }
 
-    /**
-     * Custom tooltip generator for Monthly Cashflow line chart.
-     * Format: HTML with Date on line 1, Cashflow Amount on line 2 (bold, 14px).
-     */
-    private static class MonthlyCashflowToolTipGenerator implements XYToolTipGenerator {
-        private final YearMonth month;
-
-        MonthlyCashflowToolTipGenerator(YearMonth month) {
-            this.month = month;
-        }
-
-        @Override
-        public String generateToolTip(org.jfree.data.xy.XYDataset dataset, int series, int item) {
-            Number xValue = dataset.getX(series, item);
-            Number yValue = dataset.getY(series, item);
-            if (xValue == null || yValue == null)
-                return "";
-
-            int dayOfMonth = xValue.intValue();
-            LocalDate date = month.atDay(dayOfMonth);
-            String dateStr = String.format("%02d/%02d", date.getDayOfMonth(), date.getMonthValue());
-            // Multiply by 1000 since values were divided by 1000 for display
-            long actualValue = (long) (yValue.doubleValue() * 1000);
-            String amountStr = CurrencyUtil.formatNoSymbol(actualValue);
-
-            return String.format(
-                    "<html><center>%s<br/><span style='font-size:14px; font-weight:normal'>%s đ</span></center></html>",
-                    dateStr, amountStr);
-        }
-    }
-
-    /**
-     * Apply standardized chart title styling: center aligned, 24px PLAIN font,
-     * padding.
-     */
-    private void applyChartTitleStyle(JFreeChart chart, String title) {
-        TextTitle textTitle = new TextTitle(title);
-        textTitle.setFont(textTitle.getFont().deriveFont(Font.PLAIN, 24f));
-        textTitle.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        textTitle.setPadding(new RectangleInsets(20, 0, 20, 0));
-        chart.setTitle(textTitle);
-    }
-
-    private void refreshBudgetWarnings(Connection conn, String userId, String monthKey, BudgetDAO bDao,
-            CategoryDAO cDao) throws SQLException {
-        List<BudgetDAO.BudgetUsedRow> rows = bDao.getBudgetUsedPerCategory(conn, userId, monthKey);
-        List<BudgetDAO.BudgetUsedRow> over = rows.stream().filter(r -> r.percentUsed >= 100)
-                .sorted((a, b) -> Double.compare(b.percentUsed, a.percentUsed)).collect(Collectors.toList());
-
-        Map<String, String> idToName = new HashMap<>();
-        for (Category c : cDao.findAll(conn))
-            idToName.put(c.getId(), c.getName());
+    private void refreshBudgetWarnings(String userId, String monthKey) {
+        DashboardService.BudgetWarningsData warningsData = dashboardService.getBudgetWarnings(userId, monthKey);
 
         BudgetWarningsPanel card = (BudgetWarningsPanel) getBudgetWarningsPanel();
-        card.setWarnings(over, idToName);
-        card.setVisible(!over.isEmpty());
+        card.setWarnings(warningsData.overBudgetItems, warningsData.categoryIdToName);
+        card.setVisible(warningsData.hasWarnings());
         card.revalidate();
         card.repaint();
     }
