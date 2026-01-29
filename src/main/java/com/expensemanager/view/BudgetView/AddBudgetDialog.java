@@ -1,6 +1,7 @@
 package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.util.AppContext;
+import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.dao.CategoryDAO;
@@ -73,6 +74,8 @@ public class AddBudgetDialog extends JDialog {
         g.gridx = 0;
         form.add(new JLabel("Monthly Budget Amount * (max 500.000.000 đ)"), g);
         amountF = new JTextField(15);
+        // Apply thousand separator formatting (e.g., 1.000.000)
+        CurrencyUtil.applyThousandSeparator(amountF);
         g.gridx = 1;
         form.add(amountF, g);
 
@@ -112,7 +115,7 @@ public class AddBudgetDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Select a category.");
             return;
         }
-        String a = amountF.getText().trim().replaceAll("[.,\\s]", "");
+        String a = CurrencyUtil.parseRawNumber(amountF.getText());
         if (a.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Amount is required.");
             return;

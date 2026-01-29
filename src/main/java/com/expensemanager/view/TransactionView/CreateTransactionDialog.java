@@ -1,6 +1,7 @@
 package com.expensemanager.view.TransactionView;
 
 import com.expensemanager.util.AppContext;
+import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
 import com.expensemanager.model.WalletType;
@@ -68,6 +69,8 @@ public class CreateTransactionDialog extends JDialog {
         amountPanel.setOpaque(false);
         amountF = createStyledTextField(452, 60, 30);
         amountF.setFont(amountF.getFont().deriveFont(Font.PLAIN, 16f));
+        // Apply thousand separator formatting (e.g., 1.000.000)
+        CurrencyUtil.applyThousandSeparator(amountF);
         amountPanel.add(amountF, BorderLayout.CENTER);
 
         JLabel vndLabel = new JLabel("VND");
@@ -1182,14 +1185,14 @@ public class CreateTransactionDialog extends JDialog {
     }
 
     private void onSave() {
-        String amountS = amountF.getText().trim();
+        String amountS = CurrencyUtil.parseRawNumber(amountF.getText());
         if (amountS.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Amount is required.");
             return;
         }
         long amount;
         try {
-            amount = Long.parseLong(amountS.replaceAll("[.,\\s]", ""));
+            amount = Long.parseLong(amountS);
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Invalid amount.");
             return;

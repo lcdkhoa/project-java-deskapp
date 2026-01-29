@@ -1,6 +1,7 @@
 package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.util.AppContext;
+import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
@@ -92,8 +93,10 @@ public class BudgetDialog extends JDialog {
         amountField = createStyledTextField();
         amountField.setPreferredSize(new Dimension(0, CONTROL_HEIGHT));
         amountField.setMinimumSize(new Dimension(120, CONTROL_HEIGHT));
+        // Apply thousand separator formatting (e.g., 1.000.000)
+        CurrencyUtil.applyThousandSeparator(amountField);
         if (existing != null) {
-            amountField.setText(String.valueOf(existing.getAmount()));
+            amountField.setText(CurrencyUtil.formatNoSymbol(existing.getAmount()));
         }
         form.add(amountField, "growx, h 48!, wmin 120");
 
@@ -162,7 +165,7 @@ public class BudgetDialog extends JDialog {
     }
 
     private void onSave() {
-        String rawAmount = amountField.getText() != null ? amountField.getText().trim().replaceAll("[.,\\s]", "") : "";
+        String rawAmount = CurrencyUtil.parseRawNumber(amountField.getText());
         if (rawAmount.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Amount is required.");
             return;
