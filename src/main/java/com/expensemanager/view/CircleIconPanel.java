@@ -5,46 +5,26 @@ import com.expensemanager.util.UIUtils;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Circular icon background (44x44) used in Transaction rows.
- * Fills a solid colored circle and centers a 24x24 icon inside.
- */
-public class CircleIconPanel extends JComponent {
+public final class CircleIconPanel extends JComponent {
 
     private static final int DIAMETER = 44;
     private static final int ICON_SIZE = 24;
 
-    private Color backgroundColor;
-    private String iconPath;
-    private ImageIcon icon;
+    private final ImageIcon icon;
 
-    public CircleIconPanel(Color backgroundColor, String iconPath) {
-        this.backgroundColor = backgroundColor != null ? backgroundColor : new Color(0x9CA3AF);
-        this.iconPath = iconPath;
+    public CircleIconPanel(String iconPath) {
         setOpaque(false);
         setPreferredSize(new Dimension(DIAMETER, DIAMETER));
         setMinimumSize(new Dimension(DIAMETER, DIAMETER));
         setMaximumSize(new Dimension(DIAMETER, DIAMETER));
-        loadIcon();
+        this.icon = loadIcon(iconPath);
     }
 
-    private void loadIcon() {
-        if (iconPath == null || iconPath.isBlank()) {
-            icon = null;
-            return;
+    private ImageIcon loadIcon(String path) {
+        if (path == null || path.isBlank()) {
+            return null;
         }
-        icon = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
-    }
-
-    public void setBackgroundColor(Color color) {
-        this.backgroundColor = color != null ? color : new Color(0x9CA3AF);
-        repaint();
-    }
-
-    public void setIconPath(String path) {
-        this.iconPath = path;
-        loadIcon();
-        repaint();
+        return UIUtils.getIcon(path, ICON_SIZE, ICON_SIZE);
     }
 
     @Override
@@ -52,7 +32,6 @@ public class CircleIconPanel extends JComponent {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Only render the category icon, no colored circle background.
         if (icon != null) {
             int iw = icon.getIconWidth();
             int ih = icon.getIconHeight();

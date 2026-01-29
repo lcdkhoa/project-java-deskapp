@@ -568,10 +568,9 @@ public class TransactionView extends JPanel {
             super(new MigLayout("fillx, insets 10 20 10 20", "[44!]15[grow,fill][right]", "center"));
             setOpaque(false);
 
-            // Custom paint: white rounded card with subtle border
             setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-            CircleIconPanel icon = new CircleIconPanel(iconBgColor, iconPath);
+            CircleIconPanel icon = new CircleIconPanel(iconPath);
             add(icon, "cell 0 0");
 
             JPanel center = new JPanel(new MigLayout("ins 0, fillx, wrap 2", "[grow]", "[]8[]"));
@@ -612,7 +611,6 @@ public class TransactionView extends JPanel {
             g2.setColor(CARD_BG);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), ROW_ARC, ROW_ARC);
 
-            // Subtle card border (matches screenshot better than full shadow).
             g2.setColor(BORDER_COLOR);
             g2.setStroke(new BasicStroke(1f));
             g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, ROW_ARC, ROW_ARC);
