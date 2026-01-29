@@ -170,9 +170,9 @@ public class DashboardController {
     }
 
     private JPanel buildChartsPanel() {
-        // Single row: Monthly Cash Flow (30%) | Last 7 Days (30%) | By Category (40%)
+        // Single row: Last 7 Days (35%) | By Category (30%) | Monthly Cash Flow (35%)
         JPanel panel = new JPanel(
-                new MigLayout("ins 0, gap 20 0", "[grow 30, fill][grow 30, fill][grow 40, fill]",
+                new MigLayout("ins 0, gap 20 0", "[grow 35, fill][grow 30, fill][grow 35, fill]",
                         "[grow, fill]"));
         panel.setBackground(Color.WHITE);
         panel.setOpaque(true);
@@ -253,10 +253,7 @@ public class DashboardController {
             barSet.addValue(value, "Expense", dateLabel);
         }
 
-        // Column 1: Monthly Cash Flow (30%)
-        p.add(buildMonthlyCashFlowPanel(userId, monthKey), "grow");
-
-        // Column 2: Last 7 Days (30%)
+        // Column 1: Last 7 Days (35%)
         JPanel barCard = new ModernCard();
         if (!barData.hasData) {
             JLabel noDataLabel = new JLabel("No expense data", SwingConstants.CENTER);
@@ -279,8 +276,11 @@ public class DashboardController {
         }
         p.add(barCard, "grow");
 
-        // Column 3: By Category (40%)
+        // Column 2: By Category (30%)
         p.add(buildCategoryChartPanel(userId, monthKey), "grow");
+
+        // Column 3: Monthly Cash Flow (35%)
+        p.add(buildMonthlyCashFlowPanel(userId, monthKey), "grow");
 
         p.revalidate();
         p.repaint();
@@ -525,23 +525,30 @@ public class DashboardController {
             }
         });
 
-        // Configure renderer with custom shapes and colors
+        // Configure renderer with smooth lines and round caps
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
+
+        // Smooth stroke with round caps and joins
+        BasicStroke smoothStroke = new BasicStroke(
+                2.0f, // Line width
+                BasicStroke.CAP_ROUND, // Round end caps
+                BasicStroke.JOIN_ROUND // Round joins
+        );
 
         // Income line (green) - series 0
         Color incomeGreen = new Color(0x22C55E);
         renderer.setSeriesPaint(0, incomeGreen);
-        renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+        renderer.setSeriesStroke(0, smoothStroke);
         renderer.setSeriesShapesVisible(0, true);
-        renderer.setSeriesShape(0, new java.awt.geom.Ellipse2D.Double(-4, -4, 8, 8));
+        renderer.setSeriesShape(0, new java.awt.geom.Ellipse2D.Double(-4, -4, 8, 8)); // Round dots
         renderer.setSeriesShapesFilled(0, true);
 
         // Expense line (red) - series 1
         Color expenseRed = new Color(0xDC2626);
         renderer.setSeriesPaint(1, expenseRed);
-        renderer.setSeriesStroke(1, new BasicStroke(2.0f));
+        renderer.setSeriesStroke(1, smoothStroke);
         renderer.setSeriesShapesVisible(1, true);
-        renderer.setSeriesShape(1, new java.awt.Rectangle(-4, -4, 8, 8));
+        renderer.setSeriesShape(1, new java.awt.geom.Ellipse2D.Double(-3, -3, 6, 6)); // Round dots (smaller)
         renderer.setSeriesShapesFilled(1, true);
 
         // Tooltip generator
