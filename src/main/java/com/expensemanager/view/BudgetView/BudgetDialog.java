@@ -29,7 +29,6 @@ public class BudgetDialog extends JDialog {
     private static final int CARD_ARC = 30;
     private static final int CONTROL_HEIGHT = 48;
 
-    private final MainFrame main;
     private final YearMonth month;
     private final Mode mode;
     private final Budget existing;
@@ -43,7 +42,6 @@ public class BudgetDialog extends JDialog {
     public BudgetDialog(MainFrame main, YearMonth month, Mode mode, Budget existing,
             Category existingCategory, BudgetDialogListener listener) {
         super(main, mode == Mode.ADD ? "Add Budget" : "Edit Budget", true);
-        this.main = main;
         this.month = month;
         this.mode = mode;
         this.existing = existing;
