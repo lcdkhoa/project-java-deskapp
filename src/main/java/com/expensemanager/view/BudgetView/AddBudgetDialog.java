@@ -1,6 +1,5 @@
 package com.expensemanager.view.BudgetView;
 
-import com.expensemanager.util.AppContext;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.StyledComponents;
@@ -91,7 +90,7 @@ public class AddBudgetDialog extends JDialog {
         categoryCombo.removeAllItems();
         String monthKey = MonthKeyUtil.of(month);
         try (Connection conn = DatabaseConnection.getConnection()) {
-            List<Budget> existing = new BudgetDAO().findByUserAndMonth(conn, AppContext.getUserId(), monthKey);
+            List<Budget> existing = new BudgetDAO().findByMonth(conn, monthKey);
             Set<String> having = new HashSet<>();
             for (Budget b : existing)
                 having.add(b.getCategoryId());
@@ -129,7 +128,6 @@ public class AddBudgetDialog extends JDialog {
         }
 
         Budget b = new Budget();
-        b.setUserId(AppContext.getUserId());
         b.setCategoryId(c.getId());
         b.setMonthKey(MonthKeyUtil.of(month));
         b.setAmount(amount);

@@ -26,45 +26,45 @@ public class BudgetService {
         this.transactionDAO = new TransactionDAO();
     }
 
-    public long getTotalBudget(String userId, String monthKey) {
+    public long getTotalBudget(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return budgetDAO.getTotalBudget(conn, userId, monthKey);
+            return budgetDAO.getTotalBudget(conn, monthKey);
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
         }
     }
 
-    public long getTotalSpent(String userId, String monthKey) {
+    public long getTotalSpent(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return Math.abs(transactionDAO.getMonthlyExpense(conn, userId, monthKey));
+            return Math.abs(transactionDAO.getMonthlyExpense(conn, monthKey));
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
         }
     }
 
-    public List<Budget> getBudgetsByMonth(String userId, String monthKey) {
+    public List<Budget> getBudgetsByMonth(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return budgetDAO.findByUserAndMonth(conn, userId, monthKey);
+            return budgetDAO.findByMonth(conn, monthKey);
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
 
-    public List<BudgetDAO.BudgetUsedRow> getBudgetUsedPerCategory(String userId, String monthKey) {
+    public List<BudgetDAO.BudgetUsedRow> getBudgetUsedPerCategory(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return budgetDAO.getBudgetUsedPerCategory(conn, userId, monthKey);
+            return budgetDAO.getBudgetUsedPerCategory(conn, monthKey);
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
 
-    public List<Category> getAvailableCategoriesForBudget(String userId, String monthKey) {
+    public List<Category> getAvailableCategoriesForBudget(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            List<Budget> existingBudgets = budgetDAO.findByUserAndMonth(conn, userId, monthKey);
+            List<Budget> existingBudgets = budgetDAO.findByMonth(conn, monthKey);
             Set<String> budgetedCategoryIds = new HashSet<>();
             for (Budget b : existingBudgets) {
                 budgetedCategoryIds.add(b.getCategoryId());
@@ -89,7 +89,7 @@ public class BudgetService {
         validateBudget(budget);
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            Budget existing = budgetDAO.findByUserCategoryMonth(conn, budget.getUserId(),
+            Budget existing = budgetDAO.findByCategoryAndMonth(conn,
                     budget.getCategoryId(), budget.getMonthKey());
             if (existing != null) {
                 throw new ServiceException("Budget already exists for this category and month.");
@@ -119,9 +119,6 @@ public class BudgetService {
     }
 
     private void validateBudget(Budget budget) throws ServiceException {
-        if (budget.getUserId() == null || budget.getUserId().isEmpty()) {
-            throw new ServiceException("User ID is required.");
-        }
         if (budget.getCategoryId() == null || budget.getCategoryId().isEmpty()) {
             throw new ServiceException("Category is required.");
         }
@@ -154,9 +151,9 @@ public class BudgetService {
         }
     }
 
-    public BudgetSummary getBudgetSummary(String userId, String monthKey) {
-        long totalBudget = getTotalBudget(userId, monthKey);
-        long totalSpent = getTotalSpent(userId, monthKey);
+    public BudgetSummary getBudgetSummary(String monthKey) {
+        long totalBudget = getTotalBudget(monthKey);
+        long totalSpent = getTotalSpent(monthKey);
         return new BudgetSummary(totalBudget, totalSpent);
     }
 

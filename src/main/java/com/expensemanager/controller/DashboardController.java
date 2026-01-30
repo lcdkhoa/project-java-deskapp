@@ -1,6 +1,5 @@
 package com.expensemanager.controller;
 
-import com.expensemanager.util.AppContext;
 import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
 import com.expensemanager.model.WalletType;
@@ -226,15 +225,14 @@ public class DashboardController implements TransactionDialogListener {
     }
 
     public void refresh() {
-        String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(currentMonth);
 
-        DashboardService.KPIData kpiData = dashboardService.getKPIData(userId, monthKey);
+        DashboardService.KPIData kpiData = dashboardService.getKPIData(monthKey);
 
         refreshKpi(kpiData.expense, kpiData.income, kpiData.remaining,
                 kpiData.budgetUsedPct, kpiData.totalBudget);
-        refreshCharts(userId, monthKey);
-        refreshBudgetWarnings(userId, monthKey);
+        refreshCharts(monthKey);
+        refreshBudgetWarnings(monthKey);
     }
 
     private static final Color RED = new Color(0xEF4444);
@@ -267,7 +265,7 @@ public class DashboardController implements TransactionDialogListener {
         p.repaint();
     }
 
-    private void refreshCharts(String userId, String monthKey) {
+    private void refreshCharts(String monthKey) {
         JPanel p = getChartsPanel();
         p.removeAll();
 
@@ -279,7 +277,7 @@ public class DashboardController implements TransactionDialogListener {
             referenceDate = currentMonth.atEndOfMonth();
         }
 
-        DashboardService.BarChartData barData = dashboardService.getLast7DaysExpense(userId, referenceDate);
+        DashboardService.BarChartData barData = dashboardService.getLast7DaysExpense(referenceDate);
 
         DefaultCategoryDataset barSet = new DefaultCategoryDataset();
         Map<String, LocalDate> dateLabelToDate = new HashMap<>();
@@ -314,16 +312,16 @@ public class DashboardController implements TransactionDialogListener {
         }
         p.add(barCard, "grow");
 
-        p.add(buildCategoryChartPanel(userId, monthKey), "grow");
+        p.add(buildCategoryChartPanel(monthKey), "grow");
 
-        p.add(buildMonthlyCashFlowPanel(userId, monthKey), "grow");
+        p.add(buildMonthlyCashFlowPanel(monthKey), "grow");
 
         p.revalidate();
         p.repaint();
     }
 
-    private JPanel buildCategoryChartPanel(String userId, String monthKey) {
-        DashboardService.CategoryChartData chartData = dashboardService.getCategoryExpenseData(userId, monthKey);
+    private JPanel buildCategoryChartPanel(String monthKey) {
+        DashboardService.CategoryChartData chartData = dashboardService.getCategoryExpenseData(monthKey);
 
         List<Category> allCategories = chartData.categories;
         Map<String, Category> idToCategory = chartData.idToCategory;
@@ -473,8 +471,8 @@ public class DashboardController implements TransactionDialogListener {
         return legend;
     }
 
-    private JPanel buildMonthlyCashFlowPanel(String userId, String monthKey) {
-        DashboardService.MonthlyCashFlowData data = dashboardService.getMonthlyCashflow(userId, monthKey, currentMonth);
+    private JPanel buildMonthlyCashFlowPanel(String monthKey) {
+        DashboardService.MonthlyCashFlowData data = dashboardService.getMonthlyCashflow(monthKey, currentMonth);
 
         JPanel card = new ModernCard();
         card.setLayout(new BorderLayout());
@@ -694,8 +692,8 @@ public class DashboardController implements TransactionDialogListener {
         }
     }
 
-    private void refreshBudgetWarnings(String userId, String monthKey) {
-        DashboardService.BudgetWarningsData warningsData = dashboardService.getBudgetWarnings(userId, monthKey);
+    private void refreshBudgetWarnings(String monthKey) {
+        DashboardService.BudgetWarningsData warningsData = dashboardService.getBudgetWarnings(monthKey);
 
         BudgetWarningsPanel card = (BudgetWarningsPanel) getBudgetWarningsPanel();
         card.setWarnings(warningsData.overBudgetItems, warningsData.categoryIdToName);

@@ -1,6 +1,5 @@
 package com.expensemanager.view.TransactionView;
 
-import com.expensemanager.util.AppContext;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
@@ -306,7 +305,6 @@ public class CreateTransactionDialog extends JDialog {
             note = note.substring(0, 120);
 
         Transaction tx = new Transaction();
-        tx.setUserId(AppContext.getUserId());
         tx.setAmount(amount);
         tx.setType(type);
         tx.setCategoryId(categoryId);

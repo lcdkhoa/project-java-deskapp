@@ -25,52 +25,52 @@ public class TransactionService {
         this.transactionDAO = new TransactionDAO();
     }
 
-    public long getMonthlyExpense(String userId, String monthKey) {
+    public long getMonthlyExpense(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return Math.abs(transactionDAO.getMonthlyExpense(conn, userId, monthKey));
+            return Math.abs(transactionDAO.getMonthlyExpense(conn, monthKey));
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
         }
     }
 
-    public long getMonthlyIncome(String userId, String monthKey) {
+    public long getMonthlyIncome(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return transactionDAO.getMonthlyIncome(conn, userId, monthKey);
+            return transactionDAO.getMonthlyIncome(conn, monthKey);
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
         }
     }
 
-    public Map<LocalDate, Long> getCashflowByDay(String userId, String monthKey) {
+    public Map<LocalDate, Long> getCashflowByDay(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return transactionDAO.getCashflowByDay(conn, userId, monthKey);
+            return transactionDAO.getCashflowByDay(conn, monthKey);
         } catch (SQLException e) {
             e.printStackTrace();
             return Map.of();
         }
     }
 
-    public Map<String, Long> getExpenseByCategory(String userId, String monthKey) {
+    public Map<String, Long> getExpenseByCategory(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return transactionDAO.getExpenseByCategory(conn, userId, monthKey);
+            return transactionDAO.getExpenseByCategory(conn, monthKey);
         } catch (SQLException e) {
             e.printStackTrace();
             return Map.of();
         }
     }
 
-    public Map<LocalDate, Long> getExpenseByDateRange(String userId, LocalDate start, LocalDate end) {
+    public Map<LocalDate, Long> getExpenseByDateRange(LocalDate start, LocalDate end) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return transactionDAO.getExpenseByDateRange(conn, userId, start, end);
+            return transactionDAO.getExpenseByDateRange(conn, start, end);
         } catch (SQLException e) {
             e.printStackTrace();
             return Map.of();
         }
     }
 
-    public List<Transaction> searchTransactions(String userId, String categoryId, String walletType,
+    public List<Transaction> searchTransactions(String categoryId, String walletType,
             LocalDate startDate, LocalDate endDate, String sortKey, String searchNote) throws ServiceException {
 
         if (startDate != null && endDate != null) {
@@ -83,15 +83,15 @@ public class TransactionService {
         }
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return transactionDAO.search(conn, userId, categoryId, walletType, startDate, endDate, sortKey, searchNote);
+            return transactionDAO.search(conn, categoryId, walletType, startDate, endDate, sortKey, searchNote);
         } catch (SQLException e) {
             throw new ServiceException("Failed to search transactions: " + e.getMessage());
         }
     }
 
-    public List<Transaction> getTransactionsByMonth(String userId, String monthKey) {
+    public List<Transaction> getTransactionsByMonth(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return transactionDAO.listByMonth(conn, userId, monthKey);
+            return transactionDAO.listByMonth(conn, monthKey);
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -147,9 +147,6 @@ public class TransactionService {
     }
 
     private void validateTransaction(Transaction t) throws ServiceException {
-        if (t.getUserId() == null || t.getUserId().isEmpty()) {
-            throw new ServiceException("User ID is required.");
-        }
         if (t.getType() == null || t.getType().isEmpty()) {
             throw new ServiceException("Transaction type is required.");
         }

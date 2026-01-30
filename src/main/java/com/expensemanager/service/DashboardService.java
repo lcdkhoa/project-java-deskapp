@@ -28,12 +28,12 @@ public class DashboardService {
         this.categoryDAO = new CategoryDAO();
     }
 
-    public KPIData getKPIData(String userId, String monthKey) {
+    public KPIData getKPIData(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            long expense = transactionDAO.getMonthlyExpense(conn, userId, monthKey);
-            long income = transactionDAO.getMonthlyIncome(conn, userId, monthKey);
+            long expense = transactionDAO.getMonthlyExpense(conn, monthKey);
+            long income = transactionDAO.getMonthlyIncome(conn, monthKey);
             long remaining = income - Math.abs(expense);
-            long totalBudget = budgetDAO.getTotalBudget(conn, userId, monthKey);
+            long totalBudget = budgetDAO.getTotalBudget(conn, monthKey);
             double budgetUsedPct = totalBudget > 0 ? (Math.abs(expense) * 100.0 / totalBudget) : Double.NaN;
 
             return new KPIData(expense, income, remaining, totalBudget, budgetUsedPct);
@@ -43,12 +43,12 @@ public class DashboardService {
         }
     }
 
-    public BarChartData getLast7DaysExpense(String userId, LocalDate referenceDate) {
+    public BarChartData getLast7DaysExpense(LocalDate referenceDate) {
         LocalDate start = referenceDate.minusDays(6);
         LocalDate end = referenceDate;
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            Map<LocalDate, Long> byDate = transactionDAO.getExpenseByDateRange(conn, userId, start, end);
+            Map<LocalDate, Long> byDate = transactionDAO.getExpenseByDateRange(conn, start, end);
 
             List<LocalDate> dates = new ArrayList<>();
             List<Long> amounts = new ArrayList<>();
@@ -70,10 +70,10 @@ public class DashboardService {
         }
     }
 
-    public CategoryChartData getCategoryExpenseData(String userId, String monthKey) {
+    public CategoryChartData getCategoryExpenseData(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             List<Category> allCategories = categoryDAO.findByType(conn, "expense");
-            Map<String, Long> expenseByCategory = transactionDAO.getExpenseByCategory(conn, userId, monthKey);
+            Map<String, Long> expenseByCategory = transactionDAO.getExpenseByCategory(conn, monthKey);
 
             Map<String, Category> idToCategory = new HashMap<>();
             Map<String, Long> categoryExpenses = new HashMap<>();
@@ -95,10 +95,10 @@ public class DashboardService {
         }
     }
 
-    public MonthlyCashFlowData getMonthlyCashflow(String userId, String monthKey, YearMonth month) {
+    public MonthlyCashFlowData getMonthlyCashflow(String monthKey, YearMonth month) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            Map<LocalDate, Long> incomeByDay = transactionDAO.getIncomeByDay(conn, userId, monthKey);
-            Map<LocalDate, Long> expenseByDay = transactionDAO.getExpenseByDay(conn, userId, monthKey);
+            Map<LocalDate, Long> incomeByDay = transactionDAO.getIncomeByDay(conn, monthKey);
+            Map<LocalDate, Long> expenseByDay = transactionDAO.getExpenseByDay(conn, monthKey);
 
             int days = month.lengthOfMonth();
             List<Integer> dayNumbers = new ArrayList<>();
@@ -125,9 +125,9 @@ public class DashboardService {
         }
     }
 
-    public BudgetWarningsData getBudgetWarnings(String userId, String monthKey) {
+    public BudgetWarningsData getBudgetWarnings(String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            List<BudgetDAO.BudgetUsedRow> rows = budgetDAO.getBudgetUsedPerCategory(conn, userId, monthKey);
+            List<BudgetDAO.BudgetUsedRow> rows = budgetDAO.getBudgetUsedPerCategory(conn, monthKey);
             List<BudgetDAO.BudgetUsedRow> overBudget = rows.stream()
                     .filter(r -> r.percentUsed >= 100)
                     .sorted((a, b) -> Double.compare(b.percentUsed, a.percentUsed))
