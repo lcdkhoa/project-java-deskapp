@@ -1,6 +1,5 @@
 package com.expensemanager.view.CommonComponents;
 
-import com.expensemanager.util.UIUtils;
 import com.expensemanager.view.TransactionView.TransactionView;
 import com.expensemanager.view.DashboardView.DashboardView;
 import com.expensemanager.view.BudgetView.BudgetView;
@@ -62,10 +61,10 @@ public class MainFrame extends JFrame {
         add(westWrap, BorderLayout.WEST);
         add(cards, BorderLayout.CENTER);
 
-        Color sidebarBg = new Color(UIUtils.COLOR_SIDEBAR_BG_LIGHT);
-        Color mainBg = new Color(UIUtils.COLOR_MAIN_BG_LIGHT);
-        Color cardBg = new Color(UIUtils.COLOR_CARD_BG_LIGHT);
-        Color sidebarBorder = new Color(UIUtils.COLOR_SIDEBAR_BORDER_LIGHT);
+        Color sidebarBg = new Color(StyledComponents.COLOR_SIDEBAR_BG_LIGHT);
+        Color mainBg = new Color(StyledComponents.COLOR_MAIN_BG_LIGHT);
+        Color cardBg = new Color(StyledComponents.COLOR_CARD_BG_LIGHT);
+        Color sidebarBorder = new Color(StyledComponents.COLOR_SIDEBAR_BORDER_LIGHT);
         northPanel.setBackground(sidebarBg);
         westPanel.setBackground(sidebarBg);
         westWrap.setBackground(sidebarBg);
@@ -113,7 +112,7 @@ public class MainFrame extends JFrame {
 
     private SidebarButton createNavButton(String label, String card) {
         String iconPath = "src/main/java/com/expensemanager/img/menu/" + getIconFileName(card);
-        ImageIcon icon = UIUtils.getIcon(iconPath, 20, 20);
+        ImageIcon icon = StyledComponents.getIcon(iconPath, 20, 20);
 
         SidebarButton b = new SidebarButton(card, label, icon);
         b.addActionListener(e -> showCard(card));

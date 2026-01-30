@@ -1,7 +1,6 @@
 package com.expensemanager.view.CommonComponents;
 
-import com.expensemanager.util.UIUtils;
-import com.expensemanager.util.UIFactory;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,7 +24,7 @@ public class SidebarButton extends JToggleButton {
         // Create filtered icons for selected (white) and unselected (dark gray) states
         if (icon != null && icon.getImage() != null) {
             whiteIcon = createColoredIcon(icon, Color.WHITE);
-            grayIcon = createColoredIcon(icon, new Color(UIFactory.COLOR_SIDEBAR_TEXT));
+            grayIcon = createColoredIcon(icon, new Color(StyledComponents.COLOR_SIDEBAR_TEXT));
         }
 
         setOpaque(true);
@@ -156,7 +155,7 @@ public class SidebarButton extends JToggleButton {
     }
 
     private void updateForeground() {
-        setForeground(isSelected() ? Color.WHITE : UIFactory.getSidebarTextColor());
+        setForeground(isSelected() ? Color.WHITE : new Color(StyledComponents.COLOR_SIDEBAR_TEXT));
     }
 
     @Override
@@ -166,14 +165,14 @@ public class SidebarButton extends JToggleButton {
 
         Color bg;
         if (isSelected()) {
-            bg = UIFactory.getPrimaryBlue();
+            bg = new Color(StyledComponents.COLOR_PRIMARY_BLUE);
         } else if (hover) {
-            bg = UIFactory.getSidebarHoverColor();
+            bg = new Color(StyledComponents.COLOR_SIDEBAR_HOVER);
         } else {
-            bg = new Color(UIUtils.COLOR_SIDEBAR_BG_LIGHT);
+            bg = new Color(StyledComponents.COLOR_SIDEBAR_BG_LIGHT);
         }
         g2.setColor(bg);
-        g2.fillRoundRect(0, 0, getWidth(), getHeight(), UIFactory.SIDEBAR_ARC, UIFactory.SIDEBAR_ARC);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), StyledComponents.ARC, StyledComponents.ARC);
         g2.dispose();
 
         super.paintComponent(g);

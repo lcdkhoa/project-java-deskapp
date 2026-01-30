@@ -1,6 +1,6 @@
 package com.expensemanager.view.CommonComponents;
 
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,6 +33,7 @@ public class CircleIconPanel extends JComponent {
             icon = null;
             return;
         }
+<<<<<<< HEAD
         icon = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
     }
 
@@ -45,6 +46,9 @@ public class CircleIconPanel extends JComponent {
         this.iconPath = path;
         loadIcon();
         repaint();
+=======
+        return StyledComponents.getIcon(path, ICON_SIZE, ICON_SIZE);
+>>>>>>> 73edc28 (WIP refactoring code)
     }
 
     @Override

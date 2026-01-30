@@ -1,6 +1,6 @@
 package com.expensemanager.view.BudgetView;
 
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.StyledComponents;
 
@@ -27,7 +27,7 @@ public class DeleteBudgetDialog extends JDialog {
         messageRow.setBackground(Color.WHITE);
 
         JLabel iconLabel = new JLabel();
-        ImageIcon warnIcon = UIUtils.getIcon(WARN_ICON_PATH, WARN_ICON_SIZE, WARN_ICON_SIZE);
+        ImageIcon warnIcon = StyledComponents.getIcon(WARN_ICON_PATH, WARN_ICON_SIZE, WARN_ICON_SIZE);
         if (warnIcon != null) {
             iconLabel.setIcon(warnIcon);
         }

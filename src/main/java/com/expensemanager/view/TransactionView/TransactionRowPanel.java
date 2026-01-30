@@ -1,7 +1,7 @@
 package com.expensemanager.view.TransactionView;
 
 import com.expensemanager.util.CurrencyUtil;
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;
@@ -53,7 +53,7 @@ public class TransactionRowPanel extends JPanel {
         JLabel iconLbl = new JLabel();
         if (iconPath != null && !iconPath.isBlank()
                 && (iconPath.contains("/") || iconPath.toLowerCase().endsWith(".png"))) {
-            ImageIcon img = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
+            ImageIcon img = StyledComponents.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
             if (img != null) {
                 iconLbl.setIcon(img);
             }

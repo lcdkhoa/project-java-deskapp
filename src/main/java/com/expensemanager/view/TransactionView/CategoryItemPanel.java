@@ -1,6 +1,6 @@
 package com.expensemanager.view.TransactionView;
 
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,7 +65,7 @@ public class CategoryItemPanel extends JPanel {
     }
 
     private void loadIcon() {
-        ImageIcon icon = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
+        ImageIcon icon = StyledComponents.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
         if (icon != null) {
             iconLabel.setIcon(icon);
         } else {

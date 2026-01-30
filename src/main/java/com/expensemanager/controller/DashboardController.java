@@ -67,7 +67,7 @@ public class DashboardController {
         p.setBackground(Color.WHITE);
 
         JButton prevBtn = new JButton();
-        ImageIcon leftIcon = com.expensemanager.util.UIUtils
+        ImageIcon leftIcon = com.expensemanager.view.CommonComponents.StyledComponents
                 .getIcon("src/main/java/com/expensemanager/img/dashboard/left.png", 16, 16);
         prevBtn.setIcon(leftIcon);
         prevBtn.setBorder(BorderFactory.createEmptyBorder());
@@ -85,7 +85,7 @@ public class DashboardController {
         p.add(monthLabel, "cell 1 0, alignx center, aligny center, gaptop 24");
 
         JButton nextBtn = new JButton();
-        ImageIcon rightIcon = com.expensemanager.util.UIUtils
+        ImageIcon rightIcon = com.expensemanager.view.CommonComponents.StyledComponents
                 .getIcon("src/main/java/com/expensemanager/img/dashboard/right.png", 16, 16);
         nextBtn.setIcon(rightIcon);
         nextBtn.setBorder(BorderFactory.createEmptyBorder());

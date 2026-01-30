@@ -10,7 +10,7 @@ import com.expensemanager.db.DatabaseConnection;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
 import com.expensemanager.util.MonthKeyUtil;
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;
@@ -59,7 +59,7 @@ public class AddBudgetDialog extends JDialog {
                     setText(c.getName());
                     String path = c.getIconPath();
                     if (path != null && !path.isBlank()) {
-                        setIcon(UIUtils.getIcon(path, 20, 20));
+                        setIcon(StyledComponents.getIcon(path, 20, 20));
                     } else {
                         setIcon(null);
                     }
