@@ -6,7 +6,6 @@ import com.expensemanager.model.WalletType;
 import com.expensemanager.service.CategoryService;
 import com.expensemanager.service.TransactionService;
 import com.expensemanager.service.WalletTypeService;
-import com.expensemanager.util.AppContext;
 import com.expensemanager.util.ColorUtil;
 import com.expensemanager.util.DateUtil;
 import com.expensemanager.view.TransactionView.CreateTransactionDialog;
@@ -99,8 +98,6 @@ public class TransactionController implements TransactionDialogListener {
     public void refresh() {
         listPanel.removeAll();
 
-        String userId = AppContext.getUserId();
-
         String categoryId = view.getSelectedCategoryId();
         String walletType = view.getSelectedWalletType();
 
@@ -114,7 +111,7 @@ public class TransactionController implements TransactionDialogListener {
 
             Map<String, Category> idToCat = categoryService.getCategoryMap();
             List<Transaction> list = transactionService.searchTransactions(
-                    userId, categoryId, walletType, startDate, endDate, sortKey, searchNote);
+                    categoryId, walletType, startDate, endDate, sortKey, searchNote);
 
             if (list.isEmpty()) {
                 JLabel empty = new JLabel("No transactions");

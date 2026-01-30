@@ -1,12 +1,6 @@
 CREATE DATABASE IF NOT EXISTS expense_manager;
 USE expense_manager;
 
-CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR(36) PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    created_at VARCHAR(64) NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS categories (
     id VARCHAR(36) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -20,7 +14,6 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE TABLE IF NOT EXISTS transactions (
     id VARCHAR(36) PRIMARY KEY,
-    user_id VARCHAR(36) NOT NULL,
     amount BIGINT NOT NULL,
     type VARCHAR(16) NOT NULL,
     category_id VARCHAR(36) NOT NULL,
@@ -33,20 +26,17 @@ CREATE TABLE IF NOT EXISTS transactions (
     updated_at VARCHAR(64) NOT NULL,
     CONSTRAINT chk_tx_type CHECK (type IN ('expense','income')),
     CONSTRAINT chk_tx_wallet CHECK (wallet_type IN ('cash','bank_transfer','card','e_wallet')),
-    CONSTRAINT fk_tx_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_tx_category FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
 CREATE TABLE IF NOT EXISTS budgets (
     id VARCHAR(36) PRIMARY KEY,
-    user_id VARCHAR(36) NOT NULL,
     category_id VARCHAR(36) NOT NULL,
     month_key VARCHAR(7) NOT NULL,
     amount BIGINT NOT NULL,
     created_at VARCHAR(64) NOT NULL,
     updated_at VARCHAR(64) NOT NULL,
-    UNIQUE KEY uk_budget_user_category_month (user_id, category_id, month_key),
-    CONSTRAINT fk_budget_user FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE KEY uk_budget_category_month (category_id, month_key),
     CONSTRAINT fk_budget_category FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
@@ -60,12 +50,9 @@ CREATE TABLE IF NOT EXISTS wallet_types (
     created_at VARCHAR(64) NOT NULL
 );
 
-CREATE INDEX idx_tx_user_month ON transactions(user_id, month_key);
-CREATE INDEX idx_tx_user_date ON transactions(user_id, transaction_date);
-CREATE INDEX idx_budget_user_month ON budgets(user_id, month_key);
-
--- Seed default user (used by App.java if not exists)
-INSERT IGNORE INTO users (id, email, created_at) VALUES ('75b2a244-ea7f-4b29-adc2-b9b21c03b383', 'user@example.com', CAST(NOW() AS CHAR));
+CREATE INDEX idx_tx_month ON transactions(month_key);
+CREATE INDEX idx_tx_date ON transactions(transaction_date);
+CREATE INDEX idx_budget_month ON budgets(month_key);
 
 -- Seed categories (only if empty)
 INSERT INTO categories (id, name, icon_path, legend_chart_color, type, is_active, created_at)

@@ -14,21 +14,20 @@ import java.util.UUID;
 
 public class BudgetDAO {
 
-    public List<BudgetUsedRow> getBudgetUsedPerCategory(Connection conn, String userId, String monthKey)
+    public List<BudgetUsedRow> getBudgetUsedPerCategory(Connection conn, String monthKey)
             throws SQLException {
         String sql = """
                 SELECT b.category_id, b.amount AS budget,
                        ABS(COALESCE(SUM(t.amount), 0)) AS spent,
                        CASE WHEN b.amount > 0 THEN ABS(COALESCE(SUM(t.amount), 0)) * 100.0 / b.amount ELSE 0 END AS percent_used
                 FROM budgets b
-                LEFT JOIN transactions t ON t.user_id = b.user_id AND t.category_id = b.category_id AND t.month_key = b.month_key AND t.type = 'expense'
-                WHERE b.user_id = ? AND b.month_key = ?
+                LEFT JOIN transactions t ON t.category_id = b.category_id AND t.month_key = b.month_key AND t.type = 'expense'
+                WHERE b.month_key = ?
                 GROUP BY b.category_id, b.amount
                 """;
         List<BudgetUsedRow> out = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, userId);
-            ps.setString(2, monthKey);
+            ps.setString(1, monthKey);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     BudgetUsedRow r = new BudgetUsedRow();
@@ -50,11 +49,10 @@ public class BudgetDAO {
         public double percentUsed;
     }
 
-    public List<Budget> findByUserAndMonth(Connection conn, String userId, String monthKey) throws SQLException {
-        String sql = "SELECT id, user_id, category_id, month_key, amount, created_at, updated_at FROM budgets WHERE user_id = ? AND month_key = ? ORDER BY category_id";
+    public List<Budget> findByMonth(Connection conn, String monthKey) throws SQLException {
+        String sql = "SELECT id, category_id, month_key, amount, created_at, updated_at FROM budgets WHERE month_key = ? ORDER BY category_id";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, userId);
-            ps.setString(2, monthKey);
+            ps.setString(1, monthKey);
             try (ResultSet rs = ps.executeQuery()) {
                 List<Budget> list = new ArrayList<>();
                 while (rs.next())
@@ -64,13 +62,12 @@ public class BudgetDAO {
         }
     }
 
-    public Budget findByUserCategoryMonth(Connection conn, String userId, String categoryId, String monthKey)
+    public Budget findByCategoryAndMonth(Connection conn, String categoryId, String monthKey)
             throws SQLException {
-        String sql = "SELECT id, user_id, category_id, month_key, amount, created_at, updated_at FROM budgets WHERE user_id = ? AND category_id = ? AND month_key = ?";
+        String sql = "SELECT id, category_id, month_key, amount, created_at, updated_at FROM budgets WHERE category_id = ? AND month_key = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, userId);
-            ps.setString(2, categoryId);
-            ps.setString(3, monthKey);
+            ps.setString(1, categoryId);
+            ps.setString(2, monthKey);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return map(rs);
@@ -87,15 +84,14 @@ public class BudgetDAO {
             b.setCreatedAt(now);
         if (b.getUpdatedAt() == null)
             b.setUpdatedAt(now);
-        String sql = "INSERT INTO budgets (id, user_id, category_id, month_key, amount, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO budgets (id, category_id, month_key, amount, created_at, updated_at) VALUES (?,?,?,?,?,?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, b.getId());
-            ps.setString(2, b.getUserId());
-            ps.setString(3, b.getCategoryId());
-            ps.setString(4, b.getMonthKey());
-            ps.setLong(5, b.getAmount());
-            ps.setString(6, b.getCreatedAt().toString());
-            ps.setString(7, b.getUpdatedAt().toString());
+            ps.setString(2, b.getCategoryId());
+            ps.setString(3, b.getMonthKey());
+            ps.setLong(4, b.getAmount());
+            ps.setString(5, b.getCreatedAt().toString());
+            ps.setString(6, b.getUpdatedAt().toString());
             ps.executeUpdate();
         }
     }
@@ -118,11 +114,10 @@ public class BudgetDAO {
         }
     }
 
-    public long getTotalBudget(Connection conn, String userId, String monthKey) throws SQLException {
-        String sql = "SELECT COALESCE(SUM(amount), 0) FROM budgets WHERE user_id = ? AND month_key = ?";
+    public long getTotalBudget(Connection conn, String monthKey) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM budgets WHERE month_key = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, userId);
-            ps.setString(2, monthKey);
+            ps.setString(1, monthKey);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getLong(1) : 0;
             }
@@ -132,7 +127,6 @@ public class BudgetDAO {
     private static Budget map(ResultSet rs) throws SQLException {
         Budget b = new Budget();
         b.setId(rs.getString("id"));
-        b.setUserId(rs.getString("user_id"));
         b.setCategoryId(rs.getString("category_id"));
         b.setMonthKey(rs.getString("month_key"));
         b.setAmount(rs.getLong("amount"));

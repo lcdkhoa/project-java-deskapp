@@ -1,6 +1,5 @@
 package com.expensemanager.view.BudgetView;
 
-import com.expensemanager.util.AppContext;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.model.Budget;
@@ -156,7 +155,6 @@ public class BudgetDialog extends JDialog {
                     return;
                 }
                 Budget b = new Budget();
-                b.setUserId(AppContext.getUserId());
                 b.setCategoryId(c.getId());
                 b.setMonthKey(MonthKeyUtil.of(month));
                 b.setAmount(amount);

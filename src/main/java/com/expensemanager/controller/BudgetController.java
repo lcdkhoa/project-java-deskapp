@@ -1,6 +1,5 @@
 package com.expensemanager.controller;
 
-import com.expensemanager.util.AppContext;
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
@@ -74,9 +73,8 @@ public class BudgetController implements BudgetDialogListener {
 
     @Override
     public List<Category> getAvailableCategories() {
-        String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(currentMonth);
-        return budgetService.getAvailableCategoriesForBudget(userId, monthKey);
+        return budgetService.getAvailableCategoriesForBudget(monthKey);
     }
 
     @Override
@@ -97,11 +95,10 @@ public class BudgetController implements BudgetDialogListener {
 
     public void refresh() {
         contentPanel.removeAll();
-        String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(currentMonth);
 
         try {
-            BudgetService.BudgetSummary summary = budgetService.getBudgetSummary(userId, monthKey);
+            BudgetService.BudgetSummary summary = budgetService.getBudgetSummary(monthKey);
             long totalBudget = summary.totalBudget;
             long totalSpent = summary.totalSpent;
             long remaining = summary.remaining;
@@ -176,12 +173,12 @@ public class BudgetController implements BudgetDialogListener {
             Map<String, Category> idToCat = categoryService.getCategoryMap();
 
             Map<String, Budget> idToBudget = new HashMap<>();
-            List<Budget> budgets = budgetService.getBudgetsByMonth(userId, monthKey);
+            List<Budget> budgets = budgetService.getBudgetsByMonth(monthKey);
             for (Budget b : budgets) {
                 idToBudget.put(b.getCategoryId(), b);
             }
 
-            for (BudgetDAO.BudgetUsedRow r : budgetService.getBudgetUsedPerCategory(userId, monthKey)) {
+            for (BudgetDAO.BudgetUsedRow r : budgetService.getBudgetUsedPerCategory(monthKey)) {
                 Category cat = idToCat.get(r.categoryId);
                 Budget budget = idToBudget.get(r.categoryId);
                 BudgetRowItem row = new BudgetRowItem(cat, r, budget, this);
