@@ -146,8 +146,8 @@ public class TransactionView extends JPanel {
         toDateField = new CalendarPicker("mm/dd/yyyy");
         fromDateField.clear();
         toDateField.clear();
-        fromDateField.addChangeListener(this::refresh);
-        toDateField.addChangeListener(this::refresh);
+        fromDateField.addChangeListener(() -> controller.refresh(TransactionController.FilterSource.FROM_DATE));
+        toDateField.addChangeListener(() -> controller.refresh(TransactionController.FilterSource.TO_DATE));
 
         datesRow.add(createLabeledInput("From", fromDateField), "growx");
         datesRow.add(createLabeledInput("To", toDateField), "growx");
@@ -314,8 +314,20 @@ public class TransactionView extends JPanel {
         return fromDateField != null ? fromDateField.getText() : null;
     }
 
+    public void resetFromDate() {
+        if (fromDateField != null) {
+            SwingUtilities.invokeLater(() -> fromDateField.clear());
+        }
+    }
+
     public String getToDateText() {
         return toDateField != null ? toDateField.getText() : null;
+    }
+
+    public void resetToDate() {
+        if (toDateField != null) {
+            SwingUtilities.invokeLater(() -> toDateField.clear());
+        }
     }
 
     public String getSortKey() {

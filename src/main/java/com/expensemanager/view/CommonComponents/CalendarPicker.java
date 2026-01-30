@@ -136,6 +136,10 @@ public class CalendarPicker extends JPanel {
         final int[] currentYear = { cal.get(Calendar.YEAR) };
         final int[] currentMonth = { cal.get(Calendar.MONTH) };
 
+        Calendar today = Calendar.getInstance();
+        int todayYear = today.get(Calendar.YEAR);
+        int todayMonth = today.get(Calendar.MONTH);
+
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 10, 5));
@@ -146,6 +150,15 @@ public class CalendarPicker extends JPanel {
 
         final JPanel[] bodyPanelRef = { new JPanel(new GridLayout(0, 7, 5, 5)) };
         bodyPanelRef[0].setBackground(Color.WHITE);
+
+        JButton prevBtn = createNavButton("<");
+        JButton nextBtn = createNavButton(">");
+
+        Runnable updateNavButtons = () -> {
+            boolean isFuture = (currentYear[0] > todayYear)
+                    || (currentYear[0] == todayYear && currentMonth[0] >= todayMonth);
+            nextBtn.setEnabled(!isFuture);
+        };
 
         Runnable buildBody = () -> {
             bodyPanelRef[0].removeAll();
@@ -184,8 +197,8 @@ public class CalendarPicker extends JPanel {
                 dayBtn.addActionListener(e -> {
                     Calendar newCal = Calendar.getInstance();
                     newCal.set(currentYear[0], currentMonth[0], dayValue);
-                    setDate(newCal.getTime());
                     popup.setVisible(false);
+                    setDate(newCal.getTime());
                     if (onDateSelected != null) {
                         onDateSelected.accept(selectedDate);
                     }
@@ -196,12 +209,12 @@ public class CalendarPicker extends JPanel {
             String[] monthNames = { "January", "February", "March", "April", "May", "June",
                     "July", "August", "September", "October", "November", "December" };
             monthYearLabel.setText(monthNames[currentMonth[0]] + " " + currentYear[0]);
+            updateNavButtons.run();
 
             bodyPanelRef[0].revalidate();
             bodyPanelRef[0].repaint();
         };
 
-        JButton prevBtn = createNavButton("<");
         prevBtn.addActionListener(e -> {
             currentMonth[0]--;
             if (currentMonth[0] < 0) {
@@ -211,7 +224,6 @@ public class CalendarPicker extends JPanel {
             buildBody.run();
         });
 
-        JButton nextBtn = createNavButton(">");
         nextBtn.addActionListener(e -> {
             currentMonth[0]++;
             if (currentMonth[0] > 11) {

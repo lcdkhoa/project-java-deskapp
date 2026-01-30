@@ -95,7 +95,15 @@ public class TransactionController implements TransactionDialogListener {
         view.getMain().refreshBudget();
     }
 
+    public enum FilterSource {
+        FROM_DATE, TO_DATE, OTHER
+    }
+
     public void refresh() {
+        refresh(FilterSource.OTHER);
+    }
+
+    public void refresh(FilterSource source) {
         listPanel.removeAll();
 
         String categoryId = view.getSelectedCategoryId();
@@ -131,6 +139,14 @@ public class TransactionController implements TransactionDialogListener {
             }
         } catch (TransactionService.ServiceException ex) {
             JOptionPane.showMessageDialog(view, ex.getMessage());
+            String msg = ex.getMessage();
+            if (msg.contains("End date") || msg.contains("Date range")) {
+                if (source == FilterSource.FROM_DATE) {
+                    view.resetFromDate();
+                } else if (source == FilterSource.TO_DATE) {
+                    view.resetToDate();
+                }
+            }
         }
 
         listPanel.revalidate();
