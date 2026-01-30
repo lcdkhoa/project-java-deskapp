@@ -155,17 +155,6 @@ public class SidebarButton extends JToggleButton {
         }
     }
 
-    /** Call when theme is toggled to refresh colors. */
-    public void refreshTheme() {
-        updateForeground();
-        // Recreate colored icons if needed
-        if (originalIcon != null) {
-            grayIcon = createColoredIcon(originalIcon, new Color(UIFactory.COLOR_SIDEBAR_TEXT));
-        }
-        updateIcon();
-        repaint();
-    }
-
     private void updateForeground() {
         setForeground(isSelected() ? Color.WHITE : UIFactory.getSidebarTextColor());
     }
@@ -181,7 +170,7 @@ public class SidebarButton extends JToggleButton {
         } else if (hover) {
             bg = UIFactory.getSidebarHoverColor();
         } else {
-            bg = UIUtils.getSidebarBackground(false);
+            bg = new Color(UIUtils.COLOR_SIDEBAR_BG_LIGHT);
         }
         g2.setColor(bg);
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), UIFactory.SIDEBAR_ARC, UIFactory.SIDEBAR_ARC);
