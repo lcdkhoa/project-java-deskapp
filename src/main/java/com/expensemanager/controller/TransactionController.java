@@ -48,7 +48,7 @@ public class TransactionController implements TransactionDialogListener {
         this.walletTypeService = new WalletTypeService();
 
         this.listPanel = new JPanel(
-                new MigLayout("wrap 1, fillx, insets 0 0 16 0, gapy 12", "[grow,fill]", "[]"));
+                new MigLayout("wrap 1, fillx, insets 0 0 16 12, gapy 12", "[grow,fill]", "[]"));
         this.listPanel.setOpaque(true);
         this.listPanel.setBackground(BG_PAGE);
 

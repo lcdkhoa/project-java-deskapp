@@ -40,8 +40,8 @@ public class TransactionView extends JPanel {
         setBackground(BG_PAGE);
 
         add(createHeaderPanel(), "growx");
-        add(createSearchRow(), "growx");
-        add(createFilterCard(), "growx");
+        add(createSearchRow(), "growx, gapright 12");
+        add(createFilterCard(), "growx, gapright 12");
 
         JScrollPane scrollPane = controller.getScrollPane();
         add(scrollPane, "grow, push");
@@ -75,10 +75,37 @@ public class TransactionView extends JPanel {
     }
 
     private JComponent createSearchRow() {
-        JPanel row = new JPanel(new MigLayout("fillx, insets 10 0 10 0", "[grow]", "[]"));
+        JPanel row = new JPanel(new MigLayout("fillx, insets 10 0 10 2", "[grow][]", "[]"));
         row.setOpaque(false);
         row.add(createSearchField(), "growx");
+
+        JButton resetButton = StyledComponents.createSecondaryFunctionButton("Reset", 80);
+        resetButton.addActionListener(e -> resetFilters());
+        row.add(resetButton);
+
         return row;
+    }
+
+    private void resetFilters() {
+        if (searchField != null) {
+            searchField.setText("");
+        }
+        if (categoryCombo != null && categoryCombo.getItemCount() > 0) {
+            categoryCombo.setSelectedIndex(0);
+        }
+        if (walletCombo != null && walletCombo.getItemCount() > 0) {
+            walletCombo.setSelectedIndex(0);
+        }
+        if (sortCombo != null && sortCombo.getItemCount() > 0) {
+            sortCombo.setSelectedIndex(0);
+        }
+        if (fromDateField != null) {
+            fromDateField.clear();
+        }
+        if (toDateField != null) {
+            toDateField.clear();
+        }
+        refresh();
     }
 
     private JComponent createFilterCard() {
