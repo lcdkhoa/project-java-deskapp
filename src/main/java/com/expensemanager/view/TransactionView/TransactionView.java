@@ -1,14 +1,10 @@
-package com.expensemanager.view;
+package com.expensemanager.view.TransactionView;
 
-import com.expensemanager.util.AppContext;
-import com.expensemanager.dao.CategoryDAO;
-import com.expensemanager.dao.TransactionDAO;
-import com.expensemanager.db.DatabaseConnection;
+import com.expensemanager.controller.TransactionController;
 import com.expensemanager.model.Category;
-import com.expensemanager.model.Transaction;
-import com.expensemanager.util.CurrencyUtil;
-import com.expensemanager.util.DateUtil;
 import com.expensemanager.util.UIFactory;
+import com.expensemanager.view.CommonComponents.MainFrame;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -16,14 +12,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Calendar;
 
 public class TransactionView extends JPanel {
@@ -33,14 +22,10 @@ public class TransactionView extends JPanel {
     private static final int CARD_ARC = 30;
     private static final int CONTROL_HEIGHT = 48;
 
-    private static final Color NOTE_COLOR = new Color(0x111827);
     private static final Color WALLET_COLOR = new Color(0x6B7280);
-    private static final Color EXPENSE_COLOR = new Color(0xB91C1C);
-    private static final Color INCOME_COLOR = new Color(0x16A34A);
 
     private final MainFrame main;
-
-    private static final String DEFAULT_CATEGORY_ICON = "src/main/java/com/expensemanager/img/category/others.png";
+    private final TransactionController controller;
 
     // Filters
     private JTextField searchField;
@@ -50,13 +35,9 @@ public class TransactionView extends JPanel {
     private DateField toDateField;
     private JComboBox<SortItem> sortCombo;
 
-    // List
-    private final JPanel listPanel;
-
-    private final DateTimeFormatter filterDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-
     public TransactionView(MainFrame main) {
         this.main = main;
+        this.controller = new TransactionController(this);
         setLayout(new MigLayout("wrap 1, fill, insets 20", "[grow]", "[][][][grow]"));
         setBackground(BG_PAGE);
 
@@ -70,18 +51,7 @@ public class TransactionView extends JPanel {
         add(createFilterCard(), "growx");
 
         // Transaction list
-        listPanel = new JPanel(new MigLayout("wrap 1, fillx, insets 0 0 16 0, gapy 12", "[grow,fill]", "[]"));
-        listPanel.setOpaque(true);
-        listPanel.setBackground(BG_PAGE);
-
-        JScrollPane scrollPane = new JScrollPane(listPanel);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setBackground(BG_PAGE);
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(true);
-        scrollPane.getViewport().setBackground(BG_PAGE);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
+        JScrollPane scrollPane = controller.getScrollPane();
         add(scrollPane, "grow, push");
 
         refresh();
@@ -109,7 +79,7 @@ public class TransactionView extends JPanel {
         JButton addTx = UIFactory.createPrimaryButton("Add Transaction", UIFactory.createPlusIcon());
         addTx.setIconTextGap(8);
         addTx.setPreferredSize(new Dimension(190, CONTROL_HEIGHT));
-        addTx.addActionListener(e -> new CreateTransactionDialog(main).setVisible(true));
+        addTx.addActionListener(e -> controller.openAddTransaction());
         header.add(addTx, "right");
 
         return header;
@@ -272,13 +242,10 @@ public class TransactionView extends JPanel {
         categoryCombo.removeAllItems();
         categoryCombo.addItem(new CategoryItem(null, "All categories"));
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            List<Category> all = new CategoryDAO().findAll(conn);
-            for (Category c : all) {
-                categoryCombo.addItem(new CategoryItem(c.getId(), c.getName()));
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error loading categories: " + ex.getMessage());
+        // Use controller to get categories (no direct DB access)
+        List<Category> all = controller.getAllCategories();
+        for (Category c : all) {
+            categoryCombo.addItem(new CategoryItem(c.getId(), c.getName()));
         }
     }
 
@@ -304,152 +271,46 @@ public class TransactionView extends JPanel {
     }
 
     private <T> JComboBox<T> createStyledComboBox() {
-        JComboBox<T> combo = new JComboBox<T>() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
-                g2.dispose();
-                super.paintComponent(g);
-                Graphics2D g2Border = (Graphics2D) g.create();
-                g2Border.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color borderColor = (isFocusOwner() || isPopupVisible()) ? new Color(0x155DFC) : BORDER_COLOR;
-                g2Border.setColor(borderColor);
-                g2Border.setStroke(new BasicStroke(1));
-                g2Border.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
-                g2Border.dispose();
-            }
-
-            @Override
-            protected void paintBorder(Graphics g) {
-            }
-        };
-        combo.setOpaque(false);
-        combo.setPreferredSize(new Dimension(0, CONTROL_HEIGHT));
-        combo.setMinimumSize(new Dimension(0, CONTROL_HEIGHT));
-        combo.setMaximumSize(new Dimension(Integer.MAX_VALUE, CONTROL_HEIGHT));
-        combo.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-        combo.setFont(combo.getFont().deriveFont(Font.PLAIN, 14f));
-
-        try {
-            combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
-                @Override
-                protected JButton createArrowButton() {
-                    JButton button = new JButton() {
-                        @Override
-                        protected void paintComponent(Graphics g) {
-                            Graphics2D g2 = (Graphics2D) g.create();
-                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                            g2.setColor(new Color(0x6B7280));
-
-                            int width = getWidth();
-                            int height = getHeight();
-                            int arrowSize = 12;
-                            int x = (width - arrowSize) / 2;
-                            int y = (height - arrowSize) / 2;
-
-                            int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
-                            int[] yPoints = { y + arrowSize, y + 2, y + 2 };
-                            g2.fillPolygon(xPoints, yPoints, 3);
-
-                            g2.dispose();
-                        }
-                    };
-                    button.setOpaque(false);
-                    button.setContentAreaFilled(false);
-                    button.setBorderPainted(false);
-                    button.setFocusPainted(false);
-                    button.setPreferredSize(new Dimension(40, CONTROL_HEIGHT));
-                    button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    return button;
-                }
-            });
-        } catch (Exception e) {
-            // Fallback: rely on default UI if custom UI is not available.
-        }
-
-        combo.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (isSelected) {
-                    c.setBackground(new Color(0x155DFC));
-                    c.setForeground(Color.WHITE);
-                } else {
-                    c.setBackground(Color.WHITE);
-                    c.setForeground(Color.BLACK);
-                }
-                return c;
-            }
-        });
-
-        // Repaint when popup opens/closes to update border color
-        combo.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
-            @Override
-            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
-                combo.repaint();
-            }
-
-            @Override
-            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {
-                combo.repaint();
-            }
-
-            @Override
-            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {
-                combo.repaint();
-            }
-        });
-
-        combo.addFocusListener(new java.awt.event.FocusAdapter() {
-            @Override
-            public void focusGained(java.awt.event.FocusEvent e) {
-                combo.repaint();
-            }
-
-            @Override
-            public void focusLost(java.awt.event.FocusEvent e) {
-                combo.repaint();
-            }
-        });
-
-        return combo;
+        return StyledComponents.createStyledComboBox(CONTROL_HEIGHT, CARD_ARC);
     }
 
     public void refresh() {
-        if (listPanel == null) {
-            return;
-        }
-        listPanel.removeAll();
+        controller.refresh();
+    }
 
-        String userId = AppContext.getUserId();
+    public void onShown() {
+        refresh();
+    }
+
+    public MainFrame getMain() {
+        return main;
+    }
+
+    public String getSearchText() {
+        return searchField != null ? searchField.getText() : null;
+    }
+
+    public String getSelectedCategoryId() {
         CategoryItem categoryItem = (CategoryItem) (categoryCombo != null ? categoryCombo.getSelectedItem() : null);
-        String categoryId = categoryItem != null ? categoryItem.id : null;
+        return categoryItem != null ? categoryItem.id : null;
+    }
 
+    public String getSelectedWalletType() {
         WalletItem walletItem = (WalletItem) (walletCombo != null ? walletCombo.getSelectedItem() : null);
-        String walletType = walletItem != null ? walletItem.value : null;
+        return walletItem != null ? walletItem.value : null;
+    }
 
-        LocalDate startDate = parseFilterDate(fromDateField != null ? fromDateField.getTextValue() : null);
-        LocalDate endDate = parseFilterDate(toDateField != null ? toDateField.getTextValue() : null);
+    public String getFromDateText() {
+        return fromDateField != null ? fromDateField.getTextValue() : null;
+    }
 
-        if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
-            JOptionPane.showMessageDialog(this, "End date must be on or after start date.");
-            listPanel.revalidate();
-            listPanel.repaint();
-            return;
-        }
-        if (startDate != null && endDate != null && startDate.plusDays(60).isBefore(endDate)) {
-            JOptionPane.showMessageDialog(this, "Date range cannot exceed 60 days.");
-            listPanel.revalidate();
-            listPanel.repaint();
-            return;
-        }
+    public String getToDateText() {
+        return toDateField != null ? toDateField.getTextValue() : null;
+    }
 
-        String sortKey = "date_desc";
+    public String getSortKey() {
         if (sortCombo != null && sortCombo.getSelectedItem() instanceof SortItem) {
+<<<<<<< HEAD:src/main/java/com/expensemanager/view/TransactionView.java
             sortKey = ((SortItem) sortCombo.getSelectedItem()).key;
         }
 
@@ -618,7 +479,11 @@ public class TransactionView extends JPanel {
             g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, ROW_ARC, ROW_ARC);
             g2.dispose();
             super.paintComponent(g);
+=======
+            return ((SortItem) sortCombo.getSelectedItem()).key;
+>>>>>>> 8f07de0 (refactoring controller):src/main/java/com/expensemanager/view/TransactionView/TransactionView.java
         }
+        return "date_desc";
     }
 
     private static class CategoryItem {
@@ -675,10 +540,8 @@ public class TransactionView extends JPanel {
         // Specific height for From/To date fields in filter card.
         private static final int DATE_FIELD_HEIGHT = 48;
         private final JTextField textField;
-        private final String placeholder;
 
         DateField(String placeholder) {
-            this.placeholder = placeholder;
             setLayout(new BorderLayout());
             setOpaque(false);
             setPreferredSize(new Dimension(0, DATE_FIELD_HEIGHT));

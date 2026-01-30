@@ -1,4 +1,4 @@
-package com.expensemanager.view;
+package com.expensemanager.view.CommonComponents;
 
 import com.expensemanager.util.UIUtils;
 

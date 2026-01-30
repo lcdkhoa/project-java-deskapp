@@ -1,19 +1,19 @@
-package com.expensemanager.view;
+package com.expensemanager.view.BudgetView;
 
 import javax.swing.*;
 import java.awt.*;
 
 /**
  * Custom progress bar for Section 3.3: configurable height and arc.
- * Default 8px height; color by %: &lt;80% Green, 80-99% Yellow, &gt;=100% Red.
+ * Default 8px height; color by %: <80% Green, 80-99% Yellow, >=100% Red.
  */
 public class BudgetProgressBar extends JComponent {
 
     private static final int DEFAULT_HEIGHT = 8;
     private static final int DEFAULT_ARC = 8;
     private static final Color TRACK = new Color(0xE5E7EB);
-    private static final Color NORMAL = new Color(0x22C55E);   // Green (< 80%)
-    private static final Color WARNING = new Color(0xF59E0B);  // Yellow/Orange (80-99%)
+    private static final Color NORMAL = new Color(0x22C55E); // Green (< 80%)
+    private static final Color WARNING = new Color(0xF59E0B); // Yellow/Orange (80-99%)
     private static final Color EXCEEDED = new Color(0xB91C1C); // Red (>= 100%)
 
     private double percent = 0;
@@ -24,7 +24,10 @@ public class BudgetProgressBar extends JComponent {
         updateSize();
     }
 
-    /** Constructor for custom height and corner radius (e.g. BudgetRowItem: 15px height, 30px arc). */
+    /**
+     * Constructor for custom height and corner radius (e.g. BudgetRowItem: 15px
+     * height, 30px arc).
+     */
     public BudgetProgressBar(int height, int arc) {
         this.barHeight = height;
         this.barArc = arc;
@@ -51,6 +54,8 @@ public class BudgetProgressBar extends JComponent {
         int y = (h - barHeight) / 2;
         int th = Math.min(barHeight, h);
         int arc = Math.min(barArc, th);
+        if (arc < 1)
+            arc = 1;
 
         // Track (background)
         g2.setColor(TRACK);

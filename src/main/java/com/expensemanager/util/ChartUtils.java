@@ -7,18 +7,24 @@ import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.ui.HorizontalAlignment;
 import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.RectangleInsets;
 
-import com.expensemanager.view.RoundedBarPainter;
+import com.expensemanager.view.DashboardView.RoundedBarPainter;
 import org.jfree.data.general.PieDataset;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Chart styling to match Figma: transparent backgrounds, no gridlines, small gray axes,
- * bar (soft blue, rounded top), donut (thin ring, Section 6.5.2 colors), line (teal, smooth).
+ * Chart styling to match Figma: transparent backgrounds, no gridlines, small
+ * gray axes,
+ * bar (soft blue, rounded top), donut (thin ring, Section 6.5.2 colors), line
+ * (teal, smooth).
  */
 public final class ChartUtils {
 
@@ -31,6 +37,12 @@ public final class ChartUtils {
     /** Small gray for tick labels when shown. */
     private static final Color TICK_LABEL_GRAY = new Color(0x6B7280);
     private static final Font TICK_LABEL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
+
+    /** Common chart title styling constants */
+    private static final String CHART_TITLE_FONT_FAMILY = "Segoe UI";
+    private static final int CHART_TITLE_FONT_SIZE = 18;
+    private static final int CHART_TITLE_PADDING_TOP = 10;
+    private static final int CHART_TITLE_PADDING_BOTTOM = 8;
 
     /** Section 6.5.2 ExpenseCategory colors for donut. */
     private static final Map<String, Color> CATEGORY_COLORS = new HashMap<>();
@@ -47,14 +59,16 @@ public final class ChartUtils {
         CATEGORY_COLORS.put("Other", new Color(0x6B7280));
     }
 
-    private ChartUtils() {}
+    private ChartUtils() {
+    }
 
     public static Color getCategoryColor(String name) {
         return CATEGORY_COLORS.getOrDefault(name, Color.GRAY);
     }
 
     /**
-     * General: transparent bg, no outline, no gridlines, hide axis lines, small gray tick labels.
+     * General: transparent bg, no outline, no gridlines, hide axis lines, small
+     * gray tick labels.
      */
     public static void applyGeneral(JFreeChart chart) {
         chart.setBackgroundPaint(TRANSPARENT);
@@ -84,18 +98,22 @@ public final class ChartUtils {
     }
 
     private static void trySetAxisLineInvisible(org.jfree.chart.axis.Axis axis) {
-        if (axis == null) return;
+        if (axis == null)
+            return;
         try {
             axis.setAxisLinePaint(TRANSPARENT);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     private static void trySetTickLabelStyle(org.jfree.chart.axis.Axis axis) {
-        if (axis == null) return;
+        if (axis == null)
+            return;
         try {
             axis.setTickLabelFont(TICK_LABEL_FONT);
             axis.setTickLabelPaint(TICK_LABEL_GRAY);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     /**
@@ -103,28 +121,36 @@ public final class ChartUtils {
      */
     public static void applyBarChart(JFreeChart chart) {
         applyGeneral(chart);
-        if (!(chart.getPlot() instanceof CategoryPlot cp)) return;
+        if (!(chart.getPlot() instanceof CategoryPlot cp))
+            return;
         BarRenderer r = (BarRenderer) cp.getRenderer();
         r.setBarPainter(new RoundedBarPainter());
         r.setShadowVisible(false);
         r.setSeriesPaint(0, SOFT_BLUE);
         try {
-            if (cp.getRangeAxis() != null) cp.getRangeAxis().setTickLabelsVisible(false);
-        } catch (Exception ignored) {}
+            if (cp.getRangeAxis() != null)
+                cp.getRangeAxis().setTickLabelsVisible(false);
+        } catch (Exception ignored) {
+        }
     }
 
     /**
-     * Donut: thin ring (interior gap 0.5), no shadow, no section outline, 6.5.2 colors, legend right, no border.
+     * Donut: thin ring (interior gap 0.5), no shadow, no section outline, 6.5.2
+     * colors, legend right, no border.
      */
     public static void applyDonutChart(JFreeChart chart, PieDataset dataset) {
         applyGeneral(chart);
-        if (!(chart.getPlot() instanceof PiePlot pp)) return;
+        if (!(chart.getPlot() instanceof PiePlot pp))
+            return;
         pp.setCircular(true);
         pp.setInteriorGap(0.40);
         pp.setBackgroundPaint(TRANSPARENT);
         pp.setOutlineVisible(false);
         pp.setShadowPaint(null);
-        try { pp.setShadowGenerator(null); } catch (Exception ignored) {}
+        try {
+            pp.setShadowGenerator(null);
+        } catch (Exception ignored) {
+        }
         pp.setSectionOutlinesVisible(false);
         for (Object key : dataset.getKeys()) {
             String name = key.toString();
@@ -132,7 +158,10 @@ public final class ChartUtils {
         }
         if (chart.getLegend() != null) {
             chart.getLegend().setPosition(RectangleEdge.RIGHT);
-            try { chart.getLegend().setFrame((org.jfree.chart.block.BlockFrame) null); } catch (Exception ignored) {}
+            try {
+                chart.getLegend().setFrame((org.jfree.chart.block.BlockFrame) null);
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -141,14 +170,17 @@ public final class ChartUtils {
      */
     public static void applyLineChart(JFreeChart chart) {
         applyGeneral(chart);
-        if (!(chart.getPlot() instanceof XYPlot xp)) return;
+        if (!(chart.getPlot() instanceof XYPlot xp))
+            return;
         XYSplineRenderer r = new XYSplineRenderer();
         r.setSeriesPaint(0, TEAL);
         r.setSeriesShapesVisible(0, false);
         r.setSeriesLinesVisible(0, true);
         xp.setRenderer(r);
-        if (xp.getDomainAxis() != null) xp.getDomainAxis().setVisible(false);
-        if (xp.getRangeAxis() != null) xp.getRangeAxis().setVisible(false);
+        if (xp.getDomainAxis() != null)
+            xp.getDomainAxis().setVisible(false);
+        if (xp.getRangeAxis() != null)
+            xp.getRangeAxis().setVisible(false);
     }
 
     /**
@@ -159,5 +191,43 @@ public final class ChartUtils {
         cp.setBackground(TRANSPARENT);
         cp.setOpaque(false);
         return cp;
+    }
+
+    /**
+     * Apply unified title style to JFreeChart.
+     * Creates a clean, modern look with soft font (no bold).
+     * 
+     * @param chart the chart to style
+     * @param title the title text
+     */
+    public static void applyChartTitle(JFreeChart chart, String title) {
+        TextTitle textTitle = new TextTitle(title);
+        textTitle.setFont(new Font(CHART_TITLE_FONT_FAMILY, Font.PLAIN, CHART_TITLE_FONT_SIZE));
+        textTitle.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        textTitle.setPadding(new RectangleInsets(CHART_TITLE_PADDING_TOP, 0, CHART_TITLE_PADDING_BOTTOM, 0));
+        chart.setTitle(textTitle);
+    }
+
+    /**
+     * Create a styled JLabel for chart panel titles (used for custom panels like By
+     * Category).
+     * Provides consistent styling across all chart titles.
+     * 
+     * @param title the title text
+     * @return styled JLabel
+     */
+    public static JLabel createChartTitleLabel(String title) {
+        JLabel label = new JLabel(title, SwingConstants.CENTER);
+        label.setFont(new Font(CHART_TITLE_FONT_FAMILY, Font.PLAIN, CHART_TITLE_FONT_SIZE));
+        return label;
+    }
+
+    /**
+     * Get the common chart title font for consistent styling.
+     * 
+     * @return the chart title font
+     */
+    public static Font getChartTitleFont() {
+        return new Font(CHART_TITLE_FONT_FAMILY, Font.PLAIN, CHART_TITLE_FONT_SIZE);
     }
 }

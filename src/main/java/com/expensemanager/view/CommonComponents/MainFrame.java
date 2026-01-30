@@ -1,6 +1,9 @@
-package com.expensemanager.view;
+package com.expensemanager.view.CommonComponents;
 
 import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.TransactionView.TransactionView;
+import com.expensemanager.view.DashboardView.DashboardView;
+import com.expensemanager.view.BudgetView.BudgetView;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -8,12 +11,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Main window. Menu: Dashboard, Transactions, Budget. Light mode
- * only.
- * Sidebar uses SidebarButton (active: #2563EB; inactive: transparent; hover:
- * #F3F4F6).
- */
 public class MainFrame extends JFrame {
     private static final int W = 1200;
     private static final int H = 750;
@@ -21,7 +18,7 @@ public class MainFrame extends JFrame {
     private final JPanel cards;
     private final CardLayout cardLayout;
     private final DashboardView dashboardView;
-    private final TransactionsView transactionsView;
+    private final TransactionView transactionsView;
     private final BudgetView budgetView;
     private final List<JPanel> cardWrappers = new ArrayList<>();
     private final List<SidebarButton> navButtons = new ArrayList<>();
@@ -40,7 +37,7 @@ public class MainFrame extends JFrame {
         cards = new JPanel(cardLayout);
 
         dashboardView = new DashboardView(this);
-        transactionsView = new TransactionsView(this);
+        transactionsView = new TransactionView(this);
         budgetView = new BudgetView(this);
 
         cards.add(createCardWrapper(dashboardView), "Dashboard");

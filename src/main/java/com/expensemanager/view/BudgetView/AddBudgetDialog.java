@@ -1,6 +1,7 @@
-package com.expensemanager.view;
+package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.util.AppContext;
+import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.dao.CategoryDAO;
 import com.expensemanager.db.DatabaseConnection;

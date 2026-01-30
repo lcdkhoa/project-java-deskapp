@@ -1,4 +1,4 @@
-package com.expensemanager.view;
+package com.expensemanager.view.TransactionView;
 
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.util.UIUtils;
@@ -10,7 +10,9 @@ import java.awt.*;
  * Card-like row for Section 2.2: Category icon (circle), Note (bold) + Wallet
  * (gray),
  * Amount (red/green) + Time. Padding for spacing.
- * iconPath: path to category image (e.g. src/main/java/com/expensemanager/img/category/food.png); rendered as image when path-like.
+ * iconPath: path to category image (e.g.
+ * src/main/java/com/expensemanager/img/category/food.png); rendered as image
+ * when path-like.
  */
 public class TransactionRowPanel extends JPanel {
 
@@ -20,6 +22,8 @@ public class TransactionRowPanel extends JPanel {
     private static final Color INCOME_COLOR = new Color(0x16A34A);
     private static final int ICON_SIZE = 40;
     private static final int ROW_PADDING = 10;
+
+    public static final String DEFAULT_CATEGORY_ICON = "src/main/java/com/expensemanager/img/category/others.png";
 
     public TransactionRowPanel(String iconPath, Color iconBgColor, String note, String wallet,
             long amount, String timeHhmm) {
@@ -43,7 +47,8 @@ public class TransactionRowPanel extends JPanel {
         iconWrap.setOpaque(false);
         iconWrap.setPreferredSize(new Dimension(ICON_SIZE, ICON_SIZE));
         JLabel iconLbl = new JLabel();
-        if (iconPath != null && !iconPath.isBlank() && (iconPath.contains("/") || iconPath.toLowerCase().endsWith(".png"))) {
+        if (iconPath != null && !iconPath.isBlank()
+                && (iconPath.contains("/") || iconPath.toLowerCase().endsWith(".png"))) {
             ImageIcon img = UIUtils.getIcon(iconPath, 24, 24);
             if (img != null) {
                 iconLbl.setIcon(img);

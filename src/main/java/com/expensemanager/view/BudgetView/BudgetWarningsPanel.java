@@ -1,4 +1,4 @@
-package com.expensemanager.view;
+package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.util.CurrencyUtil;
@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Budget warnings: light red bg (#FEF2F2), red border (#FECACA), arc 30, warning icon from img/dashboard/warn.png.
- * Card-in-card style: each warning item is a white card (arc 30, 85px height) inside the red panel.
+ * Budget warnings: light red bg (#FEF2F2), red border (#FECACA), arc 30,
+ * warning icon from img/dashboard/warn.png.
+ * Card-in-card style: each warning item is a white card (arc 30, 85px height)
+ * inside the red panel.
  */
 public class BudgetWarningsPanel extends JPanel {
 
@@ -62,7 +64,8 @@ public class BudgetWarningsPanel extends JPanel {
     }
 
     /**
-     * Update the list of over-budget items. Each item is a white card (arc 30, 85px height).
+     * Update the list of over-budget items. Each item is a white card (arc 30, 85px
+     * height).
      * Call setVisible(!over.isEmpty()) from the controller.
      */
     public void setWarnings(List<BudgetDAO.BudgetUsedRow> over, Map<String, String> idToName) {
@@ -89,7 +92,8 @@ public class BudgetWarningsPanel extends JPanel {
             setLayout(new MigLayout("ins 15, fillx, wrap 2", "[grow][]", "[]0[]"));
             putClientProperty("FlatLaf.style", "arc: 30");
 
-            // Row 1: Category Name (21px PLAIN, Black) | Percentage (21px PLAIN, Red) - same baseline
+            // Row 1: Category Name (21px PLAIN, Black) | Percentage (21px PLAIN, Red) -
+            // same baseline
             JLabel categoryLabel = new JLabel(categoryName);
             categoryLabel.setFont(categoryLabel.getFont().deriveFont(Font.PLAIN, 21f));
             categoryLabel.setForeground(Color.BLACK);

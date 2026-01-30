@@ -2,40 +2,42 @@ package com.expensemanager.controller;
 
 import com.expensemanager.util.AppContext;
 import com.expensemanager.dao.BudgetDAO;
-import com.expensemanager.dao.CategoryDAO;
-import com.expensemanager.dao.TransactionDAO;
-import com.expensemanager.db.DatabaseConnection;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
+import com.expensemanager.service.BudgetService;
+import com.expensemanager.service.CategoryService;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.util.MonthKeyUtil;
-import com.expensemanager.view.BudgetCard;
-import com.expensemanager.view.BudgetDialog;
-import com.expensemanager.view.BudgetProgressBar;
-import com.expensemanager.view.BudgetRowItem;
-import com.expensemanager.view.BudgetView;
+import com.expensemanager.view.BudgetView.BudgetCard;
+import com.expensemanager.view.BudgetView.BudgetDialog;
+import com.expensemanager.view.BudgetView.BudgetDialogListener;
+import com.expensemanager.view.BudgetView.BudgetProgressBar;
+import com.expensemanager.view.BudgetView.BudgetRowItem;
+import com.expensemanager.view.BudgetView.BudgetView;
 
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Controller for Budget - Section 3. Monthly overview, Budget by category.
- */
-public class BudgetController {
+public class BudgetController implements BudgetDialogListener {
     private final BudgetView view;
     private final JPanel contentPanel;
     private YearMonth currentMonth = YearMonth.now();
 
+    // Services
+    private final BudgetService budgetService;
+    private final CategoryService categoryService;
+
     public BudgetController(BudgetView view) {
         this.view = view;
+        this.budgetService = new BudgetService();
+        this.categoryService = new CategoryService();
+
         contentPanel = new JPanel(new MigLayout("wrap 1, fillx, insets 20 20 20 20, gapy 14",
                 "[grow]", "[pref!][pref!][grow]"));
         contentPanel.setBackground(Color.WHITE);
@@ -47,28 +49,47 @@ public class BudgetController {
     }
 
     public void openAddBudget() {
-        new BudgetDialog(view.getMain(), currentMonth, BudgetDialog.Mode.ADD, null, null).setVisible(true);
+        new BudgetDialog(view.getMain(), currentMonth, BudgetDialog.Mode.ADD, null, null, this).setVisible(true);
     }
 
     public void openEditBudget(Budget budget, Category category) {
-        new BudgetDialog(view.getMain(), currentMonth, BudgetDialog.Mode.EDIT, budget, category).setVisible(true);
+        new BudgetDialog(view.getMain(), currentMonth, BudgetDialog.Mode.EDIT, budget, category, this).setVisible(true);
+    }
+
+    @Override
+    public List<Category> getAvailableCategories() {
+        String userId = AppContext.getUserId();
+        String monthKey = MonthKeyUtil.of(currentMonth);
+        return budgetService.getAvailableCategoriesForBudget(userId, monthKey);
+    }
+
+    @Override
+    public void onBudgetCreated(Budget budget) throws Exception {
+        budgetService.createBudget(budget);
+    }
+
+    @Override
+    public void onBudgetUpdated(Budget budget) throws Exception {
+        budgetService.updateBudget(budget);
+    }
+
+    @Override
+    public void onRefreshRequired() {
+        view.getMain().refreshBudget();
+        view.getMain().refreshDashboard();
     }
 
     public void refresh() {
         contentPanel.removeAll();
         String userId = AppContext.getUserId();
         String monthKey = MonthKeyUtil.of(currentMonth);
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            TransactionDAO txDao = new TransactionDAO();
-            BudgetDAO bDao = new BudgetDAO();
-            CategoryDAO cDao = new CategoryDAO();
 
-            long totalBudget = bDao.getTotalBudget(conn, userId, monthKey);
-            long totalSpent = Math.abs(txDao.getMonthlyExpense(conn, userId, monthKey));
-            long remaining = totalBudget - totalSpent;
+        try {
+            BudgetService.BudgetSummary summary = budgetService.getBudgetSummary(userId, monthKey);
+            long totalBudget = summary.totalBudget;
+            long totalSpent = summary.totalSpent;
+            long remaining = summary.remaining;
 
-            // Summary cards row: same layout logic as KPI cards
-            // (DashboardController.buildKpiPanel)
             JPanel summaryRow = new JPanel(
                     new MigLayout("ins 0, gap 20 0", "[grow,fill][grow,fill][grow,fill]", "[]"));
             summaryRow.setBackground(Color.WHITE);
@@ -81,10 +102,6 @@ public class BudgetController {
                     "src/main/java/com/expensemanager/img/budget/remains.png", new Color(0x16A34A)), "grow");
             contentPanel.add(summaryRow, "growx");
 
-            // Spent % panel: fixed height 85px, arc 30, full width. White card with label +
-            // progress bar + %
-            // Layout: Row 0 = "Spent" (left) + "%" (right), Row 1 = progress bar (full
-            // width, below text)
             double spentPercent = totalBudget > 0 ? (totalSpent * 100.0 / totalBudget) : 0;
             JPanel spentPanel = new JPanel(
                     new MigLayout("wrap 1, ins 20 24 20 24, fillx, gapy 8", "[grow,fill]", "[center][center]")) {
@@ -108,7 +125,7 @@ public class BudgetController {
             spentPanel.setMinimumSize(new Dimension(0, 85));
             spentPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
 
-            // Row 0: "Spent" label (left) + "%" label (right)
+            // "Spent" row section
             JPanel textRow = new JPanel(new MigLayout("ins 0, fillx", "[pref!][grow][pref!]", "[center]"));
             textRow.setOpaque(false);
             JLabel spentLabel = new JLabel("Spent");
@@ -116,7 +133,6 @@ public class BudgetController {
             spentLabel.setForeground(new Color(0x111827));
             textRow.add(spentLabel);
 
-            // Empty space in middle
             textRow.add(new JLabel(), "growx");
 
             JLabel percentLabel = new JLabel(String.format("%.0f%%", spentPercent));
@@ -125,17 +141,16 @@ public class BudgetController {
             textRow.add(percentLabel);
             spentPanel.add(textRow, "growx, aligny center");
 
-            // Row 1: progress bar (full width, below text)
             BudgetProgressBar spentBar = new BudgetProgressBar();
             spentBar.setPercent(spentPercent);
             spentPanel.add(spentBar, "growx, h 8!, aligny center");
 
             contentPanel.add(spentPanel, "growx");
 
-            // Budget by category section
             JPanel section = new JPanel(new MigLayout("wrap 1, fillx, insets 0, gapy 12", "[grow]", "[]"));
             section.setOpaque(false);
 
+            // Budget by category section
             JLabel sectionTitle = new JLabel("Budget by Category");
             sectionTitle.setFont(sectionTitle.getFont().deriveFont(Font.PLAIN, 16f));
             sectionTitle.setForeground(new Color(0x111827));
@@ -144,18 +159,15 @@ public class BudgetController {
             JPanel listPanel = new JPanel(new MigLayout("wrap 1, fillx, insets 0, gapy 15", "[grow]", "[]"));
             listPanel.setOpaque(false);
 
-            Map<String, Category> idToCat = new HashMap<>();
-            for (Category c : cDao.findAll(conn)) {
-                idToCat.put(c.getId(), c);
-            }
+            Map<String, Category> idToCat = categoryService.getCategoryMap();
 
             Map<String, Budget> idToBudget = new HashMap<>();
-            List<Budget> budgets = bDao.findByUserAndMonth(conn, userId, monthKey);
+            List<Budget> budgets = budgetService.getBudgetsByMonth(userId, monthKey);
             for (Budget b : budgets) {
                 idToBudget.put(b.getCategoryId(), b);
             }
 
-            for (BudgetDAO.BudgetUsedRow r : bDao.getBudgetUsedPerCategory(conn, userId, monthKey)) {
+            for (BudgetDAO.BudgetUsedRow r : budgetService.getBudgetUsedPerCategory(userId, monthKey)) {
                 Category cat = idToCat.get(r.categoryId);
                 Budget budget = idToBudget.get(r.categoryId);
                 BudgetRowItem row = new BudgetRowItem(cat, r, budget, this);
@@ -169,7 +181,7 @@ public class BudgetController {
             section.add(scroll, "grow, push");
 
             contentPanel.add(section, "grow, push");
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             contentPanel.add(new JLabel("Error: " + ex.getMessage()), "growx");
         }
         contentPanel.revalidate();
