@@ -29,7 +29,6 @@ public class TransactionRowPanel extends JPanel {
         this(iconPath, iconBgColor, note, null, wallet, amount, timeHhmm);
     }
 
-    @SuppressWarnings("unused")
     public TransactionRowPanel(String iconPath, Color iconBgColor, String note, String categoryName, String wallet,
             long amount, String timeHhmm) {
         setLayout(new BorderLayout(12, 0));
