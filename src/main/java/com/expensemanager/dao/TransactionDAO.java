@@ -100,11 +100,9 @@ public class TransactionDAO {
         return out;
     }
 
-    /** 6.4.4 Spending Habits by weekday (DOW 0-6). */
+    /** 6.4.4 Spending Habits by weekday (DOW 0-6, Sunday=0). */
     public Map<Integer, Long> getSpendingByWeekday(Connection conn, String userId) throws SQLException {
-        // SQLite: strftime('%w', date) gives 0-6 (Sunday=0). We need consistent
-        // ordering; spec says "thứ trong tuần".
-        String sql = "SELECT CAST(strftime('%w', transaction_date) AS INT) AS weekday, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND type = 'expense' GROUP BY weekday";
+        String sql = "SELECT (DAYOFWEEK(STR_TO_DATE(transaction_date, '%Y-%m-%d')) - 1) AS weekday, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND type = 'expense' GROUP BY weekday";
         Map<Integer, Long> out = new HashMap<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, userId);

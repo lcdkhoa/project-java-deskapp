@@ -8,7 +8,7 @@
 - **UI**: Swing + FlatLaf
 - **Biểu đồ**: JFreeChart
 - **Layout**: MigLayout
-- **Database**: SQLite (local) + JDBC
+- **Database**: MySQL + JDBC (mysql-connector-j)
 - **Kiến trúc**: MVC (`model` / `view` / `controller`) + `dao`
 
 ## Links (tải & tài liệu)
@@ -16,8 +16,8 @@
 - **Java 17 (JDK)**: `https://learn.microsoft.com/vi-vn/java/openjdk/download` (Microsoft Build of OpenJDK) / `https://adoptium.net/temurin/releases/?version=17`
 - **Maven**: `https://maven.apache.org/download.cgi`
 - **FlatLaf**: `https://www.formdev.com/flatlaf/` / Maven Central: `https://central.sonatype.com/artifact/com.formdev/flatlaf`
-- **SQLite JDBC (sqlite-jdbc)**: `https://github.com/xerial/sqlite-jdbc` / Maven Central: `https://central.sonatype.com/artifact/org.xerial/sqlite-jdbc`
-- **SQLite (engine)**: `https://www.sqlite.org/download.html`
+- **MySQL Connector/J**: Maven Central: `https://central.sonatype.com/artifact/com.mysql/mysql-connector-j`
+- **MySQL Server**: `https://dev.mysql.com/downloads/mysql/` (8.0+ khuyến nghị)
 - **JFreeChart**: `https://www.jfree.org/jfreechart/` / Maven Central: `https://central.sonatype.com/artifact/org.jfree/jfreechart`
 - **MigLayout**: `https://www.miglayout.com/` / Maven Central: `https://central.sonatype.com/artifact/com.miglayout/miglayout-swing`
 
@@ -54,10 +54,18 @@ Hoặc build jar:
 mvn package
 ```
 
-## Lưu ý về database
+## Lưu ý về database (MySQL)
 
-- File DB mặc định đang nằm trong project tại: `src/main/java/com/expensemanager/db/expense.db`
-- Script khởi tạo schema/seed: `src/main/java/com/expensemanager/db/init.sql`
+- Ứng dụng kết nối MySQL qua JDBC. Mặc định: `localhost:3306`, database `expense_manager`, user `root`, password rỗng.
+- Cấu hình qua **system properties** hoặc **biến môi trường**:
+  - `db.host` / `DB_HOST` — host (mặc định `localhost`)
+  - `db.port` / `DB_PORT` — port (mặc định `3306`)
+  - `db.name` / `DB_NAME` — tên database (mặc định `expense_manager`)
+  - `db.user` / `DB_USER` — user (mặc định `root`)
+  - `db.password` / `DB_PASSWORD` — mật khẩu
+- Trước khi chạy app: tạo database và chạy script khởi tạo schema/seed:
+  - `mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS expense_manager;"`
+  - `mysql -u root -p expense_manager < src/main/java/com/expensemanager/db/init.sql`
 
 ## Cấu trúc thư mục
 
@@ -68,7 +76,7 @@ src/main/java/com/expensemanager/
   model/                      # model (entity)
   view/                       # view (UI Swing)
   dao/                        # DAO (truy cập dữ liệu)
-  db/                         # kết nối DB + file DB + init.sql
+  db/                         # kết nối MySQL + init.sql (schema & seed)
   util/                       # tiện ích (format, UI factory/utils, context...)
   img/                        # assets hình ảnh (icon UI)
 ```
