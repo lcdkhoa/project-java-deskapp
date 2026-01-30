@@ -210,7 +210,7 @@ public class DashboardController implements TransactionDialogListener {
 
     private JPanel buildChartsPanel() {
         JPanel panel = new JPanel(
-                new MigLayout("ins 0, gap 20 0", "[grow 35, fill][grow 30, fill][grow 35, fill]",
+                new MigLayout("ins 0, gap 20 0", "[grow 30, fill][grow 20, fill][grow 50, fill]",
                         "[grow, fill]"));
         panel.setBackground(Color.WHITE);
         panel.setOpaque(true);
@@ -440,7 +440,7 @@ public class DashboardController implements TransactionDialogListener {
             Color catColor = ColorUtil.parseColor(cat.getLegendChartColor());
             String amountStr = CurrencyUtil.format(expense);
 
-            JPanel itemPanel = new JPanel(new MigLayout("ins 0, fillx", "[]6[grow]push[]", "[center]"));
+            JPanel itemPanel = new JPanel(new MigLayout("ins 0, fillx", "[]1[grow][]", "[center]"));
             itemPanel.setOpaque(false);
 
             JLabel dotLabel = new JLabel("●");
@@ -546,7 +546,7 @@ public class DashboardController implements TransactionDialogListener {
             }
         });
 
-        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
 
         BasicStroke smoothStroke = new BasicStroke(
                 2.0f,
@@ -556,16 +556,12 @@ public class DashboardController implements TransactionDialogListener {
         Color incomeGreen = new Color(0x22C55E);
         renderer.setSeriesPaint(0, incomeGreen);
         renderer.setSeriesStroke(0, smoothStroke);
-        renderer.setSeriesShapesVisible(0, true);
-        renderer.setSeriesShape(0, new java.awt.geom.Ellipse2D.Double(-4, -4, 8, 8));
-        renderer.setSeriesShapesFilled(0, true);
+        renderer.setSeriesShapesVisible(0, false);
 
         Color expenseRed = new Color(0xDC2626);
         renderer.setSeriesPaint(1, expenseRed);
         renderer.setSeriesStroke(1, smoothStroke);
-        renderer.setSeriesShapesVisible(1, true);
-        renderer.setSeriesShape(1, new java.awt.geom.Ellipse2D.Double(-3, -3, 6, 6));
-        renderer.setSeriesShapesFilled(1, true);
+        renderer.setSeriesShapesVisible(1, false);
 
         renderer.setDefaultToolTipGenerator(new MonthlyCashFlowToolTipGenerator(data));
 
