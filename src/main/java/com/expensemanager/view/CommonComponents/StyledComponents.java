@@ -2,7 +2,7 @@ package com.expensemanager.view.CommonComponents;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
+
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -233,56 +233,96 @@ public final class StyledComponents {
     }
 
     public static JButton createStyledButton(String text, Icon icon, ButtonType type, ButtonSize size, int width) {
+        return (JButton) createStyledButtonInternal(text, icon, type, size, width, false, null);
+    }
+
+    public static JToggleButton createStyledToggleButton(String text, ButtonType typeWhenSelected, ButtonSize size,
+            int width) {
+        return (JToggleButton) createStyledButtonInternal(text, null, typeWhenSelected, size, width, true, null);
+    }
+
+    private static AbstractButton createStyledButtonInternal(String text, Icon icon, ButtonType type,
+            ButtonSize size, int width, boolean isToggle, ButtonType unselectedType) {
         Color[] colors = getColorsForButtonType(type);
-        final Color bgColor = colors[0];
-        final Color fgColor = colors[1];
+        final Color selectedBg = colors[0];
+        final Color selectedFg = colors[1];
         final Color borderColor = type == ButtonType.SECONDARY ? BORDER_COLOR : null;
-        final boolean hasBorder = type == ButtonType.SECONDARY;
+        final boolean hasBorder = type == ButtonType.SECONDARY && !isToggle;
 
         int btnHeight = size.getHeight();
 
-        JButton btn = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(bgColor);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), ARC, ARC);
+        AbstractButton btn;
+        if (isToggle) {
+            btn = new JToggleButton(text) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                if (hasBorder && borderColor != null) {
-                    g2.setColor(borderColor);
-                    g2.setStroke(new BasicStroke(1f));
-                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, ARC, ARC);
+                    // Toggle: use selected colors when selected, inactive colors when not
+                    Color bg = isSelected() ? selectedBg : TOGGLE_INACTIVE_BG;
+                    Color fg = isSelected() ? selectedFg : Color.BLACK;
+
+                    g2.setColor(bg);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), ARC, ARC);
+
+                    Font font = getFont().deriveFont(Font.PLAIN, 14f);
+                    g2.setFont(font);
+                    FontMetrics fm = g2.getFontMetrics(font);
+
+                    int textWidth = fm.stringWidth(getText());
+                    int x = (getWidth() - textWidth) / 2;
+                    int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+
+                    g2.setColor(fg);
+                    g2.drawString(getText(), x, y);
+                    g2.dispose();
                 }
+            };
+        } else {
+            btn = new JButton(text) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(selectedBg);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), ARC, ARC);
 
-                Font font = getFont().deriveFont(type == ButtonType.SECONDARY ? Font.PLAIN : Font.BOLD, 14f);
-                g2.setFont(font);
-                FontMetrics fm = g2.getFontMetrics(font);
+                    if (hasBorder && borderColor != null) {
+                        g2.setColor(borderColor);
+                        g2.setStroke(new BasicStroke(1f));
+                        g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, ARC, ARC);
+                    }
 
-                Icon btnIcon = getIcon();
-                int iconWidth = btnIcon != null ? btnIcon.getIconWidth() : 0;
-                int iconTextGap = btnIcon != null ? getIconTextGap() : 0;
-                int textWidth = fm.stringWidth(getText());
-                int totalWidth = iconWidth + iconTextGap + textWidth;
+                    Font font = getFont().deriveFont(type == ButtonType.SECONDARY ? Font.PLAIN : Font.BOLD, 14f);
+                    g2.setFont(font);
+                    FontMetrics fm = g2.getFontMetrics(font);
 
-                int startX = (getWidth() - totalWidth) / 2;
-                int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                    Icon btnIcon = getIcon();
+                    int iconWidth = btnIcon != null ? btnIcon.getIconWidth() : 0;
+                    int iconTextGap = btnIcon != null ? getIconTextGap() : 0;
+                    int textWidth = fm.stringWidth(getText());
+                    int totalWidth = iconWidth + iconTextGap + textWidth;
 
-                if (btnIcon != null) {
-                    int iconY = (getHeight() - btnIcon.getIconHeight()) / 2;
-                    btnIcon.paintIcon(this, g2, startX, iconY);
-                    startX += iconWidth + iconTextGap;
+                    int startX = (getWidth() - totalWidth) / 2;
+                    int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+
+                    if (btnIcon != null) {
+                        int iconY = (getHeight() - btnIcon.getIconHeight()) / 2;
+                        btnIcon.paintIcon(this, g2, startX, iconY);
+                        startX += iconWidth + iconTextGap;
+                    }
+                    g2.setColor(selectedFg);
+                    g2.drawString(getText(), startX, textY);
+
+                    g2.dispose();
                 }
-                g2.setColor(fgColor);
-                g2.drawString(getText(), startX, textY);
+            };
+        }
 
-                g2.dispose();
-            }
-        };
-
-        if (icon != null) {
+        if (icon != null && !isToggle) {
             btn.setIcon(icon);
-            btn.setIconTextGap(8);
+            ((JButton) btn).setIconTextGap(8);
         }
 
         btn.setContentAreaFilled(false);
@@ -290,6 +330,7 @@ public final class StyledComponents {
         btn.setFocusPainted(false);
         btn.setOpaque(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 14f));
 
         if (width > 0) {
             btn.setPreferredSize(new Dimension(width, btnHeight));
@@ -301,44 +342,6 @@ public final class StyledComponents {
             btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, btnHeight));
         }
 
-        return btn;
-    }
-
-    public static JToggleButton createStyledToggleButton(String text, ButtonType typeWhenSelected, ButtonSize size,
-            int width) {
-        Color[] selectedColors = getColorsForButtonType(typeWhenSelected);
-        final Color selectedBg = selectedColors[0];
-        final Color selectedFg = selectedColors[1];
-
-        int btnHeight = size.getHeight();
-        JToggleButton btn = new JToggleButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setClip(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), ARC, ARC));
-                Color bg = isSelected() ? selectedBg : TOGGLE_INACTIVE_BG;
-                Color fg = isSelected() ? selectedFg : Color.BLACK;
-                g2.setColor(bg);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), ARC, ARC);
-                g2.setFont(getFont().deriveFont(Font.PLAIN, 14f));
-                g2.setColor(fg);
-                FontMetrics fm = g2.getFontMetrics(g2.getFont());
-                int x = (getWidth() - fm.stringWidth(getText())) / 2;
-                int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
-                g2.drawString(getText(), x, y);
-                g2.dispose();
-            }
-        };
-        btn.setPreferredSize(new Dimension(width, btnHeight));
-        btn.setMinimumSize(new Dimension(width, btnHeight));
-        btn.setMaximumSize(new Dimension(width, btnHeight));
-        btn.setOpaque(false);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 14f));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }
 

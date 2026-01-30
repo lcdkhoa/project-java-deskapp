@@ -144,8 +144,7 @@ public class CreateTransactionDialog extends JDialog {
         noteF = StyledComponents.createStyledTextField(452, 48, 30);
         form.add(noteF, "alignx center, wrap");
 
-        // Footer Buttons - each 220px, gap 10px, centered
-        JPanel buttonPanel = new JPanel(new MigLayout("ins 0, gap 10", "[220!][220!]", "[]"));
+        JPanel buttonPanel = new JPanel(new MigLayout("ins 0, gap 10", "[220!][220!]", "[50!]"));
         buttonPanel.setOpaque(false);
 
         JButton cancelBtn = StyledComponents.createSecondaryFunctionButton("Cancel", 220);
@@ -171,7 +170,7 @@ public class CreateTransactionDialog extends JDialog {
     }
 
     private JPanel createTypeTogglePanel() {
-        JPanel panel = new JPanel(new MigLayout("ins 0, gap 10", "[220!][220!]", "[]"));
+        JPanel panel = new JPanel(new MigLayout("ins 0, gap 10", "[220!][220!]", "[50!]"));
         panel.setOpaque(false);
 
         typeGroup = new ButtonGroup();
