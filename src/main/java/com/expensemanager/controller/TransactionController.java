@@ -7,6 +7,7 @@ import com.expensemanager.service.CategoryService;
 import com.expensemanager.service.TransactionService;
 import com.expensemanager.service.WalletTypeService;
 import com.expensemanager.util.AppContext;
+import com.expensemanager.util.ColorUtil;
 import com.expensemanager.util.DateUtil;
 import com.expensemanager.view.TransactionView.CreateTransactionDialog;
 import com.expensemanager.view.TransactionView.TransactionDialogListener;
@@ -154,7 +155,7 @@ public class TransactionController implements TransactionDialogListener {
         long amount = t.getAmount();
         String time = t.getTransactionTime() != null ? t.getTransactionTime().toString().substring(0, 5) : "";
 
-        Color iconBg = parseColor(cat != null ? cat.getLegendChartColor() : null);
+        Color iconBg = ColorUtil.parseColor(cat != null ? cat.getLegendChartColor() : null, ColorUtil.SECONDARY_GRAY);
 
         String iconPath = null;
         String categoryName = null;
@@ -181,18 +182,6 @@ public class TransactionController implements TransactionDialogListener {
             return LocalDate.parse(text.trim(), filterDateFormatter);
         } catch (DateTimeParseException ex) {
             return null;
-        }
-    }
-
-    private static Color parseColor(String hex) {
-        if (hex == null || hex.isBlank())
-            return new Color(0x9CA3AF);
-        if (!hex.startsWith("#"))
-            hex = "#" + hex;
-        try {
-            return Color.decode(hex);
-        } catch (Exception e) {
-            return new Color(0x9CA3AF);
         }
     }
 }

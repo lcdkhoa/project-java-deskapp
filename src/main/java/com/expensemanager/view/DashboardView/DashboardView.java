@@ -1,22 +1,13 @@
 package com.expensemanager.view.DashboardView;
 
 import com.expensemanager.controller.DashboardController;
-import com.expensemanager.model.Category;
-import com.expensemanager.model.Transaction;
-import com.expensemanager.model.WalletType;
-import com.expensemanager.service.CategoryService;
-import com.expensemanager.service.TransactionService;
-import com.expensemanager.service.WalletTypeService;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.StyledComponents;
-import com.expensemanager.view.TransactionView.CreateTransactionDialog;
-import com.expensemanager.view.TransactionView.TransactionDialogListener;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
-public class DashboardView extends JPanel implements TransactionDialogListener {
+public class DashboardView extends JPanel {
     private static final Color MAIN_BG = Color.WHITE;
     private static final Color SUBTITLE_GRAY = new Color(0x6B7280);
     private static final Color CARD_BORDER = new Color(229, 231, 235);
@@ -27,16 +18,10 @@ public class DashboardView extends JPanel implements TransactionDialogListener {
 
     private final MainFrame main;
     private final DashboardController controller;
-    private final CategoryService categoryService;
-    private final TransactionService transactionService;
-    private final WalletTypeService walletTypeService;
 
     public DashboardView(MainFrame main) {
         this.main = main;
         this.controller = new DashboardController(this);
-        this.categoryService = new CategoryService();
-        this.transactionService = new TransactionService();
-        this.walletTypeService = new WalletTypeService();
         setBackground(MAIN_BG);
         setOpaque(true);
         setLayout(new MigLayout("ins 0, wrap 1, gap " + CARD_GAP + " " + CARD_GAP, "[grow,fill]",
@@ -90,33 +75,9 @@ public class DashboardView extends JPanel implements TransactionDialogListener {
         header.add(left, "aligny center");
 
         JButton addTx = StyledComponents.createTitleButton("Add Transaction", StyledComponents.createPlusIcon(), 180);
-        addTx.addActionListener(e -> new CreateTransactionDialog(main, this).setVisible(true));
+        addTx.addActionListener(e -> controller.openAddTransaction());
         header.add(addTx, "aligny center");
         return header;
-    }
-
-    // TransactionDialogListener implementation
-
-    @Override
-    public List<Category> getCategoriesByType(String type) {
-        return categoryService.getCategoriesByType(type);
-    }
-
-    @Override
-    public List<WalletType> getWalletTypes() {
-        return walletTypeService.getAllWalletTypes();
-    }
-
-    @Override
-    public void onTransactionCreated(Transaction transaction) throws Exception {
-        transactionService.createTransaction(transaction);
-    }
-
-    @Override
-    public void onRefreshRequired() {
-        main.refreshDashboard();
-        main.refreshTransactions();
-        main.refreshBudget();
     }
 
     private JPanel buildDateSelectorStrip() {
@@ -158,7 +119,7 @@ public class DashboardView extends JPanel implements TransactionDialogListener {
         controller.refresh();
     }
 
-    MainFrame getMain() {
+    public MainFrame getMain() {
         return main;
     }
 }
