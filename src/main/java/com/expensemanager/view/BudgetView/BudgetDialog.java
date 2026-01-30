@@ -142,8 +142,12 @@ public class BudgetDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Invalid amount.");
             return;
         }
-        if (amount <= 0 || amount > 500_000_000L) {
-            JOptionPane.showMessageDialog(this, "Amount must be 1..500.000.000.");
+        if (amount <= 0) {
+            JOptionPane.showMessageDialog(this, "Amount must be greater than 0.");
+            return;
+        }
+        if (amount > 500_000_000L) {
+            JOptionPane.showMessageDialog(this, "Amount must be less than 500.000.000.");
             return;
         }
 
