@@ -2,6 +2,7 @@ package com.expensemanager.view.TransactionView;
 
 import com.expensemanager.controller.TransactionController;
 import com.expensemanager.model.Category;
+import com.expensemanager.view.CommonComponents.CalendarPicker;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.StyledComponents;
 
@@ -12,7 +13,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.List;
-import java.util.Calendar;
 
 public class TransactionView extends JPanel {
     private static final Color BG_PAGE = Color.WHITE;
@@ -26,12 +26,11 @@ public class TransactionView extends JPanel {
     private final MainFrame main;
     private final TransactionController controller;
 
-    // Filters
     private JTextField searchField;
     private JComboBox<CategoryItem> categoryCombo;
     private JComboBox<WalletItem> walletCombo;
-    private DateField fromDateField;
-    private DateField toDateField;
+    private CalendarPicker fromDateField;
+    private CalendarPicker toDateField;
     private JComboBox<SortItem> sortCombo;
 
     public TransactionView(MainFrame main) {
@@ -40,23 +39,16 @@ public class TransactionView extends JPanel {
         setLayout(new MigLayout("wrap 1, fill, insets 20", "[grow]", "[][][][grow]"));
         setBackground(BG_PAGE);
 
-        // Page header
         add(createHeaderPanel(), "growx");
-
-        // Search bar
         add(createSearchRow(), "growx");
-
-        // Filters + Date range
         add(createFilterCard(), "growx");
 
-        // Transaction list
         JScrollPane scrollPane = controller.getScrollPane();
         add(scrollPane, "grow, push");
 
         refresh();
     }
 
-    // Page header
     private JComponent createHeaderPanel() {
         JPanel header = new JPanel(new MigLayout("fillx, insets 0", "[grow][right]", "[]"));
         header.setOpaque(false);
@@ -82,7 +74,6 @@ public class TransactionView extends JPanel {
         return header;
     }
 
-    // Search bar
     private JComponent createSearchRow() {
         JPanel row = new JPanel(new MigLayout("fillx, insets 10 0 10 0", "[grow]", "[]"));
         row.setOpaque(false);
@@ -90,7 +81,6 @@ public class TransactionView extends JPanel {
         return row;
     }
 
-    // Filters + Date range
     private JComponent createFilterCard() {
         JPanel card = new JPanel(new MigLayout("fillx, insets 16, wrap 3, gapx 18, gapy 14",
                 "[grow,fill][grow,fill][grow,fill]", "[]"));
@@ -113,23 +103,22 @@ public class TransactionView extends JPanel {
         outer.setOpaque(false);
         outer.add(card, BorderLayout.CENTER);
 
-        // Category / Wallet / Sort
         card.add(createLabeledInput("Category", createCategoryCombo()), "growx");
         card.add(createLabeledInput("Wallet", createWalletCombo()), "growx");
         card.add(createLabeledInput("Sort by", createSortCombo()), "growx");
 
-        // Date Range label
         JLabel dr = new JLabel("Date Range (Max 60 days)");
         dr.setFont(dr.getFont().deriveFont(Font.PLAIN, 12f));
         dr.setForeground(WALLET_COLOR);
         card.add(dr, "span 3, gaptop 2");
 
-        // From / To
         JPanel datesRow = new JPanel(new MigLayout("ins 0, fillx, gapx 12", "[grow,fill][grow,fill]", "[]"));
         datesRow.setOpaque(false);
 
-        fromDateField = new DateField("From");
-        toDateField = new DateField("To");
+        fromDateField = new CalendarPicker("mm/dd/yyyy");
+        toDateField = new CalendarPicker("mm/dd/yyyy");
+        fromDateField.clear();
+        toDateField.clear();
         fromDateField.addChangeListener(this::refresh);
         toDateField.addChangeListener(this::refresh);
 
@@ -298,11 +287,11 @@ public class TransactionView extends JPanel {
     }
 
     public String getFromDateText() {
-        return fromDateField != null ? fromDateField.getTextValue() : null;
+        return fromDateField != null ? fromDateField.getText() : null;
     }
 
     public String getToDateText() {
-        return toDateField != null ? toDateField.getTextValue() : null;
+        return toDateField != null ? toDateField.getText() : null;
     }
 
     public String getSortKey() {
@@ -354,351 +343,6 @@ public class TransactionView extends JPanel {
         @Override
         public String toString() {
             return label;
-        }
-    }
-
-    /**
-     * Simple date field with rounded border and calendar icon.
-     * Stores value as plain text (MM/dd/yyyy). Parsing is handled by
-     * TransactionView.
-     */
-    private static class DateField extends JComponent {
-        // Specific height for From/To date fields in filter card.
-        private static final int DATE_FIELD_HEIGHT = 48;
-        private final JTextField textField;
-
-        DateField(String placeholder) {
-            setLayout(new BorderLayout());
-            setOpaque(false);
-            setPreferredSize(new Dimension(0, DATE_FIELD_HEIGHT));
-            setMinimumSize(new Dimension(0, DATE_FIELD_HEIGHT));
-            setMaximumSize(new Dimension(Integer.MAX_VALUE, DATE_FIELD_HEIGHT));
-
-            textField = new JTextField();
-            textField.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
-            textField.setOpaque(false);
-            textField.putClientProperty("JTextField.placeholderText", "mm/dd/yyyy");
-            textField.setFont(textField.getFont().deriveFont(Font.PLAIN, 14f));
-
-            JButton iconButton = new JButton() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setColor(new Color(0x6B7280)); // Gray color for icon
-
-                    int width = getWidth();
-                    int height = getHeight();
-                    int iconSize = 16;
-                    int x = (width - iconSize) / 2;
-                    int y = (height - iconSize) / 2;
-
-                    // Draw calendar icon similar to CreateTransactionDialog
-                    g2.setStroke(new BasicStroke(1.5f));
-                    g2.drawRoundRect(x + 1, y + 3, iconSize - 2, iconSize - 4, 3, 3);
-                    g2.fillRect(x + 2, y + 3, iconSize - 4, 3);
-
-                    g2.dispose();
-                }
-            };
-            iconButton.setBorder(BorderFactory.createEmptyBorder());
-            iconButton.setContentAreaFilled(false);
-            iconButton.setOpaque(false);
-            iconButton.setPreferredSize(new Dimension(40, DATE_FIELD_HEIGHT));
-            iconButton.setFocusPainted(false);
-            iconButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            add(textField, BorderLayout.CENTER);
-            add(iconButton, BorderLayout.EAST);
-
-            // Open popup calendar when clicking the icon
-            java.awt.event.ActionListener openPicker = e -> showDatePickerPopup(DateField.this);
-            iconButton.addActionListener(openPicker);
-
-            // Also open popup when clicking inside the text field
-            textField.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent e) {
-                    if (!textField.isEditable())
-                        return;
-                    showDatePickerPopup(DateField.this);
-                }
-            });
-        }
-
-        String getTextValue() {
-            return textField.getText();
-        }
-
-        void addChangeListener(Runnable r) {
-            textField.getDocument().addDocumentListener(new DocumentListener() {
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    r.run();
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    r.run();
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    r.run();
-                }
-            });
-        }
-
-        /**
-         * Show modern popup date picker below the field, matching
-         * CreateTransactionDialog calendar design.
-         */
-        private void showDatePickerPopup(JComponent anchor) {
-            JPopupMenu popup = new JPopupMenu();
-            popup.setBorder(BorderFactory.createLineBorder(new Color(0xE5E7EB), 1));
-
-            JPanel calendarPanel = createCalendarPanel(popup);
-            popup.add(calendarPanel);
-
-            // Match popup width with the field width
-            popup.setPopupSize(anchor.getWidth(), 350);
-
-            // Show popup just below the field
-            popup.show(anchor, 0, anchor.getHeight());
-        }
-
-        /**
-         * Build calendar panel copied/adapted from CreateTransactionDialog.
-         */
-        private JPanel createCalendarPanel(JPopupMenu popup) {
-            JPanel calendarPanel = new JPanel(new BorderLayout());
-            calendarPanel.setBackground(Color.WHITE);
-            calendarPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-            // Determine current date from field text or use today
-            java.util.Date currentDate = parseCurrentDateOrToday();
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(currentDate);
-            final int[] currentYear = { cal.get(Calendar.YEAR) };
-            final int[] currentMonth = { cal.get(Calendar.MONTH) };
-
-            // Header with month navigation
-            JPanel headerPanel = new JPanel(new BorderLayout());
-            headerPanel.setBackground(Color.WHITE);
-            headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 10, 5));
-
-            final JLabel monthYearLabel = new JLabel();
-            monthYearLabel.setFont(monthYearLabel.getFont().deriveFont(Font.BOLD, 14f));
-            monthYearLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-            final JPanel[] bodyPanelRef = { new JPanel(new GridLayout(0, 7, 5, 5)) };
-            bodyPanelRef[0].setBackground(Color.WHITE);
-
-            Runnable buildCalendarBody = () -> {
-                bodyPanelRef[0].removeAll();
-
-                // Day names header
-                String[] dayNames = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-                for (String dayName : dayNames) {
-                    JLabel dayLabel = new JLabel(dayName, SwingConstants.CENTER);
-                    dayLabel.setFont(dayLabel.getFont().deriveFont(Font.PLAIN, 11f));
-                    dayLabel.setForeground(new Color(0x6B7280));
-                    bodyPanelRef[0].add(dayLabel);
-                }
-
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(currentYear[0], currentMonth[0], 1);
-                int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1; // 0 = Sunday
-                int daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-
-                // Currently selected date from text field (if any) to highlight
-                java.util.Date selectedDate = parseCurrentDateOrToday();
-                Calendar selectedCal = Calendar.getInstance();
-                selectedCal.setTime(selectedDate);
-                int selectedYear = selectedCal.get(Calendar.YEAR);
-                int selectedMonth = selectedCal.get(Calendar.MONTH);
-                int selectedDayValue = selectedCal.get(Calendar.DAY_OF_MONTH);
-
-                // Empty cells before first day
-                for (int i = 0; i < firstDayOfWeek; i++) {
-                    bodyPanelRef[0].add(new JLabel());
-                }
-
-                // Add day buttons
-                for (int day = 1; day <= daysInMonth; day++) {
-                    final int dayValue = day;
-                    boolean isSelected = (currentYear[0] == selectedYear && currentMonth[0] == selectedMonth
-                            && day == selectedDayValue);
-                    JButton dayBtn = createDayButton(String.valueOf(day), isSelected);
-                    dayBtn.addActionListener(e -> {
-                        Calendar newCal = Calendar.getInstance();
-                        newCal.set(currentYear[0], currentMonth[0], dayValue);
-                        java.util.Date chosen = newCal.getTime();
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM/dd/yyyy");
-                        textField.setText(sdf.format(chosen));
-                        popup.setVisible(false);
-                    });
-                    bodyPanelRef[0].add(dayBtn);
-                }
-
-                // Update header label
-                String[] monthNames = { "January", "February", "March", "April", "May", "June", "July", "August",
-                        "September", "October", "November", "December" };
-                monthYearLabel.setText(monthNames[currentMonth[0]] + " " + currentYear[0]);
-
-                bodyPanelRef[0].revalidate();
-                bodyPanelRef[0].repaint();
-            };
-
-            // Previous month button
-            JButton prevBtn = createFlatButton("<");
-            prevBtn.addActionListener(e -> {
-                currentMonth[0]--;
-                if (currentMonth[0] < 0) {
-                    currentMonth[0] = 11;
-                    currentYear[0]--;
-                }
-                buildCalendarBody.run();
-            });
-
-            // Next month button
-            JButton nextBtn = createFlatButton(">");
-            nextBtn.addActionListener(e -> {
-                currentMonth[0]++;
-                if (currentMonth[0] > 11) {
-                    currentMonth[0] = 0;
-                    currentYear[0]++;
-                }
-                buildCalendarBody.run();
-            });
-
-            headerPanel.add(prevBtn, BorderLayout.WEST);
-            headerPanel.add(monthYearLabel, BorderLayout.CENTER);
-            headerPanel.add(nextBtn, BorderLayout.EAST);
-
-            // Initial build
-            buildCalendarBody.run();
-
-            calendarPanel.add(headerPanel, BorderLayout.NORTH);
-            calendarPanel.add(bodyPanelRef[0], BorderLayout.CENTER);
-
-            return calendarPanel;
-        }
-
-        /**
-         * Create single day button, matching CreateTransactionDialog style.
-         */
-        private JButton createDayButton(String text, boolean isSelected) {
-            JButton btn = new JButton(text) {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                    if (isSelected || getModel().isRollover()) {
-                        Color bg = isSelected ? new Color(0x155DFC) : new Color(0xE3F2FD);
-                        g2.setColor(bg);
-                        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
-                        g2.setColor(isSelected ? Color.WHITE : Color.BLACK);
-                    } else {
-                        g2.setColor(Color.WHITE);
-                        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 5, 5);
-                        g2.setColor(Color.BLACK);
-                    }
-
-                    FontMetrics fm = g2.getFontMetrics(getFont());
-                    int x = (getWidth() - fm.stringWidth(getText())) / 2;
-                    int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
-                    g2.drawString(getText(), x, y);
-                    g2.dispose();
-                }
-            };
-            btn.setOpaque(false);
-            btn.setContentAreaFilled(false);
-            btn.setBorderPainted(false);
-            btn.setFocusPainted(false);
-            btn.setPreferredSize(new Dimension(35, 35));
-            btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 12f));
-            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            return btn;
-        }
-
-        /**
-         * Simple flat button for month navigation.
-         */
-        private JButton createFlatButton(String text) {
-            JButton btn = new JButton(text) {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                    if (getModel().isRollover()) {
-                        g2.setColor(new Color(0xE3F2FD));
-                        g2.fillRect(0, 0, getWidth(), getHeight());
-                    } else {
-                        g2.setColor(Color.WHITE);
-                        g2.fillRect(0, 0, getWidth(), getHeight());
-                    }
-
-                    g2.setColor(Color.BLACK);
-                    FontMetrics fm = g2.getFontMetrics(getFont());
-                    int x = (getWidth() - fm.stringWidth(getText())) / 2;
-                    int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
-                    g2.drawString(getText(), x, y);
-                    g2.dispose();
-                }
-            };
-            btn.setOpaque(false);
-            btn.setContentAreaFilled(false);
-            btn.setBorderPainted(false);
-            btn.setFocusPainted(false);
-            btn.setPreferredSize(new Dimension(30, 30));
-            btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 14f));
-            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            return btn;
-        }
-
-        /**
-         * Parse current text field value to Date, or return today if invalid/empty.
-         */
-        private java.util.Date parseCurrentDateOrToday() {
-            String txt = textField.getText();
-            if (txt != null && !txt.isBlank()) {
-                try {
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM/dd/yyyy");
-                    sdf.setLenient(false);
-                    return sdf.parse(txt.trim());
-                } catch (Exception ignored) {
-                }
-            }
-            return new java.util.Date();
-        }
-
-        @Override
-        public Dimension getPreferredSize() {
-            Dimension base = super.getPreferredSize();
-            return new Dimension(base != null ? base.width : 0, DATE_FIELD_HEIGHT);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            // White rounded background to match CreateTransactionDialog fields
-            g2.setColor(Color.WHITE);
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), CARD_ARC, CARD_ARC);
-
-            // Border: blue when focused, otherwise light gray
-            boolean focused = textField.isFocusOwner();
-            g2.setColor(focused ? new Color(0x155DFC) : BORDER_COLOR);
-            g2.setStroke(new BasicStroke(1f));
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_ARC, CARD_ARC);
-
-            g2.dispose();
-            super.paintComponent(g);
         }
     }
 }
