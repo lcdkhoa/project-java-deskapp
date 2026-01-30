@@ -2,14 +2,23 @@ package com.expensemanager.controller;
 
 import com.expensemanager.util.AppContext;
 import com.expensemanager.model.Category;
+import com.expensemanager.model.Transaction;
+import com.expensemanager.model.WalletType;
+import com.expensemanager.service.CategoryService;
 import com.expensemanager.service.DashboardService;
+import com.expensemanager.service.TransactionService;
+import com.expensemanager.service.WalletTypeService;
 import com.expensemanager.util.ChartUtils;
+import com.expensemanager.util.ColorUtil;
 import com.expensemanager.util.CurrencyUtil;
 import com.expensemanager.util.MonthKeyUtil;
 import com.expensemanager.view.BudgetView.BudgetWarningsPanel;
 import com.expensemanager.view.DashboardView.DashboardView;
 import com.expensemanager.view.DashboardView.KPICard;
+import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.ModernCard;
+import com.expensemanager.view.TransactionView.CreateTransactionDialog;
+import com.expensemanager.view.TransactionView.TransactionDialogListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -40,7 +49,7 @@ import java.time.YearMonth;
 import java.util.*;
 import java.util.List;
 
-public class DashboardController {
+public class DashboardController implements TransactionDialogListener {
     private final DashboardView view;
     private YearMonth currentMonth;
     private final JLabel monthLabel;
@@ -48,15 +57,47 @@ public class DashboardController {
     private JPanel chartsPanel;
     private BudgetWarningsPanel budgetWarningsPanel;
 
-    // Services
     private final DashboardService dashboardService;
+    private final CategoryService categoryService;
+    private final TransactionService transactionService;
+    private final WalletTypeService walletTypeService;
 
     public DashboardController(DashboardView view) {
         this.view = view;
         this.dashboardService = new DashboardService();
+        this.categoryService = new CategoryService();
+        this.transactionService = new TransactionService();
+        this.walletTypeService = new WalletTypeService();
         this.currentMonth = YearMonth.now();
         this.monthLabel = new JLabel(MonthKeyUtil.toLabel(MonthKeyUtil.of(currentMonth)));
         monthLabel.setFont(monthLabel.getFont().deriveFont(16f));
+    }
+
+    @Override
+    public List<Category> getCategoriesByType(String type) {
+        return categoryService.getCategoriesByType(type);
+    }
+
+    @Override
+    public List<WalletType> getWalletTypes() {
+        return walletTypeService.getAllWalletTypes();
+    }
+
+    @Override
+    public void onTransactionCreated(Transaction transaction) throws Exception {
+        transactionService.createTransaction(transaction);
+    }
+
+    @Override
+    public void onRefreshRequired() {
+        MainFrame main = view.getMain();
+        main.refreshDashboard();
+        main.refreshTransactions();
+        main.refreshBudget();
+    }
+
+    public void openAddTransaction() {
+        new CreateTransactionDialog(view.getMain(), this).setVisible(true);
     }
 
     private JLabel backToCurrentLink;
@@ -361,7 +402,7 @@ public class DashboardController {
         for (Category cat : allCategories) {
             long expense = categoryExpenses.get(cat.getId());
             if (expense > 0) {
-                Color catColor = parseColor(cat.getLegendChartColor());
+                Color catColor = ColorUtil.parseColor(cat.getLegendChartColor());
                 plot.setSectionPaint(cat.getId(), catColor);
                 plot.setSectionOutlinePaint(cat.getId(), Color.WHITE);
                 plot.setSectionOutlineStroke(cat.getId(), whiteStroke);
@@ -411,7 +452,7 @@ public class DashboardController {
         for (int i = 0; i < categoriesWithExpense.size(); i++) {
             Category cat = categoriesWithExpense.get(i);
             long expense = expenses.getOrDefault(cat.getId(), 0L);
-            Color catColor = parseColor(cat.getLegendChartColor());
+            Color catColor = ColorUtil.parseColor(cat.getLegendChartColor());
             String amountStr = CurrencyUtil.format(expense);
 
             JPanel itemPanel = new JPanel(new MigLayout("ins 0, fillx", "[]6[grow]push[]", "[center]"));
@@ -603,18 +644,6 @@ public class DashboardController {
         }
     }
 
-    private static Color parseColor(String hex) {
-        if (hex == null || hex.isBlank())
-            return new Color(0x6B7280);
-        if (!hex.startsWith("#"))
-            hex = "#" + hex;
-        try {
-            return Color.decode(hex);
-        } catch (Exception e) {
-            return new Color(0x6B7280);
-        }
-    }
-
     private static class PieCategoryToolTipGenerator implements PieToolTipGenerator {
         private final Map<String, Category> idToCategory;
         private final Map<String, Long> expenses;
@@ -638,7 +667,7 @@ public class DashboardController {
             double percentage = totalExpense > 0 ? (expense * 100.0 / totalExpense) : 0.0;
             String pctStr = String.format("%.1f%%", percentage);
 
-            Color catColor = parseColor(cat.getLegendChartColor());
+            Color catColor = ColorUtil.parseColor(cat.getLegendChartColor());
             String colorHex = String.format("#%02x%02x%02x", catColor.getRed(), catColor.getGreen(),
                     catColor.getBlue());
 
