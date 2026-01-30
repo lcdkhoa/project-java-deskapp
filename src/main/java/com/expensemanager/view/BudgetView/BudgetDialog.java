@@ -27,8 +27,6 @@ public class BudgetDialog extends JDialog {
     private final YearMonth month;
     private final Mode mode;
     private final Budget existing;
-    @SuppressWarnings("unused")
-    private final Category existingCategory;
     private final BudgetDialogListener listener;
 
     private JComboBox<Category> categoryCombo;
@@ -40,7 +38,6 @@ public class BudgetDialog extends JDialog {
         this.month = month;
         this.mode = mode;
         this.existing = existing;
-        this.existingCategory = existingCategory;
         this.listener = listener;
 
         setSize(460, 320);
@@ -60,12 +57,7 @@ public class BudgetDialog extends JDialog {
             refillCategories();
             form.add(categoryCombo, "growx, h 48!");
         } else {
-            String name;
-            if (existingCategory != null) {
-                name = existingCategory.getName();
-            } else {
-                name = "";
-            }
+            String name = existingCategory != null ? existingCategory.getName() : "";
             JTextField readOnly = createStyledTextField();
             readOnly.setText(name);
             readOnly.setEditable(false);
