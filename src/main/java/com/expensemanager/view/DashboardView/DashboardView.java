@@ -3,8 +3,10 @@ package com.expensemanager.view.DashboardView;
 import com.expensemanager.controller.DashboardController;
 import com.expensemanager.model.Category;
 import com.expensemanager.model.Transaction;
+import com.expensemanager.model.WalletType;
 import com.expensemanager.service.CategoryService;
 import com.expensemanager.service.TransactionService;
+import com.expensemanager.service.WalletTypeService;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.util.UIFactory;
 import com.expensemanager.view.TransactionView.CreateTransactionDialog;
@@ -27,12 +29,14 @@ public class DashboardView extends JPanel implements TransactionDialogListener {
     private final DashboardController controller;
     private final CategoryService categoryService;
     private final TransactionService transactionService;
+    private final WalletTypeService walletTypeService;
 
     public DashboardView(MainFrame main) {
         this.main = main;
         this.controller = new DashboardController(this);
         this.categoryService = new CategoryService();
         this.transactionService = new TransactionService();
+        this.walletTypeService = new WalletTypeService();
         setBackground(MAIN_BG);
         setOpaque(true);
         setLayout(new MigLayout("ins 0, wrap 1, gap " + CARD_GAP + " " + CARD_GAP, "[grow,fill]",
@@ -96,6 +100,11 @@ public class DashboardView extends JPanel implements TransactionDialogListener {
     @Override
     public List<Category> getCategoriesByType(String type) {
         return categoryService.getCategoriesByType(type);
+    }
+
+    @Override
+    public List<WalletType> getWalletTypes() {
+        return walletTypeService.getAllWalletTypes();
     }
 
     @Override

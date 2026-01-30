@@ -1,3 +1,4 @@
+
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
@@ -44,6 +45,17 @@ CREATE TABLE IF NOT EXISTS budgets (
 );
 
 
+CREATE TABLE IF NOT EXISTS wallet_types (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    icon_path TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+);
+
+
 CREATE INDEX IF NOT EXISTS idx_tx_user_month ON transactions(user_id, month_key);
 CREATE INDEX IF NOT EXISTS idx_tx_user_date ON transactions(user_id, transaction_date);
 CREATE INDEX IF NOT EXISTS idx_budget_user_month ON budgets(user_id, month_key);
@@ -67,3 +79,14 @@ SELECT * FROM (
     UNION ALL SELECT 'cat-inc-other', 'Other Income', 'src/main/java/com/expensemanager/img/category/other_income.png', '#4ADE80', 'income', 1, datetime('now')
 ) AS seed
 WHERE (SELECT COUNT(*) FROM categories) = 0;
+
+
+
+INSERT INTO wallet_types (id, name, display_name, icon_path, sort_order, is_active, created_at)
+SELECT * FROM (
+    SELECT 'wallet-cash' AS id, 'cash' AS name, 'Cash' AS display_name, 'src/main/java/com/expensemanager/img/wallet/cash.png' AS icon_path, 1 AS sort_order, 1 AS is_active, datetime('now') AS created_at
+    UNION ALL SELECT 'wallet-bank', 'bank_transfer', 'Bank Transfer', 'src/main/java/com/expensemanager/img/wallet/bank.png', 2, 1, datetime('now')
+    UNION ALL SELECT 'wallet-card', 'card', 'Visa Card', 'src/main/java/com/expensemanager/img/wallet/card.png', 3, 1, datetime('now')
+    UNION ALL SELECT 'wallet-ewallet', 'e_wallet', 'E-Wallet', 'src/main/java/com/expensemanager/img/wallet/ewallet.png', 4, 1, datetime('now')
+) AS seed
+WHERE (SELECT COUNT(*) FROM wallet_types) = 0;
