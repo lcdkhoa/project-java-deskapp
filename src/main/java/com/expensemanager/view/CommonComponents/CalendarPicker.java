@@ -7,10 +7,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.function.Consumer;
 
-/**
- * Reusable Calendar Picker component.
- * Displays a popup calendar for date selection.
- */
 public class CalendarPicker extends JPanel {
 
     private static final Color BORDER_COLOR = new Color(0xE5E7EB);
@@ -49,13 +45,11 @@ public class CalendarPicker extends JPanel {
             dateField.putClientProperty("JTextField.placeholderText", placeholder);
         }
 
-        // Create calendar icon button
         JButton iconButton = createIconButton();
 
         add(dateField, BorderLayout.CENTER);
         add(iconButton, BorderLayout.EAST);
 
-        // Add click listeners
         dateField.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -64,7 +58,6 @@ public class CalendarPicker extends JPanel {
         });
         iconButton.addActionListener(e -> showCalendarPopup());
 
-        // Add focus listener for border repaint
         dateField.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusGained(java.awt.event.FocusEvent e) {
@@ -115,11 +108,9 @@ public class CalendarPicker extends JPanel {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // White rounded background
         g2.setColor(Color.WHITE);
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), ARC, ARC);
 
-        // Border
         boolean focused = dateField.isFocusOwner();
         g2.setColor(focused ? FOCUS_COLOR : BORDER_COLOR);
         g2.setStroke(new BasicStroke(1f));
@@ -162,7 +153,6 @@ public class CalendarPicker extends JPanel {
         Runnable buildBody = () -> {
             bodyPanelRef[0].removeAll();
 
-            // Day headers
             String[] dayNames = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
             for (String dayName : dayNames) {
                 JLabel dayLabel = new JLabel(dayName, SwingConstants.CENTER);
@@ -185,12 +175,10 @@ public class CalendarPicker extends JPanel {
             int selectedMonth = selectedCal.get(Calendar.MONTH);
             int selectedDay = selectedCal.get(Calendar.DAY_OF_MONTH);
 
-            // Empty cells before first day
             for (int i = 0; i < firstDayOfWeek; i++) {
                 bodyPanelRef[0].add(new JLabel());
             }
 
-            // Day buttons
             for (int day = 1; day <= daysInMonth; day++) {
                 final int dayValue = day;
                 boolean isSelected = (currentYear[0] == selectedYear &&
@@ -317,8 +305,6 @@ public class CalendarPicker extends JPanel {
         return btn;
     }
 
-    // Public API
-
     public void setDate(Date date) {
         this.selectedDate = date;
         if (date != null) {
@@ -343,5 +329,32 @@ public class CalendarPicker extends JPanel {
     public void clear() {
         selectedDate = null;
         dateField.setText("");
+    }
+
+    public void addChangeListener(Runnable listener) {
+        dateField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                listener.run();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                listener.run();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                listener.run();
+            }
+        });
+    }
+
+    public void setEditable(boolean editable) {
+        dateField.setEditable(editable);
+    }
+
+    public JTextField getTextField() {
+        return dateField;
     }
 }
