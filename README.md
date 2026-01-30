@@ -1,88 +1,126 @@
 # Personal Expense Manager (Java Desktop)
 
-Ứng dụng desktop quản lý chi tiêu cá nhân (Java Swing) theo Functional Specification v1.0.
+Một ứng dụng desktop hiện đại, trực quan giúp quản lý chi tiêu cá nhân hiệu quả, được xây dựng bằng **Java** và **MySQL**. Dự án áp dụng mô hình kiến trúc **MVC**, giao diện **Swing** kết hợp với **FlatLaf** cho trải nghiệm người dùng mượt mà và thẩm mỹ.
 
-## Tech stack
+## 🚀 Các Tính Năng Chính
+
+### 📊 Dashboard (Tổng quan)
+- **Biểu đồ trực quan**:
+    - **Cash Flow**: Theo dõi dòng tiền (Thu/Chi) qua biểu đồ đường.
+    - **Thu/Chi theo danh mục**: Biểu đồ tròn thể hiện tỷ lệ chi tiêu cho từng nhóm (Ăn uống, Di chuyển, v.v.).
+- **Chỉ số tài chính (KPIs)**: Tổng thu, Tổng chi, Số dư ví, và Ngân sách còn lại trong tháng.
+- **Cảnh báo ngân sách**: Hiển thị trạng thái ngân sách của các danh mục (An toàn, Cảnh báo, Vượt mức).
+
+### 💸 Quản lý Giao dịch (Transactions)
+- **Thêm mới**: Giao diện dialog tiện lợi để nhập liệu nhanh chóng (Số tiền, Danh mục, Ví, Ghi chú, Thời gian).
+- **Lịch sử & Tìm kiếm**:
+    - Xem danh sách giao dịch chi tiết.
+    - Bộ lọc mạnh mẽ: Theo khoảng thời gian (Hôm nay, Tuần này, Tháng này...), Ví, Danh mục.
+    - Tìm kiếm theo từ khóa trong ghi chú.
+
+### 💰 Quản lý Ngân sách (Budget)
+- **Thiết lập mục tiêu**: Đặt ngân sách tối đa cho từng danh mục trong tháng.
+- **Theo dõi tiến độ**: Dashboard và Transaction View giúp bạn biết mình đã chi bao nhiêu so với ngân sách.
+
+### 🛠️ Quản lý Danh mục & Ví
+- Hệ thống danh mục đa dạng (Ăn uống, Nhà cửa, Lương, Thưởng...).
+- Hỗ trợ nhiều loại ví (Tiền mặt, Thẻ, Ví điện tử, Chuyển khoản).
+
+---
+
+## 🛠 Tech Stack
+
+Dự án sử dụng các công nghệ và thư viện Java tiêu chuẩn:
 
 - **Ngôn ngữ**: Java **17** (LTS)
-- **UI**: Swing + FlatLaf
-- **Biểu đồ**: JFreeChart
-- **Layout**: MigLayout
-- **Database**: MySQL + JDBC (mysql-connector-j)
-- **Kiến trúc**: MVC (`model` / `view` / `controller`) + `dao`
+- **Giao diện (UI)**:
+    - **Swing**: Framework UI cốt lõi.
+    - **FlatLaf**: Look and Feel hiện đại (Flat UI).
+    - **MigLayout**: Quản lý layout mạnh mẽ và linh hoạt.
+    - **JCalendar**: Component chọn ngày tháng.
+- **Biểu đồ**: **JFreeChart**
+- **Cơ sở dữ liệu**: **MySQL** (kết nối qua JDBC / `mysql-connector-j`)
+- **Kiến trúc**: MVC (Model - View - Controller) + DAO Pattern + Service Layer.
+- **Build Tool**: Maven
 
-## Links (tải & tài liệu)
+---
 
-- **Java 17 (JDK)**: `https://learn.microsoft.com/vi-vn/java/openjdk/download` (Microsoft Build of OpenJDK) / `https://adoptium.net/temurin/releases/?version=17`
-- **Maven**: `https://maven.apache.org/download.cgi`
-- **FlatLaf**: `https://www.formdev.com/flatlaf/` / Maven Central: `https://central.sonatype.com/artifact/com.formdev/flatlaf`
-- **MySQL Connector/J**: Maven Central: `https://central.sonatype.com/artifact/com.mysql/mysql-connector-j`
-- **MySQL Server**: `https://dev.mysql.com/downloads/mysql/` (8.0+ khuyến nghị)
-- **JFreeChart**: `https://www.jfree.org/jfreechart/` / Maven Central: `https://central.sonatype.com/artifact/org.jfree/jfreechart`
-- **MigLayout**: `https://www.miglayout.com/` / Maven Central: `https://central.sonatype.com/artifact/com.miglayout/miglayout-swing`
+## ⚙️ Yêu cầu hệ thống
 
-## Yêu cầu
+- **Java JDK**: phiên bản **17** trở lên.
+- **Maven**: phiên bản **3.6+**.
+- **MySQL Server**: phiên bản **8.0+**.
 
-- Java/JDK **17**
-- Maven **3.9+**
+---
 
-## Cách setup
+## 📥 Hướng dẫn Cài đặt & Chạy ứng dụng
 
-1) Trỏ đến thư mục project:
+### 1. Chuẩn bị Cơ sở dữ liệu (Database)
 
-```bash
-cd project_java_desk_app
-```
+Trước khi chạy ứng dụng, bạn cần tạo database và các bảng.
 
-1) Build để tải dependencies:
+1.  Mở MySQL Client hoặc Workbench.
+2.  Tạo database:
+    ```sql
+    CREATE DATABASE IF NOT EXISTS expense_manager;
+    ```
+3.  Chạy script khởi tạo (tạo bảng và dữ liệu mẫu):
+    
+    *Cách 1: Dùng command line*
+    ```bash
+    mysql -u root -p expense_manager < src/main/java/com/expensemanager/db/init.sql
+    ```
+    
+    *Cách 2: Dùng MySQL Workbench/DBeaver*
+    - Mở file `src/main/java/com/expensemanager/db/init.sql`.
+    - Execute toàn bộ script vào database `expense_manager`.
 
+### 2. Cấu hình Kết nối
+
+Mặc định ứng dụng kết nối tới `localhost:3306`, user `root`, không mật khẩu. Nếu cấu hình của bạn khác, hãy set biến môi trường hoặc sửa code (hoặc chạy với tham số hệ thống - chưa implement config file ngoài).
+
+*Hiện tại cấu hình cứng trong `DatabaseHelper.java` hoặc biến môi trường:*
+- `DB_HOST` (default: localhost)
+- `DB_PORT` (default: 3306)
+- `DB_NAME` (default: expense_manager)
+- `DB_USER` (default: root)
+- `DB_PASSWORD` (default: *empty*)
+
+### 3. Build và Chạy
+
+Mở terminal tại thư mục gốc của dự án (`project_java_desk_app`).
+
+**Bước 1: Cài đặt dependencies và compile**
 ```bash
 mvn clean compile
 ```
 
-## Cách chạy
-
-Chạy bằng Maven (khuyến nghị):
-
+**Bước 2: Chạy ứng dụng**
 ```bash
 mvn exec:java
 ```
 
-Hoặc build jar:
-
+Hoặc đóng gói thành file JAR và chạy:
 ```bash
 mvn package
+java -jar target/personal-expense-manager-1.0.0-SNAPSHOT.jar
 ```
 
-## Lưu ý về database (MySQL)
+---
 
-- Ứng dụng kết nối MySQL qua JDBC. Mặc định: `localhost:3306`, database `expense_manager`, user `root`, password rỗng.
-- Cấu hình qua **system properties** hoặc **biến môi trường**:
-  - `db.host` / `DB_HOST` — host (mặc định `localhost`)
-  - `db.port` / `DB_PORT` — port (mặc định `3306`)
-  - `db.name` / `DB_NAME` — tên database (mặc định `expense_manager`)
-  - `db.user` / `DB_USER` — user (mặc định `root`)
-  - `db.password` / `DB_PASSWORD` — mật khẩu
-- Trước khi chạy app: tạo database và chạy script khởi tạo schema/seed:
-  - `mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS expense_manager;"`
-  - `mysql -u root -p expense_manager < src/main/java/com/expensemanager/db/init.sql`
-
-## Cấu trúc thư mục
+## 📁 Cấu trúc Thư mục
 
 ```text
 src/main/java/com/expensemanager/
-  App.java                    # entry point
-  controller/                 # controller (MVC)
-  model/                      # model (entity)
-  view/                       # view (UI Swing)
-  dao/                        # DAO (truy cập dữ liệu)
-  db/                         # kết nối MySQL + init.sql (schema & seed)
-  util/                       # tiện ích (format, UI factory/utils, context...)
-  img/                        # assets hình ảnh (icon UI)
+├── controller/       # Xử lý logic điều hướng và tương tác (Controller trong MVC)
+├── model/            # Các lớp thực thể (Entity) đại diện dữ liệu
+├── view/             # Giao diện người dùng (JFrame, JPanel, Dialog)
+│   ├── DashboardView/
+│   ├── TransactionView/
+│   ├── BudgetView/
+│   └── CommonComponents/
+├── dao/              # Data Access Object - Tương tác trực tiếp với CSDL
+├── service/          # Business Logic Layer - Xử lý nghiệp vụ
+├── db/               # Cấu hình kết nối DB và script init.sql
+└── util/             # Các tiện ích (Formatter, Constants...)
 ```
-
-## Tính năng chính (tóm tắt)
-
-- **Dashboard**: KPI, charts (last 7 days / by category / cashflow), cảnh báo budget, thêm giao dịch
-- **Transactions**: tạo giao dịch (dialog), tìm kiếm & lọc, danh sách theo thời gian
-- **Budget**: thêm/sửa budget theo tháng & danh mục, tổng quan và danh sách theo category
