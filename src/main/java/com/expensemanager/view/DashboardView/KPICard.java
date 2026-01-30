@@ -2,7 +2,7 @@ package com.expensemanager.view.DashboardView;
 
 import com.expensemanager.view.CommonComponents.ModernCard;
 
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -29,7 +29,7 @@ public class KPICard extends ModernCard {
         row1.setOpaque(false);
 
         iconLabel = new JLabel();
-        ImageIcon icon = UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
+        ImageIcon icon = StyledComponents.getIcon(iconPath, ICON_SIZE, ICON_SIZE);
         if (icon != null) {
             iconLabel.setIcon(icon);
         } else {

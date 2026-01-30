@@ -7,6 +7,7 @@ import com.expensemanager.model.Transaction;
 import com.expensemanager.model.WalletType;
 import com.expensemanager.util.MonthKeyUtil;
 import com.expensemanager.view.CommonComponents.MainFrame;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -44,7 +45,6 @@ public class CreateTransactionDialog extends JDialog {
 
     private static final Color EXPENSE_COLOR = new Color(0xE7000B);
     private static final Color INCOME_COLOR = new Color(0x00A63E);
-    private static final Color INACTIVE_BG = new Color(0xF3F4F6);
 
     public CreateTransactionDialog(MainFrame main, TransactionDialogListener listener) {
         super(main, "Create Transaction", true);
@@ -66,7 +66,7 @@ public class CreateTransactionDialog extends JDialog {
 
         JPanel amountPanel = new JPanel(new BorderLayout());
         amountPanel.setOpaque(false);
-        amountF = createStyledTextField(452, 60, 30);
+        amountF = StyledComponents.createStyledTextField(452, 60, 30);
         amountF.setFont(amountF.getFont().deriveFont(Font.PLAIN, 16f));
         // Apply thousand separator formatting (e.g., 1.000.000)
         CurrencyUtil.applyThousandSeparator(amountF);
@@ -125,33 +125,36 @@ public class CreateTransactionDialog extends JDialog {
         walletLabel.setFont(walletLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(walletLabel, "alignx left");
 
-        walletCombo = createStyledComboBox(452, 48, 30);
+        walletCombo = StyledComponents.<String>createStyledComboBox(48, 30);
+        walletCombo.setPreferredSize(new Dimension(452, 48));
+        walletCombo.setMinimumSize(new Dimension(452, 48));
+        walletCombo.setMaximumSize(new Dimension(452, 48));
         // Load wallet options from DB
         String[] walletDisplayNames = walletTypes.stream()
                 .map(WalletType::getDisplayName)
                 .toArray(String[]::new);
         walletCombo.setModel(new DefaultComboBoxModel<>(walletDisplayNames));
-        form.add(walletCombo, "w 452!, alignx center, wrap");
+        form.add(walletCombo, "alignx center, wrap");
 
         // Note
         JLabel noteLabel = new JLabel("Note");
         noteLabel.setFont(noteLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(noteLabel, "alignx left");
 
-        noteF = createStyledTextField(452, 48, 30);
-        form.add(noteF, "w 452!, alignx center, wrap");
+        noteF = StyledComponents.createStyledTextField(452, 48, 30);
+        form.add(noteF, "alignx center, wrap");
 
         // Footer Buttons - each 220px, gap 10px, centered
         JPanel buttonPanel = new JPanel(new MigLayout("ins 0, gap 10", "[220!][220!]", "[]"));
         buttonPanel.setOpaque(false);
 
-        JButton cancelBtn = createFooterButton("Cancel", false);
+        JButton cancelBtn = StyledComponents.createSecondaryFunctionButton("Cancel", 220);
         cancelBtn.addActionListener(e -> dispose());
-        buttonPanel.add(cancelBtn, "w 220!");
+        buttonPanel.add(cancelBtn);
 
-        JButton saveBtn = createFooterButton("Save", true);
+        JButton saveBtn = StyledComponents.createPrimaryFunctionButton("Save", 220);
         saveBtn.addActionListener(e -> onSave());
-        buttonPanel.add(saveBtn, "w 220!");
+        buttonPanel.add(saveBtn);
 
         form.add(buttonPanel, "w 450!, alignx center, wrap");
 
@@ -168,14 +171,15 @@ public class CreateTransactionDialog extends JDialog {
     }
 
     private JPanel createTypeTogglePanel() {
-        // Two buttons: each 220px width, gap 10px, total 450px
         JPanel panel = new JPanel(new MigLayout("ins 0, gap 10", "[220!][220!]", "[]"));
         panel.setOpaque(false);
 
         typeGroup = new ButtonGroup();
 
-        expenseBtn = createToggleButton("Expense", EXPENSE_COLOR);
-        incomeBtn = createToggleButton("Income", INCOME_COLOR);
+        expenseBtn = StyledComponents.createStyledToggleButton("Expense", StyledComponents.ButtonType.DANGER,
+                StyledComponents.ButtonSize.FUNCTION, 220);
+        incomeBtn = StyledComponents.createStyledToggleButton("Income", StyledComponents.ButtonType.SUCCESS,
+                StyledComponents.ButtonSize.FUNCTION, 220);
 
         typeGroup.add(expenseBtn);
         typeGroup.add(incomeBtn);
@@ -189,50 +193,10 @@ public class CreateTransactionDialog extends JDialog {
             refillCategories();
         });
 
-        panel.add(expenseBtn, "w 220!");
-        panel.add(incomeBtn, "w 220!");
+        panel.add(expenseBtn);
+        panel.add(incomeBtn);
 
         return panel;
-    }
-
-    private JToggleButton createToggleButton(String text, Color activeColor) {
-        JToggleButton btn = new JToggleButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Fill white background first to avoid gray showing through rounded corners
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-
-                if (isSelected()) {
-                    g2.setColor(activeColor);
-                } else {
-                    g2.setColor(INACTIVE_BG);
-                }
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-
-                g2.setColor(isSelected() ? Color.WHITE : Color.BLACK);
-                FontMetrics fm = g2.getFontMetrics(getFont());
-                int x = (getWidth() - fm.stringWidth(getText())) / 2;
-                int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
-                g2.drawString(getText(), x, y);
-
-                g2.dispose();
-            }
-        };
-
-        btn.setPreferredSize(new Dimension(220, 48));
-        btn.setMinimumSize(new Dimension(220, 48));
-        btn.setMaximumSize(new Dimension(220, 48));
-        btn.setOpaque(false);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 14f));
-
-        return btn;
     }
 
     private void updateAmountColor() {
@@ -858,240 +822,6 @@ public class CreateTransactionDialog extends JDialog {
         });
 
         return spinner;
-    }
-
-    private JTextField createStyledTextField(int width, int height, int arc) {
-        JTextField field = new JTextField() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Fill white background with rounded corners - ensure no gray shows through
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
-                // Draw border only
-                g2.setColor(new Color(0xE5E7EB));
-                g2.setStroke(new BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        field.setOpaque(false);
-        field.setBackground(Color.WHITE);
-        field.setPreferredSize(new Dimension(width, height));
-        field.setMinimumSize(new Dimension(width, height));
-        field.setMaximumSize(new Dimension(width, height));
-        field.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-        field.setFont(field.getFont().deriveFont(Font.PLAIN, 14f));
-        return field;
-    }
-
-    private JComboBox<String> createStyledComboBox(int width, int height, int arc) {
-        JComboBox<String> combo = new JComboBox<String>() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
-                g2.dispose();
-                super.paintComponent(g);
-                Graphics2D g2Border = (Graphics2D) g.create();
-                g2Border.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color borderColor = (isFocusOwner() || isPopupVisible()) ? new Color(0x155DFC) : new Color(0xE5E7EB);
-                g2Border.setColor(borderColor);
-                g2Border.setStroke(new BasicStroke(1));
-                g2Border.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
-                g2Border.dispose();
-            }
-
-            @Override
-            protected void paintBorder(Graphics g) {
-            }
-        };
-        combo.setOpaque(false);
-        combo.setPreferredSize(new Dimension(width, height));
-        combo.setMinimumSize(new Dimension(width, height));
-        combo.setMaximumSize(new Dimension(width, height));
-        combo.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
-        combo.setFont(combo.getFont().deriveFont(Font.PLAIN, 14f));
-
-        try {
-            combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
-                @Override
-                protected JButton createArrowButton() {
-                    JButton button = new JButton() {
-                        @Override
-                        protected void paintComponent(Graphics g) {
-                            Graphics2D g2 = (Graphics2D) g.create();
-                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                            // Draw dropdown arrow icon pointing down
-                            g2.setColor(new Color(0x6B7280)); // Gray color for icon
-
-                            int width = getWidth();
-                            int height = getHeight();
-                            int arrowSize = 12;
-                            int x = (width - arrowSize) / 2;
-                            int y = (height - arrowSize) / 2;
-
-                            // Draw triangle pointing down
-                            int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
-                            int[] yPoints = { y + arrowSize, y + 2, y + 2 };
-                            g2.fillPolygon(xPoints, yPoints, 3);
-
-                            g2.dispose();
-                        }
-                    };
-                    button.setOpaque(false);
-                    button.setContentAreaFilled(false);
-                    button.setBorderPainted(false);
-                    button.setFocusPainted(false);
-                    button.setPreferredSize(new Dimension(40, height));
-                    button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    return button;
-                }
-            });
-        } catch (Exception e) {
-            // Fallback: customize arrow button after UI is set
-            combo.addHierarchyListener(new java.awt.event.HierarchyListener() {
-                @Override
-                public void hierarchyChanged(java.awt.event.HierarchyEvent e) {
-                    if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0
-                            && combo.isShowing()) {
-                        SwingUtilities.invokeLater(() -> {
-                            // Find and customize arrow button
-                            Component[] comps = combo.getComponents();
-                            for (Component comp : comps) {
-                                if (comp instanceof JButton) {
-                                    final JButton btn = (JButton) comp;
-                                    btn.setOpaque(false);
-                                    btn.setContentAreaFilled(false);
-                                    btn.setBorderPainted(false);
-                                    btn.setFocusPainted(false);
-                                    btn.setPreferredSize(new Dimension(40, height));
-                                    btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-                                    // Wrap button to add custom paint
-                                    JButton wrappedBtn = new JButton() {
-                                        @Override
-                                        protected void paintComponent(Graphics g) {
-                                            Graphics2D g2 = (Graphics2D) g.create();
-                                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                                                    RenderingHints.VALUE_ANTIALIAS_ON);
-
-                                            // Draw dropdown arrow icon pointing down
-                                            g2.setColor(new Color(0x6B7280));
-
-                                            int w = getWidth();
-                                            int h = getHeight();
-                                            int arrowSize = 12;
-                                            int x = (w - arrowSize) / 2;
-                                            int y = (h - arrowSize) / 2;
-
-                                            // Draw triangle pointing down
-                                            int[] xPoints = { x + arrowSize / 2, x, x + arrowSize };
-                                            int[] yPoints = { y + arrowSize, y + 2, y + 2 };
-                                            g2.fillPolygon(xPoints, yPoints, 3);
-
-                                            g2.dispose();
-                                        }
-                                    };
-                                    wrappedBtn.setOpaque(false);
-                                    wrappedBtn.setContentAreaFilled(false);
-                                    wrappedBtn.setBorderPainted(false);
-                                    wrappedBtn.setFocusPainted(false);
-                                    wrappedBtn.setPreferredSize(new Dimension(40, height));
-                                    wrappedBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-                                    // Copy action listeners from original button
-                                    for (java.awt.event.ActionListener listener : btn.getActionListeners()) {
-                                        wrappedBtn.addActionListener(listener);
-                                    }
-
-                                    // Replace button
-                                    Container parent = btn.getParent();
-                                    if (parent != null) {
-                                        int index = -1;
-                                        for (int i = 0; i < parent.getComponentCount(); i++) {
-                                            if (parent.getComponent(i) == btn) {
-                                                index = i;
-                                                break;
-                                            }
-                                        }
-                                        if (index >= 0) {
-                                            parent.remove(index);
-                                            parent.add(wrappedBtn, index);
-                                            parent.revalidate();
-                                            parent.repaint();
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        }
-
-        // Add focus listener to update border color when focus changes
-        combo.addFocusListener(new java.awt.event.FocusAdapter() {
-            @Override
-            public void focusGained(java.awt.event.FocusEvent e) {
-                combo.repaint();
-            }
-
-            @Override
-            public void focusLost(java.awt.event.FocusEvent e) {
-                combo.repaint();
-            }
-        });
-
-        // Repaint when popup opens/closes to update border color
-        combo.addPopupMenuListener(new javax.swing.event.PopupMenuListener() {
-            @Override
-            public void popupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent e) {
-                combo.repaint();
-            }
-
-            @Override
-            public void popupMenuWillBecomeInvisible(javax.swing.event.PopupMenuEvent e) {
-                combo.repaint();
-            }
-
-            @Override
-            public void popupMenuCanceled(javax.swing.event.PopupMenuEvent e) {
-                combo.repaint();
-            }
-        });
-
-        // Ensure renderer and editor also have white background
-        combo.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                c.setBackground(Color.WHITE);
-                if (isSelected) {
-                    c.setBackground(new Color(0x155DFC));
-                    c.setForeground(Color.WHITE);
-                } else {
-                    c.setBackground(Color.WHITE);
-                    c.setForeground(Color.BLACK);
-                }
-                return c;
-            }
-        });
-        return combo;
-    }
-
-    private JButton createFooterButton(String text, boolean isSave) {
-        if (isSave) {
-            return com.expensemanager.view.CommonComponents.StyledComponents.createPrimaryFunctionButton(text, 210);
-        } else {
-            return com.expensemanager.view.CommonComponents.StyledComponents.createSecondaryFunctionButton(text, 210);
-        }
     }
 
     private void refillCategories() {

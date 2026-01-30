@@ -5,7 +5,7 @@ import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
 import com.expensemanager.util.CurrencyUtil;
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -48,7 +48,7 @@ public class BudgetRowItem extends JPanel {
         iconPanel.setMinimumSize(new Dimension(ICON_SIZE, ICON_SIZE));
 
         JLabel iconLabel = new JLabel();
-        ImageIcon icon = iconPath != null ? UIUtils.getIcon(iconPath, ICON_SIZE, ICON_SIZE) : null;
+        ImageIcon icon = iconPath != null ? StyledComponents.getIcon(iconPath, ICON_SIZE, ICON_SIZE) : null;
         if (icon != null) {
             iconLabel.setIcon(icon);
         }
@@ -138,7 +138,7 @@ public class BudgetRowItem extends JPanel {
 
     private JButton createDeleteButton() {
         JButton btn = new JButton();
-        ImageIcon deleteIcon = UIUtils.getIcon("src/main/java/com/expensemanager/img/budget/delete.png", 20, 20);
+        ImageIcon deleteIcon = StyledComponents.getIcon("src/main/java/com/expensemanager/img/budget/delete.png", 20, 20);
         if (deleteIcon != null) {
             btn.setIcon(deleteIcon);
         }
@@ -154,7 +154,7 @@ public class BudgetRowItem extends JPanel {
 
     private JButton createEditButton() {
         JButton btn = new JButton();
-        ImageIcon penIcon = UIUtils.getIcon("src/main/java/com/expensemanager/img/budget/pen.png", 20, 20);
+        ImageIcon penIcon = StyledComponents.getIcon("src/main/java/com/expensemanager/img/budget/pen.png", 20, 20);
         if (penIcon != null) {
             btn.setIcon(penIcon);
         }

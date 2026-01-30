@@ -2,7 +2,7 @@ package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.dao.BudgetDAO;
 import com.expensemanager.util.CurrencyUtil;
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -38,7 +38,7 @@ public class BudgetWarningsPanel extends JPanel {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         header.setOpaque(false);
         JLabel iconLbl = new JLabel();
-        ImageIcon warnIcon = UIUtils.getIcon("src/main/java/com/expensemanager/img/dashboard/warn.png", 20, 20);
+        ImageIcon warnIcon = StyledComponents.getIcon("src/main/java/com/expensemanager/img/dashboard/warn.png", 20, 20);
         if (warnIcon != null) {
             iconLbl.setIcon(warnIcon);
         } else {

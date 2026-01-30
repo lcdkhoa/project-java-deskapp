@@ -1,6 +1,6 @@
 package com.expensemanager.view.CommonComponents;
 
-import com.expensemanager.util.UIUtils;
+import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +24,7 @@ public final class CircleIconPanel extends JComponent {
         if (path == null || path.isBlank()) {
             return null;
         }
-        return UIUtils.getIcon(path, ICON_SIZE, ICON_SIZE);
+        return StyledComponents.getIcon(path, ICON_SIZE, ICON_SIZE);
     }
 
     @Override
