@@ -20,31 +20,19 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Chart styling to match Figma: transparent backgrounds, no gridlines, small
- * gray axes,
- * bar (soft blue, rounded top), donut (thin ring, Section 6.5.2 colors), line
- * (teal, smooth).
- */
 public final class ChartUtils {
 
-    /** Soft blue for bar chart. */
     public static final Color SOFT_BLUE = new Color(0x93C5FD);
-    /** Teal for line chart. */
     public static final Color TEAL = new Color(0x14B8A6);
-    /** Transparent for chart/plot background. */
     private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
-    /** Small gray for tick labels when shown. */
     private static final Color TICK_LABEL_GRAY = new Color(0x6B7280);
     private static final Font TICK_LABEL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
 
-    /** Common chart title styling constants */
     private static final String CHART_TITLE_FONT_FAMILY = "Segoe UI";
     private static final int CHART_TITLE_FONT_SIZE = 18;
     private static final int CHART_TITLE_PADDING_TOP = 10;
     private static final int CHART_TITLE_PADDING_BOTTOM = 8;
 
-    /** Section 6.5.2 ExpenseCategory colors for donut. */
     private static final Map<String, Color> CATEGORY_COLORS = new HashMap<>();
     static {
         CATEGORY_COLORS.put("Food", new Color(0x4F46E5));
@@ -53,7 +41,6 @@ public final class ChartUtils {
         CATEGORY_COLORS.put("Bills", new Color(0x7C3AED));
         CATEGORY_COLORS.put("Shopping", new Color(0xEC4899));
         CATEGORY_COLORS.put("Entertainment", new Color(0xF59E0B));
-        CATEGORY_COLORS.put("Coffee", new Color(0xA16207));
         CATEGORY_COLORS.put("Healthcare", new Color(0x22C55E));
         CATEGORY_COLORS.put("Education", new Color(0x0EA5E9));
         CATEGORY_COLORS.put("Other", new Color(0x6B7280));
@@ -66,10 +53,6 @@ public final class ChartUtils {
         return CATEGORY_COLORS.getOrDefault(name, Color.GRAY);
     }
 
-    /**
-     * General: transparent bg, no outline, no gridlines, hide axis lines, small
-     * gray tick labels.
-     */
     public static void applyGeneral(JFreeChart chart) {
         chart.setBackgroundPaint(TRANSPARENT);
         if (chart.getPlot() instanceof CategoryPlot cp) {
@@ -91,7 +74,6 @@ public final class ChartUtils {
             trySetTickLabelStyle(xp.getDomainAxis());
             trySetTickLabelStyle(xp.getRangeAxis());
         } else if (chart.getPlot() instanceof PiePlot) {
-            // Pie/Ring: plot-level only
             chart.getPlot().setBackgroundPaint(TRANSPARENT);
             chart.getPlot().setOutlineVisible(false);
         }
@@ -116,9 +98,6 @@ public final class ChartUtils {
         }
     }
 
-    /**
-     * Bar chart: rounded top corners, Soft Blue, no Y-axis values.
-     */
     public static void applyBarChart(JFreeChart chart) {
         applyGeneral(chart);
         if (!(chart.getPlot() instanceof CategoryPlot cp))
@@ -134,10 +113,6 @@ public final class ChartUtils {
         }
     }
 
-    /**
-     * Donut: thin ring (interior gap 0.5), no shadow, no section outline, 6.5.2
-     * colors, legend right, no border.
-     */
     public static void applyDonutChart(JFreeChart chart, PieDataset dataset) {
         applyGeneral(chart);
         if (!(chart.getPlot() instanceof PiePlot pp))
@@ -165,9 +140,6 @@ public final class ChartUtils {
         }
     }
 
-    /**
-     * Line chart: XYSplineRenderer, teal, no shapes (dots).
-     */
     public static void applyLineChart(JFreeChart chart) {
         applyGeneral(chart);
         if (!(chart.getPlot() instanceof XYPlot xp))
@@ -183,9 +155,6 @@ public final class ChartUtils {
             xp.getRangeAxis().setVisible(false);
     }
 
-    /**
-     * ChartPanel with transparent background for use inside ModernCard.
-     */
     public static ChartPanel createChartPanel(JFreeChart chart) {
         ChartPanel cp = new ChartPanel(chart, 280, 180, 80, 80, 1024, 768, true, true, true, true, true, true);
         cp.setBackground(TRANSPARENT);
@@ -193,13 +162,6 @@ public final class ChartUtils {
         return cp;
     }
 
-    /**
-     * Apply unified title style to JFreeChart.
-     * Creates a clean, modern look with soft font (no bold).
-     * 
-     * @param chart the chart to style
-     * @param title the title text
-     */
     public static void applyChartTitle(JFreeChart chart, String title) {
         TextTitle textTitle = new TextTitle(title);
         textTitle.setFont(new Font(CHART_TITLE_FONT_FAMILY, Font.PLAIN, CHART_TITLE_FONT_SIZE));
@@ -208,25 +170,12 @@ public final class ChartUtils {
         chart.setTitle(textTitle);
     }
 
-    /**
-     * Create a styled JLabel for chart panel titles (used for custom panels like By
-     * Category).
-     * Provides consistent styling across all chart titles.
-     * 
-     * @param title the title text
-     * @return styled JLabel
-     */
     public static JLabel createChartTitleLabel(String title) {
         JLabel label = new JLabel(title, SwingConstants.CENTER);
         label.setFont(new Font(CHART_TITLE_FONT_FAMILY, Font.PLAIN, CHART_TITLE_FONT_SIZE));
         return label;
     }
 
-    /**
-     * Get the common chart title font for consistent styling.
-     * 
-     * @return the chart title font
-     */
     public static Font getChartTitleFont() {
         return new Font(CHART_TITLE_FONT_FAMILY, Font.PLAIN, CHART_TITLE_FONT_SIZE);
     }

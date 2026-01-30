@@ -12,10 +12,6 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Single budget record row in Budget page.
- * Fixed height, rounded card, custom progress bar & status chip.
- */
 public class BudgetRowItem extends JPanel {
 
     private static final int CARD_ARC = 30;
@@ -29,7 +25,6 @@ public class BudgetRowItem extends JPanel {
             BudgetController controller) {
         super(new MigLayout("fill, insets 15 25 15 25", "[" + ICON_SIZE + "!]20[grow]20[right]",
                 "[center][center][bottom]"));
-        // Store for edit action
         final Budget rowBudget = budget;
         final Category rowCategory = category;
         final BudgetController rowController = controller;
@@ -40,7 +35,6 @@ public class BudgetRowItem extends JPanel {
 
         String name = category != null ? category.getName() : usedRow.categoryId;
 
-        // Left: category icon only (no background), 40x40
         String iconPath = resolveIconPath(category);
         JPanel iconPanel = new JPanel(new GridBagLayout());
         iconPanel.setOpaque(false);
@@ -56,19 +50,15 @@ public class BudgetRowItem extends JPanel {
 
         add(iconPanel, "cell 0 0, aligny center");
 
-        // Row 0: category label on same line as icon
         JLabel nameLabel = new JLabel(name);
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.PLAIN, 16f));
         nameLabel.setForeground(new Color(0x111827));
         add(nameLabel, "cell 1 0, aligny center, growx");
 
-        // Row 1: progress bar full width, fixed height 15px, arc 30px
         BudgetProgressBar bar = new BudgetProgressBar(15, 30);
         bar.setPercent(usedRow.percentUsed);
         add(bar, "cell 0 1 3 1, growx, h 15!");
 
-        // Row 2: "Spent: X / Limit: Y" starting from column 0 (aligned with icon) + "%"
-        // (right)
         String spentText = CurrencyUtil.format(usedRow.spent);
         String limitText = CurrencyUtil.format(usedRow.budget);
         JPanel infoRow = new JPanel(new MigLayout("ins 0, fillx", "[pref!][grow][pref!]", "[center]"));
@@ -79,26 +69,21 @@ public class BudgetRowItem extends JPanel {
         infoLabel.setForeground(new Color(0x6B7280));
         infoRow.add(infoLabel);
 
-        // Empty space in middle
         infoRow.add(new JLabel(), "growx");
 
-        // Percentage label (right aligned)
         JLabel percentLabel = new JLabel(String.format("%.0f%%", usedRow.percentUsed));
         percentLabel.setFont(percentLabel.getFont().deriveFont(Font.PLAIN, 14f));
-        // Color based on percent: green < 80%, yellow 80-99%, red >= 100%
         if (usedRow.percentUsed < 80) {
-            percentLabel.setForeground(new Color(0x22C55E)); // Green
+            percentLabel.setForeground(new Color(0x22C55E));
         } else if (usedRow.percentUsed < 100) {
-            percentLabel.setForeground(new Color(0xF59E0B)); // Yellow/Orange
+            percentLabel.setForeground(new Color(0xF59E0B));
         } else {
-            percentLabel.setForeground(new Color(0xB91C1C)); // Red
+            percentLabel.setForeground(new Color(0xB91C1C));
         }
         infoRow.add(percentLabel);
 
-        // Span from column 0 to include icon area
         add(infoRow, "cell 0 2 3 1, aligny bottom, growx");
 
-        // Right: status chip + delete button + edit button
         JPanel rightPanel = new JPanel(new MigLayout("ins 0, gap 8", "[][pref!][pref!]", "[center]"));
         rightPanel.setOpaque(false);
 
@@ -138,7 +123,8 @@ public class BudgetRowItem extends JPanel {
 
     private JButton createDeleteButton() {
         JButton btn = new JButton();
-        ImageIcon deleteIcon = StyledComponents.getIcon("src/main/java/com/expensemanager/img/budget/delete.png", 20, 20);
+        ImageIcon deleteIcon = StyledComponents.getIcon("src/main/java/com/expensemanager/img/budget/delete.png", 20,
+                20);
         if (deleteIcon != null) {
             btn.setIcon(deleteIcon);
         }

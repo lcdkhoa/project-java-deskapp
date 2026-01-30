@@ -16,13 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * DAO for transactions - Section 6.3.3. amount: expense &lt; 0, income &gt; 0.
- * Queries per 6.4: Monthly Expense, Cashflow, Budget Used, Spending Habits.
- */
 public class TransactionDAO {
 
-    /** 6.4.1 Monthly Expense */
     public long getMonthlyExpense(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = ? AND month_key = ? AND type = 'expense'";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -34,7 +29,6 @@ public class TransactionDAO {
         }
     }
 
-    /** Monthly Income */
     public long getMonthlyIncome(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = ? AND month_key = ? AND type = 'income'";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -46,10 +40,6 @@ public class TransactionDAO {
         }
     }
 
-    /**
-     * 6.4.3 Cashflow per day. Cashflow(day) = SUM(amount) = Income - Expense
-     * (amount signs).
-     */
     public Map<LocalDate, Long> getCashflowByDay(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT transaction_date, SUM(amount) AS cashflow FROM transactions WHERE user_id = ? AND month_key = ? GROUP BY transaction_date ORDER BY transaction_date";
         Map<LocalDate, Long> out = new HashMap<>();
@@ -65,7 +55,6 @@ public class TransactionDAO {
         return out;
     }
 
-    /** Get income per day in month (for Monthly Cash Flow chart). */
     public Map<LocalDate, Long> getIncomeByDay(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT transaction_date, SUM(amount) AS total FROM transactions WHERE user_id = ? AND month_key = ? AND type = 'income' GROUP BY transaction_date ORDER BY transaction_date";
         Map<LocalDate, Long> out = new HashMap<>();
@@ -81,10 +70,6 @@ public class TransactionDAO {
         return out;
     }
 
-    /**
-     * Get expense per day in month (for Monthly Cash Flow chart). Returns positive
-     * values.
-     */
     public Map<LocalDate, Long> getExpenseByDay(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT transaction_date, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND month_key = ? AND type = 'expense' GROUP BY transaction_date ORDER BY transaction_date";
         Map<LocalDate, Long> out = new HashMap<>();
@@ -100,7 +85,6 @@ public class TransactionDAO {
         return out;
     }
 
-    /** 6.4.4 Spending Habits by weekday (DOW 0-6, Sunday=0). */
     public Map<Integer, Long> getSpendingByWeekday(Connection conn, String userId) throws SQLException {
         String sql = "SELECT (DAYOFWEEK(STR_TO_DATE(transaction_date, '%Y-%m-%d')) - 1) AS weekday, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND type = 'expense' GROUP BY weekday";
         Map<Integer, Long> out = new HashMap<>();
@@ -115,7 +99,6 @@ public class TransactionDAO {
         return out;
     }
 
-    /** Expense by category in month (for Donut). Exclude 0. */
     public Map<String, Long> getExpenseByCategory(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT category_id, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND month_key = ? AND type = 'expense' GROUP BY category_id HAVING total > 0";
         Map<String, Long> out = new HashMap<>();
@@ -131,7 +114,6 @@ public class TransactionDAO {
         return out;
     }
 
-    /** Expense grouped by date in range (for Last 7 Days bar). */
     public Map<LocalDate, Long> getExpenseByDateRange(Connection conn, String userId, LocalDate start, LocalDate end)
             throws SQLException {
         String sql = "SELECT transaction_date, ABS(SUM(amount)) AS total FROM transactions WHERE user_id = ? AND type = 'expense' AND transaction_date >= ? AND transaction_date <= ? GROUP BY transaction_date ORDER BY transaction_date";
@@ -212,10 +194,6 @@ public class TransactionDAO {
         return null;
     }
 
-    /**
-     * Search and filter. Sort: date (newest), amount (high). Date range max 60
-     * days, Start <= End.
-     */
     public List<Transaction> search(Connection conn, String userId, String categoryId, String walletType,
             LocalDate startDate, LocalDate endDate, String sortBy, String searchNote) throws SQLException {
         List<String> cond = new ArrayList<>();
@@ -242,13 +220,6 @@ public class TransactionDAO {
             cond.add("COALESCE(note,'') LIKE ?");
             args.add("%" + searchNote.trim() + "%");
         }
-        // Spec: search by Note, Category name. Category filter uses categoryId;
-        // category name search could be added via JOIN.
-        // Sort options:
-        // - date_desc (default): newest first
-        // - date_asc: oldest first
-        // - amount_desc: highest absolute amount first
-        // - amount_asc: lowest absolute amount first
         String order;
         if ("date_asc".equals(sortBy)) {
             order = "transaction_date ASC, transaction_time ASC";
@@ -257,7 +228,6 @@ public class TransactionDAO {
         } else if ("amount_asc".equals(sortBy)) {
             order = "ABS(amount) ASC, transaction_date DESC, transaction_time DESC";
         } else {
-            // Default: newest first
             order = "transaction_date DESC, transaction_time DESC";
         }
         String sql = "SELECT id, user_id, amount, type, category_id, wallet_type, note, transaction_date, transaction_time, month_key, created_at, updated_at FROM transactions WHERE "
@@ -275,7 +245,6 @@ public class TransactionDAO {
         }
     }
 
-    /** List by date DESC, time DESC for a month (grouped by date in UI). */
     public List<Transaction> listByMonth(Connection conn, String userId, String monthKey) throws SQLException {
         String sql = "SELECT id, user_id, amount, type, category_id, wallet_type, note, transaction_date, transaction_time, month_key, created_at, updated_at FROM transactions WHERE user_id = ? AND month_key = ? ORDER BY transaction_date DESC, transaction_time DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

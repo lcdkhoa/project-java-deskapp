@@ -10,9 +10,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO for categories table. Section 6.3.2.
- */
 public class CategoryDAO {
 
     public List<Category> findAll(Connection conn) throws SQLException {
@@ -33,7 +30,8 @@ public class CategoryDAO {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return map(rs);
+                if (rs.next())
+                    return map(rs);
             }
         }
         return null;
@@ -48,7 +46,8 @@ public class CategoryDAO {
     private List<Category> extractList(PreparedStatement ps) throws SQLException {
         List<Category> list = new ArrayList<>();
         try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(map(rs));
+            while (rs.next())
+                list.add(map(rs));
         }
         return list;
     }
@@ -62,7 +61,8 @@ public class CategoryDAO {
         c.setType(rs.getString("type"));
         c.setActive(rs.getInt("is_active") != 0);
         String t = rs.getString("created_at");
-        if (t != null) c.setCreatedAt(DateUtil.parseInstant(t));
+        if (t != null)
+            c.setCreatedAt(DateUtil.parseInstant(t));
         return c;
     }
 }

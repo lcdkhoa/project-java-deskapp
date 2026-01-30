@@ -10,7 +10,6 @@ import com.expensemanager.db.DatabaseConnection;
 import com.expensemanager.model.Budget;
 import com.expensemanager.model.Category;
 import com.expensemanager.util.MonthKeyUtil;
-import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,10 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Add Budget - Section 3.1. Category (expense, not already budgeted), Monthly
- * Budget Amount (max 500.000.000).
- */
 public class AddBudgetDialog extends JDialog {
     private final MainFrame main;
     private final YearMonth month;
@@ -75,7 +70,6 @@ public class AddBudgetDialog extends JDialog {
         g.gridx = 0;
         form.add(new JLabel("Monthly Budget Amount * (max 500.000.000 đ)"), g);
         amountF = new JTextField(15);
-        // Apply thousand separator formatting (e.g., 1.000.000)
         CurrencyUtil.applyThousandSeparator(amountF);
         g.gridx = 1;
         form.add(amountF, g);

@@ -177,10 +177,8 @@ public class TransactionView extends JPanel {
                 int x = (getWidth() - w) / 2;
                 int y = (getHeight() - h) / 2;
 
-                // Circle
                 g2.setStroke(new BasicStroke(1.5f));
                 g2.drawOval(x, y, 10, 10);
-                // Handle
                 g2.drawLine(x + 8, y + 8, x + 14, y + 14);
 
                 g2.dispose();
@@ -228,7 +226,6 @@ public class TransactionView extends JPanel {
         categoryCombo.removeAllItems();
         categoryCombo.addItem(new CategoryItem(null, "All categories"));
 
-        // Use controller to get categories (no direct DB access)
         List<Category> all = controller.getAllCategories();
         for (Category c : all) {
             categoryCombo.addItem(new CategoryItem(c.getId(), c.getName()));

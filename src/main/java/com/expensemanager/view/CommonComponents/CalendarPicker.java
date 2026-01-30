@@ -35,7 +35,6 @@ public class CalendarPicker extends JPanel {
 
         this.selectedDate = new Date();
 
-        // Create text field
         dateField = new JTextField();
         dateField.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
         dateField.setOpaque(false);
@@ -86,7 +85,6 @@ public class CalendarPicker extends JPanel {
                 int x = (width - iconSize) / 2;
                 int y = (height - iconSize) / 2;
 
-                // Draw calendar icon
                 g2.setStroke(new BasicStroke(1.5f));
                 g2.drawRoundRect(x + 1, y + 3, iconSize - 2, iconSize - 4, 3, 3);
                 g2.fillRect(x + 2, y + 3, iconSize - 4, 3);
@@ -138,7 +136,6 @@ public class CalendarPicker extends JPanel {
         final int[] currentYear = { cal.get(Calendar.YEAR) };
         final int[] currentMonth = { cal.get(Calendar.MONTH) };
 
-        // Header with navigation
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 10, 5));
@@ -166,7 +163,6 @@ public class CalendarPicker extends JPanel {
             int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
             int daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 
-            // Get selected date for highlighting
             Calendar selectedCal = Calendar.getInstance();
             if (selectedDate != null) {
                 selectedCal.setTime(selectedDate);
@@ -197,7 +193,6 @@ public class CalendarPicker extends JPanel {
                 bodyPanelRef[0].add(dayBtn);
             }
 
-            // Update header label
             String[] monthNames = { "January", "February", "March", "April", "May", "June",
                     "July", "August", "September", "October", "November", "December" };
             monthYearLabel.setText(monthNames[currentMonth[0]] + " " + currentYear[0]);
@@ -206,7 +201,6 @@ public class CalendarPicker extends JPanel {
             bodyPanelRef[0].repaint();
         };
 
-        // Previous/Next buttons
         JButton prevBtn = createNavButton("<");
         prevBtn.addActionListener(e -> {
             currentMonth[0]--;

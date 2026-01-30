@@ -29,7 +29,6 @@ public class BudgetCard extends ModernCard {
         setMinimumSize(new Dimension(0, CARD_HEIGHT));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, CARD_HEIGHT));
 
-        // Icon + Title
         JPanel row1 = new JPanel(new MigLayout("ins 0, gap 8 0", "[][]", "[center]"));
         row1.setOpaque(false);
 
@@ -49,7 +48,6 @@ public class BudgetCard extends ModernCard {
         row1.add(titleLabel, "align left, aligny center");
         add(row1, "wrap");
 
-        // Value
         valueLabel = new JLabel(valueText);
         valueLabel.setFont(valueLabel.getFont().deriveFont(Font.PLAIN, VALUE_FONT_SIZE));
         valueLabel.setForeground(valueColor != null ? valueColor : new Color(0x111827));

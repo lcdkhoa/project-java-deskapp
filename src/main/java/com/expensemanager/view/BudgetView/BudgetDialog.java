@@ -15,11 +15,6 @@ import java.awt.*;
 import java.time.YearMonth;
 import java.util.List;
 
-/**
- * Unified Add/Edit Budget dialog with modern rounded inputs.
- * Uses BudgetDialogListener to communicate with controller (no direct DB
- * access).
- */
 public class BudgetDialog extends JDialog {
 
     public enum Mode {
@@ -52,13 +47,10 @@ public class BudgetDialog extends JDialog {
         setLocationRelativeTo(main);
         setLayout(new BorderLayout());
 
-        // Row constraints: label rows min 20, input rows 48 so amount field is never
-        // squeezed
         JPanel form = new JPanel(new MigLayout("ins 20 20 16 20, wrap 1, gapy 16",
                 "[grow]", "[20!][48!][20!][48!]"));
         form.setBackground(Color.WHITE);
 
-        // Category
         JLabel catLabel = new JLabel(mode == Mode.ADD ? "Category *" : "Category");
         catLabel.setFont(catLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(catLabel, "alignx left");
@@ -68,7 +60,6 @@ public class BudgetDialog extends JDialog {
             refillCategories();
             form.add(categoryCombo, "growx, h 48!");
         } else {
-            // Read-only category field styled like textfield
             String name;
             if (existingCategory != null) {
                 name = existingCategory.getName();
@@ -82,7 +73,6 @@ public class BudgetDialog extends JDialog {
             form.add(readOnly, "growx, h 48!");
         }
 
-        // Amount
         JLabel amountLabel = new JLabel("Monthly Budget Amount * (max 500.000.000 đ)");
         amountLabel.setFont(amountLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(amountLabel, "alignx left");
@@ -90,7 +80,6 @@ public class BudgetDialog extends JDialog {
         amountField = createStyledTextField();
         amountField.setPreferredSize(new Dimension(0, CONTROL_HEIGHT));
         amountField.setMinimumSize(new Dimension(120, CONTROL_HEIGHT));
-        // Apply thousand separator formatting (e.g., 1.000.000)
         CurrencyUtil.applyThousandSeparator(amountField);
         if (existing != null) {
             amountField.setText(CurrencyUtil.formatNoSymbol(existing.getAmount()));
@@ -99,7 +88,6 @@ public class BudgetDialog extends JDialog {
 
         add(form, BorderLayout.CENTER);
 
-        // Footer buttons
         JPanel footer = new JPanel(new MigLayout("ins 0 20 20 20, gap 10", "[grow][grow]", "[]"));
         footer.setBackground(Color.WHITE);
 
@@ -119,14 +107,8 @@ public class BudgetDialog extends JDialog {
         return StyledComponents.createStyledTextField();
     }
 
-    /**
-     * Category dropdown styled like TransactionView createStyledComboBox:
-     * white bg, rounded (CARD_ARC), border blue on focus/popup, custom arrow, 48px
-     * height.
-     */
     private JComboBox<Category> createStyledCategoryCombo() {
         JComboBox<Category> combo = StyledComponents.createStyledComboBox(CONTROL_HEIGHT, CARD_ARC);
-        // Custom renderer to show Category name
         combo.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
@@ -150,7 +132,6 @@ public class BudgetDialog extends JDialog {
 
     private void refillCategories() {
         categoryCombo.removeAllItems();
-        // Use listener to get available categories (no direct DB access)
         List<Category> available = listener.getAvailableCategories();
         for (Category c : available) {
             categoryCombo.addItem(c);
@@ -187,11 +168,9 @@ public class BudgetDialog extends JDialog {
                 b.setCategoryId(c.getId());
                 b.setMonthKey(MonthKeyUtil.of(month));
                 b.setAmount(amount);
-                // Use listener to save (no direct DB access)
                 listener.onBudgetCreated(b);
             } else {
                 existing.setAmount(amount);
-                // Use listener to update (no direct DB access)
                 listener.onBudgetUpdated(existing);
             }
             listener.onRefreshRequired();

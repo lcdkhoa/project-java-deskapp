@@ -5,10 +5,6 @@ import com.expensemanager.util.CurrencyUtil;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * White rounded card for Section 3.3: Category icon, name, Spent / Limit,
- * progress bar at bottom.
- */
 public class BudgetCategoryCard extends JPanel {
 
     private static final int RADIUS = 12;
@@ -22,7 +18,6 @@ public class BudgetCategoryCard extends JPanel {
         setLayout(new BorderLayout(0, 10));
         setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
 
-        // Top: icon + name
         JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         top.setOpaque(false);
         JPanel iconWrap = new JPanel(new GridBagLayout()) {
@@ -50,14 +45,12 @@ public class BudgetCategoryCard extends JPanel {
         top.add(nameLbl);
         add(top, BorderLayout.NORTH);
 
-        // Middle: Spent / Limit
         JLabel amountLbl = new JLabel(CurrencyUtil.format(spent) + " / " + CurrencyUtil.format(budget));
         amountLbl.setFont(amountLbl.getFont().deriveFont(12f));
         amountLbl.setForeground(AMOUNT_COLOR);
         amountLbl.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
         add(amountLbl, BorderLayout.CENTER);
 
-        // Bottom: progress bar
         BudgetProgressBar bar = new BudgetProgressBar();
         bar.setPercent(percentUsed);
         add(bar, BorderLayout.SOUTH);

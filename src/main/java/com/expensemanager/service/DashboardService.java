@@ -16,10 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Service layer for Dashboard operations.
- * Aggregates data from multiple DAOs for dashboard display.
- */
 public class DashboardService {
 
     private final TransactionDAO transactionDAO;
@@ -32,13 +28,6 @@ public class DashboardService {
         this.categoryDAO = new CategoryDAO();
     }
 
-    /**
-     * Get KPI data for dashboard.
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return KPI data object
-     */
     public KPIData getKPIData(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             long expense = transactionDAO.getMonthlyExpense(conn, userId, monthKey);
@@ -54,14 +43,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Get expense data for last 7 days (for bar chart).
-     * 
-     * @param userId        user ID
-     * @param referenceDate reference date (today if current month, end of month
-     *                      otherwise)
-     * @return BarChartData with dates and amounts
-     */
     public BarChartData getLast7DaysExpense(String userId, LocalDate referenceDate) {
         LocalDate start = referenceDate.minusDays(6);
         LocalDate end = referenceDate;
@@ -89,13 +70,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Get expense by category data (for donut chart).
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return CategoryChartData
-     */
     public CategoryChartData getCategoryExpenseData(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             List<Category> allCategories = categoryDAO.findByType(conn, "expense");
@@ -121,15 +95,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Get monthly cashflow data (for line chart) with separate Income and Expense
-     * series.
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @param month    YearMonth object
-     * @return MonthlyCashFlowData with income and expense per day
-     */
     public MonthlyCashFlowData getMonthlyCashflow(String userId, String monthKey, YearMonth month) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             Map<LocalDate, Long> incomeByDay = transactionDAO.getIncomeByDay(conn, userId, monthKey);
@@ -160,13 +125,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Get budget warnings (categories that are over budget).
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return BudgetWarningsData
-     */
     public BudgetWarningsData getBudgetWarnings(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             List<BudgetDAO.BudgetUsedRow> rows = budgetDAO.getBudgetUsedPerCategory(conn, userId, monthKey);
@@ -187,11 +145,6 @@ public class DashboardService {
         }
     }
 
-    // Data classes for dashboard
-
-    /**
-     * KPI data for dashboard cards.
-     */
     public static class KPIData {
         public final long expense;
         public final long income;
@@ -208,9 +161,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Bar chart data for last 7 days.
-     */
     public static class BarChartData {
         public final List<LocalDate> dates;
         public final List<Long> amounts;
@@ -223,9 +173,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Category expense data for donut chart.
-     */
     public static class CategoryChartData {
         public final List<Category> categories;
         public final Map<String, Category> idToCategory;
@@ -243,9 +190,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Monthly Cash Flow chart data with separate Income and Expense series.
-     */
     public static class MonthlyCashFlowData {
         public final List<Integer> dayNumbers;
         public final List<Long> incomeValues;
@@ -263,9 +207,6 @@ public class DashboardService {
         }
     }
 
-    /**
-     * Budget warnings data.
-     */
     public static class BudgetWarningsData {
         public final List<BudgetDAO.BudgetUsedRow> overBudgetItems;
         public final Map<String, String> categoryIdToName;

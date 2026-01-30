@@ -34,12 +34,10 @@ public class CreateTransactionDialog extends JDialog {
     private JComboBox<String> walletCombo;
     private JTextField noteF;
 
-    // Category grid
     private Map<String, CategoryItemPanel> categoryPanels;
     private CategoryItemPanel selectedCategoryPanel;
     private JPanel categoryGridPanel;
 
-    // Wallet types loaded from DB
     private List<WalletType> walletTypes;
 
     private static final Color EXPENSE_COLOR = new Color(0xE7000B);
@@ -58,7 +56,6 @@ public class CreateTransactionDialog extends JDialog {
         JPanel form = new JPanel(new MigLayout("ins 20, wrap 1, gapy 15, align center", "[450!]", "[]"));
         form.setBackground(Color.WHITE);
 
-        // Amount field
         JLabel amountLabel = new JLabel("Amount *");
         amountLabel.setFont(amountLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(amountLabel, "alignx left");
@@ -67,7 +64,6 @@ public class CreateTransactionDialog extends JDialog {
         amountPanel.setOpaque(false);
         amountF = StyledComponents.createStyledTextField(452, 60, 30);
         amountF.setFont(amountF.getFont().deriveFont(Font.PLAIN, 16f));
-        // Apply thousand separator formatting (e.g., 1.000.000)
         CurrencyUtil.applyThousandSeparator(amountF);
         amountPanel.add(amountF, BorderLayout.CENTER);
 
@@ -77,7 +73,6 @@ public class CreateTransactionDialog extends JDialog {
         amountPanel.add(vndLabel, BorderLayout.EAST);
         form.add(amountPanel, "w 452!, alignx center, wrap");
 
-        // Transaction Type Toggle Buttons
         JLabel typeLabel = new JLabel("Type *");
         typeLabel.setFont(typeLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(typeLabel, "alignx left");
@@ -85,7 +80,6 @@ public class CreateTransactionDialog extends JDialog {
         JPanel typePanel = createTypeTogglePanel();
         form.add(typePanel, "w 450!, alignx center, wrap");
 
-        // Date & Time - using CalendarPicker and TimePicker
         JLabel dateTimeLabel = new JLabel("Date & Time *");
         dateTimeLabel.setFont(dateTimeLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(dateTimeLabel, "alignx left");
@@ -93,11 +87,9 @@ public class CreateTransactionDialog extends JDialog {
         JPanel dateTimePanel = new JPanel(new MigLayout("ins 0, gap 10", "[grow,fill][grow,fill]", "[]"));
         dateTimePanel.setOpaque(false);
 
-        // Create CalendarPicker and TimePicker components
         datePicker = new CalendarPicker("mm/dd/yyyy");
         timePicker = new TimePicker("hh:mm a");
 
-        // Set current date/time as default
         datePicker.setDate(new Date());
         timePicker.setTime(new Date());
 
@@ -106,7 +98,6 @@ public class CreateTransactionDialog extends JDialog {
 
         form.add(dateTimePanel, "w 452!, alignx center, wrap");
 
-        // Category Grid - centered
         JLabel categoryLabel = new JLabel("Category *");
         categoryLabel.setFont(categoryLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(categoryLabel, "alignx left");
@@ -115,7 +106,6 @@ public class CreateTransactionDialog extends JDialog {
         categoryGridPanel.setOpaque(false);
         form.add(categoryGridPanel, "w 450!, alignx center, wrap");
 
-        // Wallet - width 452px, height 48px, centered
         JLabel walletLabel = new JLabel("Wallet");
         walletLabel.setFont(walletLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(walletLabel, "alignx left");
@@ -124,14 +114,12 @@ public class CreateTransactionDialog extends JDialog {
         walletCombo.setPreferredSize(new Dimension(452, 48));
         walletCombo.setMinimumSize(new Dimension(452, 48));
         walletCombo.setMaximumSize(new Dimension(452, 48));
-        // Load wallet options from DB
         String[] walletDisplayNames = walletTypes.stream()
                 .map(WalletType::getDisplayName)
                 .toArray(String[]::new);
         walletCombo.setModel(new DefaultComboBoxModel<>(walletDisplayNames));
         form.add(walletCombo, "alignx center, wrap");
 
-        // Note
         JLabel noteLabel = new JLabel("Note");
         noteLabel.setFont(noteLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(noteLabel, "alignx left");
@@ -152,13 +140,11 @@ public class CreateTransactionDialog extends JDialog {
 
         form.add(buttonPanel, "w 450!, alignx center, wrap");
 
-        // Add form to dialog
         JScrollPane scrollPane = new JScrollPane(form);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setBackground(Color.WHITE);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Initialize with Expense selected and load categories
         expenseBtn.setSelected(true);
         updateAmountColor();
         refillCategories();
@@ -202,14 +188,12 @@ public class CreateTransactionDialog extends JDialog {
     }
 
     private void refillCategories() {
-        // Clear existing panels
         categoryGridPanel.removeAll();
         categoryPanels.clear();
         selectedCategoryPanel = null;
 
         String type = expenseBtn.isSelected() ? "expense" : "income";
 
-        // Use listener to get categories (no direct DB access)
         List<Category> list = listener.getCategoriesByType(type);
 
         String[] categoryOrder;
@@ -301,7 +285,6 @@ public class CreateTransactionDialog extends JDialog {
         }
         String categoryId = selectedCategoryPanel.getCategoryId();
 
-        // Get date from CalendarPicker and time from TimePicker
         Date selectedDate = datePicker.getDate();
         Date selectedTime = timePicker.getTime();
 
@@ -317,7 +300,6 @@ public class CreateTransactionDialog extends JDialog {
         LocalDate d = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalTime t = selectedTime.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
 
-        // Get wallet name from selected wallet type
         String wallet = walletTypes.get(walletCombo.getSelectedIndex()).getName();
         String note = noteF.getText();
         if (note != null && note.length() > 120)
@@ -325,7 +307,7 @@ public class CreateTransactionDialog extends JDialog {
 
         Transaction tx = new Transaction();
         tx.setUserId(AppContext.getUserId());
-        tx.setAmount(amount); // Service will handle sign based on type
+        tx.setAmount(amount);
         tx.setType(type);
         tx.setCategoryId(categoryId);
         tx.setWalletType(wallet);
@@ -335,7 +317,6 @@ public class CreateTransactionDialog extends JDialog {
         tx.setMonthKey(MonthKeyUtil.of(d));
 
         try {
-            // Use listener to save (no direct DB access)
             listener.onTransactionCreated(tx);
             listener.onRefreshRequired();
             dispose();

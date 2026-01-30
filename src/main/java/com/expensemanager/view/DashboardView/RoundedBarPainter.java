@@ -8,10 +8,6 @@ import java.awt.*;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.RectangularShape;
 
-/**
- * BarPainter with rounded top corners only. No shadow. Figma: bars with soft
- * blue, rounded tops.
- */
 public final class RoundedBarPainter implements BarPainter {
 
     private static final int ARC = 6;
@@ -31,7 +27,6 @@ public final class RoundedBarPainter implements BarPainter {
         if (arc < 1)
             arc = 1;
 
-        // Rounded top corners only (top = smaller y for vertical bars)
         GeneralPath path = new GeneralPath();
         path.moveTo(x + arc, y);
         path.lineTo(x + w - arc, y);
