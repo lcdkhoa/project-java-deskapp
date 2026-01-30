@@ -10,19 +10,13 @@ import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Budget warnings: light red bg (#FEF2F2), red border (#FECACA), arc 30,
- * warning icon from img/dashboard/warn.png.
- * Card-in-card style: each warning item is a white card (arc 30, 85px height)
- * inside the red panel.
- */
 public class BudgetWarningsPanel extends JPanel {
 
-    private static final Color BG = new Color(254, 242, 242); // #FEF2F2
-    private static final Color BORDER = new Color(0xFECACA); // Red border
+    private static final Color BG = new Color(254, 242, 242);
+    private static final Color BORDER = new Color(0xFECACA);
     private static final Color TITLE_RED = new Color(0x991B1B);
     private static final Color PERCENT_RED = new Color(0xEF4444);
-    private static final Color AMOUNT_GRAY = new Color(0x6B7280); // Gray for amount text
+    private static final Color AMOUNT_GRAY = new Color(0x6B7280);
     private static final int RADIUS = 30;
     private static final int WARNING_CARD_HEIGHT = 85;
 
@@ -38,7 +32,8 @@ public class BudgetWarningsPanel extends JPanel {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         header.setOpaque(false);
         JLabel iconLbl = new JLabel();
-        ImageIcon warnIcon = StyledComponents.getIcon("src/main/java/com/expensemanager/img/dashboard/warn.png", 20, 20);
+        ImageIcon warnIcon = StyledComponents.getIcon("src/main/java/com/expensemanager/img/dashboard/warn.png", 20,
+                20);
         if (warnIcon != null) {
             iconLbl.setIcon(warnIcon);
         } else {
@@ -63,11 +58,6 @@ public class BudgetWarningsPanel extends JPanel {
         add(scroll, BorderLayout.CENTER);
     }
 
-    /**
-     * Update the list of over-budget items. Each item is a white card (arc 30, 85px
-     * height).
-     * Call setVisible(!over.isEmpty()) from the controller.
-     */
     public void setWarnings(List<BudgetDAO.BudgetUsedRow> over, Map<String, String> idToName) {
         listPanel.removeAll();
         for (BudgetDAO.BudgetUsedRow r : over) {
@@ -75,7 +65,6 @@ public class BudgetWarningsPanel extends JPanel {
             String amountStr = CurrencyUtil.format(r.spent) + " / " + CurrencyUtil.format(r.budget);
             String pctStr = String.format("%.0f%%", r.percentUsed);
 
-            // White card for each warning item
             JPanel warningCard = new WarningItemCard(name, amountStr, pctStr);
             listPanel.add(warningCard, "growx, h " + WARNING_CARD_HEIGHT + "!");
         }
@@ -83,17 +72,13 @@ public class BudgetWarningsPanel extends JPanel {
         listPanel.repaint();
     }
 
-    /** White card for a single warning item: arc 30, fixed height 85px. */
     private static final class WarningItemCard extends JPanel {
         WarningItemCard(String categoryName, String amountStr, String pctStr) {
             setOpaque(false);
             setBackground(Color.WHITE);
-            // Layout: fillx, wrap 2 for two columns, []0[] for no gap between rows
             setLayout(new MigLayout("ins 15, fillx, wrap 2", "[grow][]", "[]0[]"));
             putClientProperty("FlatLaf.style", "arc: 30");
 
-            // Row 1: Category Name (21px PLAIN, Black) | Percentage (21px PLAIN, Red) -
-            // same baseline
             JLabel categoryLabel = new JLabel(categoryName);
             categoryLabel.setFont(categoryLabel.getFont().deriveFont(Font.PLAIN, 21f));
             categoryLabel.setForeground(Color.BLACK);
@@ -105,7 +90,6 @@ public class BudgetWarningsPanel extends JPanel {
             pctLabel.setHorizontalAlignment(SwingConstants.RIGHT);
             add(pctLabel, "cell 1 0, align right, aligny center");
 
-            // Row 2: Amount Text (14px Regular, Gray) - directly below Category Name
             JLabel amountLabel = new JLabel(amountStr);
             amountLabel.setFont(amountLabel.getFont().deriveFont(Font.PLAIN, 14f));
             amountLabel.setForeground(AMOUNT_GRAY);

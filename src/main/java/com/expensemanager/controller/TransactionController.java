@@ -36,7 +36,6 @@ public class TransactionController implements TransactionDialogListener {
     private final JPanel listPanel;
     private final JScrollPane scrollPane;
 
-    // Services
     private final TransactionService transactionService;
     private final CategoryService categoryService;
     private final WalletTypeService walletTypeService;

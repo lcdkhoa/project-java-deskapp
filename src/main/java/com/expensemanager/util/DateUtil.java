@@ -7,14 +7,12 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-/**
- * Parse timestamp strings from DB. Handles ISO-8601 and "yyyy-MM-dd HH:mm:ss[.fraction]".
- * formatDateForGroup for Section 2.2: "Today", "Yesterday", or "Dec 19, 2025".
- */
 public final class DateUtil {
     private static final DateTimeFormatter GROUP_DATE = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH);
+
     public static Instant parseInstant(String t) {
-        if (t == null || t.isEmpty()) return null;
+        if (t == null || t.isEmpty())
+            return null;
         try {
             return Instant.parse(t);
         } catch (Exception e) {
@@ -27,12 +25,14 @@ public final class DateUtil {
         }
     }
 
-    /** Section 2.2: "Today", "Yesterday", or "Dec 19, 2025". */
     public static String formatDateForGroup(LocalDate d) {
-        if (d == null) return "";
+        if (d == null)
+            return "";
         LocalDate today = LocalDate.now();
-        if (d.equals(today)) return "Today";
-        if (d.equals(today.minusDays(1))) return "Yesterday";
+        if (d.equals(today))
+            return "Today";
+        if (d.equals(today.minusDays(1)))
+            return "Yesterday";
         return d.format(GROUP_DATE);
     }
 }

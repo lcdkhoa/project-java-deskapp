@@ -7,10 +7,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.function.Consumer;
 
-/**
- * Reusable Time Picker component.
- * Displays a popup time selector with 30-minute intervals.
- */
 public class TimePicker extends JPanel {
 
   private static final Color BORDER_COLOR = new Color(0xE5E7EB);
@@ -39,7 +35,6 @@ public class TimePicker extends JPanel {
 
     this.selectedTime = new Date();
 
-    // Create text field
     timeField = new JTextField();
     timeField.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
     timeField.setOpaque(false);
@@ -49,13 +44,11 @@ public class TimePicker extends JPanel {
       timeField.putClientProperty("JTextField.placeholderText", placeholder);
     }
 
-    // Create clock icon button
     JButton iconButton = createIconButton();
 
     add(timeField, BorderLayout.CENTER);
     add(iconButton, BorderLayout.EAST);
 
-    // Add click listeners
     timeField.addMouseListener(new java.awt.event.MouseAdapter() {
       @Override
       public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -64,7 +57,6 @@ public class TimePicker extends JPanel {
     });
     iconButton.addActionListener(e -> showTimePopup());
 
-    // Add focus listener for border repaint
     timeField.addFocusListener(new java.awt.event.FocusAdapter() {
       @Override
       public void focusGained(java.awt.event.FocusEvent e) {
@@ -95,7 +87,6 @@ public class TimePicker extends JPanel {
         int centerX = x + iconSize / 2;
         int centerY = y + iconSize / 2;
 
-        // Draw clock icon
         g2.setStroke(new BasicStroke(1.5f));
         g2.drawOval(x + 1, y + 1, iconSize - 2, iconSize - 2);
         g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
@@ -120,11 +111,9 @@ public class TimePicker extends JPanel {
     Graphics2D g2 = (Graphics2D) g.create();
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-    // White rounded background
     g2.setColor(Color.WHITE);
     g2.fillRoundRect(0, 0, getWidth(), getHeight(), ARC, ARC);
 
-    // Border
     boolean focused = timeField.isFocusOwner();
     g2.setColor(focused ? FOCUS_COLOR : BORDER_COLOR);
     g2.setStroke(new BasicStroke(1f));
@@ -147,7 +136,6 @@ public class TimePicker extends JPanel {
     panel.setBackground(Color.WHITE);
     panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-    // Get current time for highlighting
     Calendar cal = Calendar.getInstance();
     if (selectedTime != null) {
       cal.setTime(selectedTime);
@@ -156,12 +144,10 @@ public class TimePicker extends JPanel {
     int currentMinute = cal.get(Calendar.MINUTE);
     int currentTimeMinutes = currentHour * 60 + currentMinute;
 
-    // Create scrollable list of time slots
     JPanel timeListPanel = new JPanel();
     timeListPanel.setLayout(new BoxLayout(timeListPanel, BoxLayout.Y_AXIS));
     timeListPanel.setBackground(Color.WHITE);
 
-    // Find closest time slot
     int closestSlotMinutes = -1;
     int minDiff = Integer.MAX_VALUE;
     for (int hour = 0; hour < 24; hour++) {
@@ -175,7 +161,6 @@ public class TimePicker extends JPanel {
       }
     }
 
-    // Generate time slots in 30-minute intervals
     int slotIndex = 0;
     final int[] closestSlotIndex = { -1 };
     final int finalClosestSlot = closestSlotMinutes;
@@ -215,7 +200,6 @@ public class TimePicker extends JPanel {
     scrollPane.getViewport().setBackground(Color.WHITE);
     scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-    // Scroll to closest time slot
     if (closestSlotIndex[0] >= 0) {
       final int idx = closestSlotIndex[0];
       SwingUtilities.invokeLater(() -> {
@@ -268,8 +252,6 @@ public class TimePicker extends JPanel {
     return btn;
   }
 
-  // Public API
-
   public void setTime(Date time) {
     this.selectedTime = time;
     if (time != null) {
@@ -296,9 +278,6 @@ public class TimePicker extends JPanel {
     timeField.setText("");
   }
 
-  /**
-   * Add a change listener that fires when the text field content changes.
-   */
   public void addChangeListener(Runnable listener) {
     timeField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
       @Override
@@ -318,9 +297,6 @@ public class TimePicker extends JPanel {
     });
   }
 
-  /**
-   * Get the underlying text field for additional customization.
-   */
   public JTextField getTextField() {
     return timeField;
   }

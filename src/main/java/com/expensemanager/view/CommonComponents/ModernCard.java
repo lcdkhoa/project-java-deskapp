@@ -3,23 +3,16 @@ package com.expensemanager.view.CommonComponents;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Card: white background, arc 20 rounded corners, 1px border #E5E7EB, 20px internal padding.
- * Use for KPI, charts. FlatLaf.style arc: 20; custom paint for rounded rect.
- */
 public class ModernCard extends JPanel {
 
     private static final int PADDING = 20;
     private static final int ARC = 30;
-    private static final Color BORDER_COLOR = new Color(229, 231, 235); // #E5E7EB
+    private static final Color BORDER_COLOR = new Color(229, 231, 235);
 
     public ModernCard() {
         this(null);
     }
 
-    /**
-     * @param content component to show inside the card; may be null (use add() later)
-     */
     public ModernCard(Component content) {
         setOpaque(false);
         setBackground(Color.WHITE);

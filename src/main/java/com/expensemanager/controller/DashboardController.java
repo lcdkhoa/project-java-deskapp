@@ -196,7 +196,6 @@ public class DashboardController implements TransactionDialogListener {
     }
 
     private JPanel buildKpiPanel() {
-        // 4 columns [grow,fill] equal width, gap 20
         JPanel panel = new JPanel(
                 new MigLayout("ins 0, gap 20 0", "[grow,fill][grow,fill][grow,fill][grow,fill]", "[]"));
         panel.setBackground(Color.WHITE);
@@ -211,7 +210,6 @@ public class DashboardController implements TransactionDialogListener {
     }
 
     private JPanel buildChartsPanel() {
-        // Single row: Last 7 Days (35%) | By Category (30%) | Monthly Cash Flow (35%)
         JPanel panel = new JPanel(
                 new MigLayout("ins 0, gap 20 0", "[grow 35, fill][grow 30, fill][grow 35, fill]",
                         "[grow, fill]"));
@@ -294,7 +292,6 @@ public class DashboardController implements TransactionDialogListener {
             barSet.addValue(value, "Expense", dateLabel);
         }
 
-        // Column 1: Last 7 Days (35%)
         JPanel barCard = new ModernCard();
         if (!barData.hasData) {
             JLabel noDataLabel = new JLabel("No expense data", SwingConstants.CENTER);
@@ -317,10 +314,8 @@ public class DashboardController implements TransactionDialogListener {
         }
         p.add(barCard, "grow");
 
-        // Column 2: By Category (30%)
         p.add(buildCategoryChartPanel(userId, monthKey), "grow");
 
-        // Column 3: Monthly Cash Flow (35%)
         p.add(buildMonthlyCashFlowPanel(userId, monthKey), "grow");
 
         p.revalidate();
@@ -343,10 +338,9 @@ public class DashboardController implements TransactionDialogListener {
             }
         }
 
-        // Layout: Title on top, Pie chart center, Legend at bottom (2 columns)
         JPanel container = new JPanel(new MigLayout("fill, wrap 1", "[grow, fill]", "[][grow, fill][]")) {
             private static final int ARC = 30;
-            private static final Color BORDER_COLOR = new Color(229, 231, 235); // #E5E7EB
+            private static final Color BORDER_COLOR = new Color(229, 231, 235);
             private static final int PADDING = 15;
 
             {
@@ -369,7 +363,6 @@ public class DashboardController implements TransactionDialogListener {
             }
         };
 
-        // Title - using common chart title style
         JLabel titleLabel = ChartUtils.createChartTitleLabel("By Category");
         container.add(titleLabel, "growx, gapbottom 10");
 
@@ -384,19 +377,18 @@ public class DashboardController implements TransactionDialogListener {
         JFreeChart chart = ChartFactory.createRingChart(null, pieSet, false, true, false);
         chart.setBackgroundPaint(null);
 
-        // Configure RingPlot
         RingPlot plot = (RingPlot) chart.getPlot();
-        plot.setSectionDepth(0.5); // Thick donut ring
-        plot.setLabelGenerator(null); // Hide connecting labels
-        plot.setOutlineVisible(false); // No outer border
-        plot.setBackgroundPaint(null); // Transparent
-        plot.setShadowPaint(null); // Disable shadow to remove dirty look
+        plot.setSectionDepth(0.5);
+        plot.setLabelGenerator(null);
+        plot.setOutlineVisible(false);
+        plot.setBackgroundPaint(null);
+        plot.setShadowPaint(null);
         try {
             plot.setShadowGenerator(null);
         } catch (Exception ignored) {
         }
         plot.setSectionOutlinesVisible(true);
-        plot.setSeparatorsVisible(false); // Hide gray separator lines between sections
+        plot.setSeparatorsVisible(false);
 
         BasicStroke whiteStroke = new BasicStroke(3f);
         for (Category cat : allCategories) {
@@ -414,10 +406,8 @@ public class DashboardController implements TransactionDialogListener {
         ChartPanel chartPanel = ChartUtils.createChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(180, 180));
 
-        // Pie chart centered
         container.add(chartPanel, "grow, align center");
 
-        // Legend at bottom - 2 columns layout
         JPanel legendPanel = createCategoryLegendPanel(allCategories, categoryExpenses, idToCategory);
         container.add(legendPanel, "growx, gaptop 10");
 
@@ -434,18 +424,15 @@ public class DashboardController implements TransactionDialogListener {
             }
         }
 
-        // 2 columns legend at bottom - split items evenly
         JPanel legend = new JPanel(new MigLayout("ins 0, gap 20 0", "[grow 50, fill][grow 50, fill]", ""));
         legend.setOpaque(false);
 
         int total = categoriesWithExpense.size();
-        int leftCount = (total + 1) / 2; // Round up for left column (e.g., 9 items -> 5 left, 4 right)
+        int leftCount = (total + 1) / 2;
 
-        // Left column
         JPanel leftColumn = new JPanel(new MigLayout("ins 0, gap 0 6, wrap 1", "[grow, fill]", ""));
         leftColumn.setOpaque(false);
 
-        // Right column
         JPanel rightColumn = new JPanel(new MigLayout("ins 0, gap 0 6, wrap 1", "[grow, fill]", ""));
         rightColumn.setOpaque(false);
 
@@ -458,19 +445,16 @@ public class DashboardController implements TransactionDialogListener {
             JPanel itemPanel = new JPanel(new MigLayout("ins 0, fillx", "[]6[grow]push[]", "[center]"));
             itemPanel.setOpaque(false);
 
-            // Dot - size 14
             JLabel dotLabel = new JLabel("●");
             dotLabel.setFont(dotLabel.getFont().deriveFont(20f));
             dotLabel.setForeground(catColor);
             itemPanel.add(dotLabel, "aligny center");
 
-            // Category name - size 13
             JLabel nameLabel = new JLabel(cat.getName());
             nameLabel.setFont(nameLabel.getFont().deriveFont(Font.PLAIN, 16f));
             nameLabel.setForeground(new Color(0x1F2937));
             itemPanel.add(nameLabel, "aligny center");
 
-            // Amount - size 13, right aligned
             JLabel amountLabel = new JLabel(amountStr);
             amountLabel.setFont(amountLabel.getFont().deriveFont(Font.PLAIN, 16f));
             amountLabel.setForeground(new Color(0x1F2937));
@@ -540,7 +524,6 @@ public class DashboardController implements TransactionDialogListener {
         plot.setRangeGridlinesVisible(true);
         plot.setOutlineVisible(false);
 
-        // Day of Month
         NumberAxis xAxis = (NumberAxis) plot.getDomainAxis();
         xAxis.setRange(1, daysInMonth);
         xAxis.setTickUnit(new NumberTickUnit(1));
@@ -549,7 +532,6 @@ public class DashboardController implements TransactionDialogListener {
         xAxis.setTickLabelPaint(new Color(0x6B7280));
         xAxis.setAxisLinePaint(new Color(0x9CA3AF));
 
-        // Configure Y-axis (Amount)
         NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
         yAxis.setTickLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
         yAxis.setTickLabelPaint(new Color(0x6B7280));
@@ -566,38 +548,31 @@ public class DashboardController implements TransactionDialogListener {
             }
         });
 
-        // Configure renderer with smooth lines and round caps
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
 
-        // Smooth stroke with round caps and joins
         BasicStroke smoothStroke = new BasicStroke(
-                2.0f, // Line width
-                BasicStroke.CAP_ROUND, // Round end caps
-                BasicStroke.JOIN_ROUND // Round joins
-        );
+                2.0f,
+                BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_ROUND);
 
-        // Income line (green) - series 0
         Color incomeGreen = new Color(0x22C55E);
         renderer.setSeriesPaint(0, incomeGreen);
         renderer.setSeriesStroke(0, smoothStroke);
         renderer.setSeriesShapesVisible(0, true);
-        renderer.setSeriesShape(0, new java.awt.geom.Ellipse2D.Double(-4, -4, 8, 8)); // Round dots
+        renderer.setSeriesShape(0, new java.awt.geom.Ellipse2D.Double(-4, -4, 8, 8));
         renderer.setSeriesShapesFilled(0, true);
 
-        // Expense line (red) - series 1
         Color expenseRed = new Color(0xDC2626);
         renderer.setSeriesPaint(1, expenseRed);
         renderer.setSeriesStroke(1, smoothStroke);
         renderer.setSeriesShapesVisible(1, true);
-        renderer.setSeriesShape(1, new java.awt.geom.Ellipse2D.Double(-3, -3, 6, 6)); // Round dots (smaller)
+        renderer.setSeriesShape(1, new java.awt.geom.Ellipse2D.Double(-3, -3, 6, 6));
         renderer.setSeriesShapesFilled(1, true);
 
-        // Tooltip generator
         renderer.setDefaultToolTipGenerator(new MonthlyCashFlowToolTipGenerator(data));
 
         plot.setRenderer(renderer);
 
-        // Configure legend with compact styling
         LegendTitle legend = chart.getLegend();
         if (legend != null) {
             legend.setPosition(RectangleEdge.TOP);
@@ -614,9 +589,6 @@ public class DashboardController implements TransactionDialogListener {
         return card;
     }
 
-    /**
-     * Tooltip generator for Monthly Cash Flow chart.
-     */
     private static class MonthlyCashFlowToolTipGenerator implements XYToolTipGenerator {
         private final DashboardService.MonthlyCashFlowData data;
 

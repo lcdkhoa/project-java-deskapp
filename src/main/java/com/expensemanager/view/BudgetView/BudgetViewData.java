@@ -7,20 +7,13 @@ import com.expensemanager.model.Category;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Data Transfer Object for BudgetView.
- * Contains all data needed to render the budget view.
- * Controller fetches this data and passes it to the view.
- */
 public class BudgetViewData {
 
-    // Summary data
     public final long totalBudget;
     public final long totalSpent;
     public final long remaining;
     public final double spentPercent;
 
-    // Budget by category data
     public final List<BudgetDAO.BudgetUsedRow> budgetUsedRows;
     public final Map<String, Category> categoryMap;
     public final Map<String, Budget> budgetMap;

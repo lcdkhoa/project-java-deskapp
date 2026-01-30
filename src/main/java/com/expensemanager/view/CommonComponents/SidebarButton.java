@@ -1,7 +1,5 @@
 package com.expensemanager.view.CommonComponents;
 
-import com.expensemanager.view.CommonComponents.StyledComponents;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -21,7 +19,6 @@ public class SidebarButton extends JToggleButton {
         this.cardName = cardName;
         this.originalIcon = icon;
 
-        // Create filtered icons for selected (white) and unselected (dark gray) states
         if (icon != null && icon.getImage() != null) {
             whiteIcon = createColoredIcon(icon, Color.WHITE);
             grayIcon = createColoredIcon(icon, new Color(StyledComponents.COLOR_SIDEBAR_TEXT));
@@ -32,18 +29,14 @@ public class SidebarButton extends JToggleButton {
         setBorderPainted(false);
         setFocusPainted(false);
         setHorizontalAlignment(SwingConstants.LEFT);
-        // Padding: top, left, bottom, right - left padding 20px as per spec
         setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
-        // Fixed height: 48px - let layout control width
         setPreferredSize(new Dimension(0, 48));
         setMinimumSize(new Dimension(0, 48));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
 
-        // Font: 24px Regular/Medium
         setFont(getFont().deriveFont(Font.PLAIN, 20f));
 
-        // Set initial icon
         updateIcon();
 
         getModel().addChangeListener(e -> {
@@ -69,10 +62,6 @@ public class SidebarButton extends JToggleButton {
         updateForeground();
     }
 
-    /**
-     * Creates a colored version of an icon by applying a color tint.
-     * Converts icon to grayscale and then applies target color.
-     */
     private ImageIcon createColoredIcon(ImageIcon original, Color color) {
         if (original == null || original.getImage() == null) {
             return null;
@@ -91,26 +80,22 @@ public class SidebarButton extends JToggleButton {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-        // Draw original image
         g2d.drawImage(image, 0, 0, null);
 
-        // Convert to grayscale and apply color tint
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 int rgb = buffered.getRGB(x, y);
                 int alpha = (rgb >> 24) & 0xFF;
 
                 if (alpha == 0) {
-                    continue; // Keep transparent pixels
+                    continue;
                 }
 
-                // Convert to grayscale
                 int r = (rgb >> 16) & 0xFF;
                 int g = (rgb >> 8) & 0xFF;
                 int b = rgb & 0xFF;
                 int gray = (int) (0.299 * r + 0.587 * g + 0.114 * b);
 
-                // Apply target color based on grayscale intensity
                 float intensity = gray / 255.0f;
                 int newR = (int) (color.getRed() * intensity);
                 int newG = (int) (color.getGreen() * intensity);

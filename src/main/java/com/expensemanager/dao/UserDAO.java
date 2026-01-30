@@ -8,9 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * DAO for users table.
- */
 public class UserDAO {
 
     public User findById(Connection conn, String id) throws SQLException {
@@ -31,7 +28,8 @@ public class UserDAO {
         u.setId(rs.getString("id"));
         u.setEmail(rs.getString("email"));
         String t = rs.getString("created_at");
-        if (t != null) u.setCreatedAt(DateUtil.parseInstant(t));
+        if (t != null)
+            u.setCreatedAt(DateUtil.parseInstant(t));
         return u;
     }
 }

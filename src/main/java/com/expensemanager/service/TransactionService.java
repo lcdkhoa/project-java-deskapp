@@ -13,15 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Service layer for Transaction operations.
- * Encapsulates business logic and data access for transactions.
- */
 public class TransactionService {
 
     private final TransactionDAO transactionDAO;
 
-    // Validation constants
     private static final long MAX_AMOUNT = 500_000_000L;
     private static final int MAX_NOTE_LENGTH = 120;
     private static final int MAX_DATE_RANGE_DAYS = 60;
@@ -30,13 +25,6 @@ public class TransactionService {
         this.transactionDAO = new TransactionDAO();
     }
 
-    /**
-     * Get monthly expense total.
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return expense amount (negative value from DB, but returned as absolute)
-     */
     public long getMonthlyExpense(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return Math.abs(transactionDAO.getMonthlyExpense(conn, userId, monthKey));
@@ -46,13 +34,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Get monthly income total.
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return income amount
-     */
     public long getMonthlyIncome(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return transactionDAO.getMonthlyIncome(conn, userId, monthKey);
@@ -62,13 +43,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Get cashflow by day for a month.
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return map of date -> cashflow amount
-     */
     public Map<LocalDate, Long> getCashflowByDay(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return transactionDAO.getCashflowByDay(conn, userId, monthKey);
@@ -78,13 +52,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Get expense by category for a month.
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return map of categoryId -> expense amount
-     */
     public Map<String, Long> getExpenseByCategory(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return transactionDAO.getExpenseByCategory(conn, userId, monthKey);
@@ -94,14 +61,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Get expense by date range (for bar chart).
-     * 
-     * @param userId user ID
-     * @param start  start date
-     * @param end    end date
-     * @return map of date -> expense amount
-     */
     public Map<LocalDate, Long> getExpenseByDateRange(String userId, LocalDate start, LocalDate end) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return transactionDAO.getExpenseByDateRange(conn, userId, start, end);
@@ -111,23 +70,9 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Search and filter transactions.
-     * 
-     * @param userId     user ID
-     * @param categoryId category filter (null for all)
-     * @param walletType wallet type filter (null for all)
-     * @param startDate  start date filter (null for no limit)
-     * @param endDate    end date filter (null for no limit)
-     * @param sortKey    sort key (date_desc, date_asc, amount_desc, amount_asc)
-     * @param searchNote note search text (null for no filter)
-     * @return list of transactions
-     * @throws ServiceException if validation fails
-     */
     public List<Transaction> searchTransactions(String userId, String categoryId, String walletType,
             LocalDate startDate, LocalDate endDate, String sortKey, String searchNote) throws ServiceException {
 
-        // Validate date range
         if (startDate != null && endDate != null) {
             if (endDate.isBefore(startDate)) {
                 throw new ServiceException("End date must be on or after start date.");
@@ -144,13 +89,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Get transactions for a specific month.
-     * 
-     * @param userId   user ID
-     * @param monthKey month key (yyyy-MM)
-     * @return list of transactions
-     */
     public List<Transaction> getTransactionsByMonth(String userId, String monthKey) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return transactionDAO.listByMonth(conn, userId, monthKey);
@@ -160,19 +98,11 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Create a new transaction.
-     * 
-     * @param transaction transaction to create
-     * @throws ServiceException if validation fails or database error
-     */
     public void createTransaction(Transaction transaction) throws ServiceException {
         validateTransaction(transaction);
 
-        // Ensure amount sign matches type
         normalizeTransactionAmount(transaction);
 
-        // Set month key from transaction date
         if (transaction.getTransactionDate() != null && transaction.getMonthKey() == null) {
             transaction.setMonthKey(MonthKeyUtil.fromDate(transaction.getTransactionDate()));
         }
@@ -184,17 +114,10 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Update an existing transaction.
-     * 
-     * @param transaction transaction to update
-     * @throws ServiceException if validation fails or database error
-     */
     public void updateTransaction(Transaction transaction) throws ServiceException {
         validateTransaction(transaction);
         normalizeTransactionAmount(transaction);
 
-        // Update month key if date changed
         if (transaction.getTransactionDate() != null) {
             transaction.setMonthKey(MonthKeyUtil.fromDate(transaction.getTransactionDate()));
         }
@@ -206,12 +129,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Delete a transaction.
-     * 
-     * @param transactionId transaction ID to delete
-     * @throws ServiceException if database error
-     */
     public void deleteTransaction(String transactionId) throws ServiceException {
         try (Connection conn = DatabaseConnection.getConnection()) {
             transactionDAO.delete(conn, transactionId);
@@ -220,12 +137,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Find transaction by ID.
-     * 
-     * @param transactionId transaction ID
-     * @return transaction or null if not found
-     */
     public Transaction findById(String transactionId) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return transactionDAO.findById(conn, transactionId);
@@ -235,9 +146,6 @@ public class TransactionService {
         }
     }
 
-    /**
-     * Validate transaction before save.
-     */
     private void validateTransaction(Transaction t) throws ServiceException {
         if (t.getUserId() == null || t.getUserId().isEmpty()) {
             throw new ServiceException("User ID is required.");
@@ -269,15 +177,11 @@ public class TransactionService {
             throw new ServiceException("Amount cannot exceed " + MAX_AMOUNT + ".");
         }
 
-        // Truncate note if too long
         if (t.getNote() != null && t.getNote().length() > MAX_NOTE_LENGTH) {
             t.setNote(t.getNote().substring(0, MAX_NOTE_LENGTH));
         }
     }
 
-    /**
-     * Normalize transaction amount: expense should be negative, income positive.
-     */
     private void normalizeTransactionAmount(Transaction t) {
         long absAmount = Math.abs(t.getAmount());
         if ("expense".equals(t.getType())) {
@@ -287,7 +191,6 @@ public class TransactionService {
         }
     }
 
-    // Cached wallet display names
     private static Map<String, String> walletDisplayCache;
 
     public static String toWalletDisplay(String walletType) {
@@ -295,13 +198,11 @@ public class TransactionService {
             return "";
         }
 
-        // Load cache if not initialized
         if (walletDisplayCache == null) {
             WalletTypeService walletTypeService = new WalletTypeService();
             walletDisplayCache = walletTypeService.getWalletDisplayNameMap();
         }
 
-        // Return from cache or fallback to code
         return walletDisplayCache.getOrDefault(walletType, walletType);
     }
 

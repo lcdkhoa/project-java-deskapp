@@ -24,7 +24,6 @@ public class KPICard extends ModernCard {
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         setLayout(new MigLayout("ins 0, wrap 1, gapy 10", "[]", "[]"));
 
-        // Icon + Title
         JPanel row1 = new JPanel(new MigLayout("ins 0, gap 8 0", "[][]", "[center]"));
         row1.setOpaque(false);
 
@@ -33,25 +32,21 @@ public class KPICard extends ModernCard {
         if (icon != null) {
             iconLabel.setIcon(icon);
         } else {
-            // Fallback: use a placeholder
             iconLabel.setText("?");
             iconLabel.setFont(iconLabel.getFont().deriveFont(Font.BOLD, 16f));
         }
         row1.add(iconLabel, "align left, aligny center");
 
         titleLabel = new JLabel(title);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.PLAIN, TITLE_FONT_SIZE)); // 20px Regular/Medium
+        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.PLAIN, TITLE_FONT_SIZE));
         titleLabel.setForeground(TITLE_COLOR);
         row1.add(titleLabel, "align left, aligny center");
         add(row1, "wrap");
 
-        // Row 2 (Value Row): Big Value Number (32px Plain) - strictly below title, no
-        // text wrapping
         valueLabel = new JLabel(valueText);
-        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.PLAIN, VALUE_FONT_SIZE)); // 32px Plain (not bold)
+        valueLabel.setFont(valueLabel.getFont().deriveFont(Font.PLAIN, VALUE_FONT_SIZE));
         valueLabel.setForeground(valueColor);
         valueLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        // Prevent text wrapping - expand card width if necessary
         valueLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         add(valueLabel, "align left");
     }

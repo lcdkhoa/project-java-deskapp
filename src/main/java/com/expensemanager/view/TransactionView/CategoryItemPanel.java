@@ -36,7 +36,6 @@ public class CategoryItemPanel extends JPanel {
         setOpaque(false);
         setLayout(new BorderLayout(0, 8));
 
-        // Create icon label (centered at top)
         iconLabel = new JLabel();
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         iconLabel.setVerticalAlignment(SwingConstants.CENTER);

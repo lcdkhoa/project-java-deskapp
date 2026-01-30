@@ -40,22 +40,17 @@ public class DashboardView extends JPanel {
             }
         });
 
-        // (Header)
         JPanel header = buildHeaderPanel();
         add(header, "growx, h " + HEADER_HEIGHT + ", wrap");
 
-        // (Date Selector)
         add(buildDateSelectorStrip(), "growx, wrap");
 
-        // (KPI Cards)
         add(controller.getKpiCardsPanel(), "growx, wrap");
 
-        // (Charts)
         JPanel chartsPanel = controller.getChartsPanel();
         chartsPanel.setMinimumSize(new Dimension(0, 600));
         add(chartsPanel, "growx, growy, pushy, wrap");
 
-        // Budget Warning
         add(controller.getBudgetWarningsPanel(), "growx");
     }
 

@@ -19,7 +19,6 @@ public class BudgetView extends JPanel {
         setOpaque(true);
         setLayout(new MigLayout("wrap 1, fill, insets 20 24 24 24, gapy 24", "[grow]", "[][grow]"));
 
-        // Header row
         JPanel header = new JPanel(new MigLayout("ins 0, fillx", "[grow][pref!]", "[]"));
         header.setOpaque(false);
 

@@ -2,7 +2,6 @@ package com.expensemanager.view.BudgetView;
 
 import com.expensemanager.view.CommonComponents.StyledComponents;
 import com.expensemanager.view.CommonComponents.MainFrame;
-import com.expensemanager.view.CommonComponents.StyledComponents;
 
 import javax.swing.*;
 import java.awt.*;

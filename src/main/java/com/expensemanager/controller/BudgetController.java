@@ -30,7 +30,6 @@ public class BudgetController implements BudgetDialogListener {
     private final JPanel contentPanel;
     private YearMonth currentMonth = YearMonth.now();
 
-    // Services
     private final BudgetService budgetService;
     private final CategoryService categoryService;
 
@@ -142,7 +141,6 @@ public class BudgetController implements BudgetDialogListener {
             spentPanel.setMinimumSize(new Dimension(0, 85));
             spentPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
 
-            // "Spent" row section
             JPanel textRow = new JPanel(new MigLayout("ins 0, fillx", "[pref!][grow][pref!]", "[center]"));
             textRow.setOpaque(false);
             JLabel spentLabel = new JLabel("Spent");
@@ -167,7 +165,6 @@ public class BudgetController implements BudgetDialogListener {
             JPanel section = new JPanel(new MigLayout("wrap 1, fillx, insets 0, gapy 12", "[grow]", "[]"));
             section.setOpaque(false);
 
-            // Budget by category section
             JLabel sectionTitle = new JLabel("Budget by Category");
             sectionTitle.setFont(sectionTitle.getFont().deriveFont(Font.PLAIN, 16f));
             sectionTitle.setForeground(new Color(0x111827));
