@@ -2,9 +2,11 @@ package com.expensemanager.view.TransactionView;
 
 import com.expensemanager.controller.TransactionController;
 import com.expensemanager.model.Category;
+import com.expensemanager.model.WalletType;
 import com.expensemanager.view.CommonComponents.CalendarPicker;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.StyledComponents;
+import com.expensemanager.view.CommonComponents.WalletListCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -28,7 +30,7 @@ public class TransactionView extends JPanel {
 
     private JTextField searchField;
     private JComboBox<CategoryItem> categoryCombo;
-    private JComboBox<WalletItem> walletCombo;
+    private JComboBox<Object> walletCombo;
     private CalendarPicker fromDateField;
     private CalendarPicker toDateField;
     private JComboBox<SortItem> sortCombo;
@@ -261,11 +263,12 @@ public class TransactionView extends JPanel {
 
     private JComponent createWalletCombo() {
         walletCombo = createStyledComboBox();
-        walletCombo.addItem(new WalletItem(null, "All wallets"));
-        walletCombo.addItem(new WalletItem("cash", "Cash"));
-        walletCombo.addItem(new WalletItem("bank_transfer", "Bank Transfer"));
-        walletCombo.addItem(new WalletItem("card", "Card"));
-        walletCombo.addItem(new WalletItem("e_wallet", "E-wallet"));
+        walletCombo.setRenderer(new WalletListCellRenderer());
+        walletCombo.addItem("All wallets");
+        List<WalletType> wallets = controller.getWalletTypes();
+        for (WalletType wt : wallets) {
+            walletCombo.addItem(wt);
+        }
         walletCombo.addActionListener(e -> refresh());
         return walletCombo;
     }
@@ -306,8 +309,11 @@ public class TransactionView extends JPanel {
     }
 
     public String getSelectedWalletType() {
-        WalletItem walletItem = (WalletItem) (walletCombo != null ? walletCombo.getSelectedItem() : null);
-        return walletItem != null ? walletItem.value : null;
+        Object selected = walletCombo != null ? walletCombo.getSelectedItem() : null;
+        if (selected instanceof WalletType) {
+            return ((WalletType) selected).getName();
+        }
+        return null;
     }
 
     public String getFromDateText() {
@@ -343,21 +349,6 @@ public class TransactionView extends JPanel {
 
         CategoryItem(String id, String label) {
             this.id = id;
-            this.label = label;
-        }
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
-
-    private static class WalletItem {
-        final String value;
-        final String label;
-
-        WalletItem(String value, String label) {
-            this.value = value;
             this.label = label;
         }
 

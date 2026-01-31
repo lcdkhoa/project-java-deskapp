@@ -9,6 +9,7 @@ import com.expensemanager.view.CommonComponents.CalendarPicker;
 import com.expensemanager.view.CommonComponents.MainFrame;
 import com.expensemanager.view.CommonComponents.StyledComponents;
 import com.expensemanager.view.CommonComponents.TimePicker;
+import com.expensemanager.view.CommonComponents.WalletListCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -30,7 +31,7 @@ public class CreateTransactionDialog extends JDialog {
     private ButtonGroup typeGroup;
     private CalendarPicker datePicker;
     private TimePicker timePicker;
-    private JComboBox<String> walletCombo;
+    private JComboBox<WalletType> walletCombo;
     private JTextField noteF;
 
     private Map<String, CategoryItemPanel> categoryPanels;
@@ -109,14 +110,16 @@ public class CreateTransactionDialog extends JDialog {
         walletLabel.setFont(walletLabel.getFont().deriveFont(Font.PLAIN, 14f));
         form.add(walletLabel, "alignx left");
 
-        walletCombo = StyledComponents.<String>createStyledComboBox(48, 30);
+        walletCombo = StyledComponents.createStyledComboBox(48, 30);
         walletCombo.setPreferredSize(new Dimension(452, 48));
         walletCombo.setMinimumSize(new Dimension(452, 48));
         walletCombo.setMaximumSize(new Dimension(452, 48));
-        String[] walletDisplayNames = walletTypes.stream()
-                .map(WalletType::getDisplayName)
-                .toArray(String[]::new);
-        walletCombo.setModel(new DefaultComboBoxModel<>(walletDisplayNames));
+        walletCombo.setRenderer(new WalletListCellRenderer());
+        DefaultComboBoxModel<WalletType> walletModel = new DefaultComboBoxModel<>();
+        for (WalletType wt : walletTypes) {
+            walletModel.addElement(wt);
+        }
+        walletCombo.setModel(walletModel);
         form.add(walletCombo, "alignx center, wrap");
 
         JLabel noteLabel = new JLabel("Note");
@@ -299,7 +302,7 @@ public class CreateTransactionDialog extends JDialog {
         LocalDate d = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalTime t = selectedTime.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
 
-        String wallet = walletTypes.get(walletCombo.getSelectedIndex()).getName();
+        String wallet = ((WalletType) walletCombo.getSelectedItem()).getName();
         String note = noteF.getText();
         if (note != null && note.length() > 120)
             note = note.substring(0, 120);
