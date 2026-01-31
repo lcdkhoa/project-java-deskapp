@@ -5,7 +5,10 @@ import com.expensemanager.model.Category;
 import com.expensemanager.model.WalletType;
 import com.expensemanager.view.CommonComponents.CalendarPicker;
 import com.expensemanager.view.CommonComponents.MainFrame;
+import com.expensemanager.view.CommonComponents.SortListCellRenderer;
+import com.expensemanager.view.CommonComponents.SortListCellRenderer.SortItem;
 import com.expensemanager.view.CommonComponents.StyledComponents;
+import com.expensemanager.view.CommonComponents.CategoryListCellRenderer;
 import com.expensemanager.view.CommonComponents.WalletListCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
@@ -29,7 +32,7 @@ public class TransactionView extends JPanel {
     private final TransactionController controller;
 
     private JTextField searchField;
-    private JComboBox<CategoryItem> categoryCombo;
+    private JComboBox<Object> categoryCombo;
     private JComboBox<Object> walletCombo;
     private CalendarPicker fromDateField;
     private CalendarPicker toDateField;
@@ -244,21 +247,14 @@ public class TransactionView extends JPanel {
 
     private JComponent createCategoryCombo() {
         categoryCombo = createStyledComboBox();
-
-        categoryCombo.addActionListener(e -> refresh());
-        reloadCategories();
-
-        return categoryCombo;
-    }
-
-    private void reloadCategories() {
-        categoryCombo.removeAllItems();
-        categoryCombo.addItem(new CategoryItem(null, "All categories"));
-
+        categoryCombo.setRenderer(new CategoryListCellRenderer());
+        categoryCombo.addItem("All categories");
         List<Category> all = controller.getAllCategories();
         for (Category c : all) {
-            categoryCombo.addItem(new CategoryItem(c.getId(), c.getName()));
+            categoryCombo.addItem(c);
         }
+        categoryCombo.addActionListener(e -> refresh());
+        return categoryCombo;
     }
 
     private JComponent createWalletCombo() {
@@ -275,10 +271,17 @@ public class TransactionView extends JPanel {
 
     private JComponent createSortCombo() {
         sortCombo = createStyledComboBox();
-        sortCombo.addItem(new SortItem("date_desc", "Date (Newest first)"));
-        sortCombo.addItem(new SortItem("date_asc", "Date (Oldest first)"));
-        sortCombo.addItem(new SortItem("amount_desc", "Amount (Highest first)"));
-        sortCombo.addItem(new SortItem("amount_asc", "Amount (Lowest first)"));
+        sortCombo.setRenderer(new SortListCellRenderer());
+
+        sortCombo.addItem(new SortItem("date_desc", "Date (Newest first)",
+                "src/main/java/com/expensemanager/img/menu/lastest.png"));
+        sortCombo.addItem(new SortItem("date_asc", "Date (Oldest first)",
+                "src/main/java/com/expensemanager/img/menu/oldest.png"));
+        sortCombo.addItem(new SortItem("amount_desc", "Amount (Highest first)",
+                "src/main/java/com/expensemanager/img/menu/amount_most.png"));
+        sortCombo.addItem(new SortItem("amount_asc", "Amount (Lowest first)",
+                "src/main/java/com/expensemanager/img/menu/amount_less.png"));
+
         sortCombo.addActionListener(e -> refresh());
         return sortCombo;
     }
@@ -304,8 +307,11 @@ public class TransactionView extends JPanel {
     }
 
     public String getSelectedCategoryId() {
-        CategoryItem categoryItem = (CategoryItem) (categoryCombo != null ? categoryCombo.getSelectedItem() : null);
-        return categoryItem != null ? categoryItem.id : null;
+        Object selected = categoryCombo != null ? categoryCombo.getSelectedItem() : null;
+        if (selected instanceof Category) {
+            return ((Category) selected).getId();
+        }
+        return null;
     }
 
     public String getSelectedWalletType() {
@@ -338,38 +344,9 @@ public class TransactionView extends JPanel {
 
     public String getSortKey() {
         if (sortCombo != null && sortCombo.getSelectedItem() instanceof SortItem) {
-            return ((SortItem) sortCombo.getSelectedItem()).key;
+            return ((SortItem) sortCombo.getSelectedItem()).getKey();
         }
         return "date_desc";
     }
 
-    private static class CategoryItem {
-        final String id;
-        final String label;
-
-        CategoryItem(String id, String label) {
-            this.id = id;
-            this.label = label;
-        }
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
-
-    private static class SortItem {
-        final String key;
-        final String label;
-
-        SortItem(String key, String label) {
-            this.key = key;
-            this.label = label;
-        }
-
-        @Override
-        public String toString() {
-            return label;
-        }
-    }
 }
